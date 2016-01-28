@@ -6,7 +6,7 @@
 class Utilities
 {
 public:
-	static bool IsSameSpeaker(const std::string& first, const std::string& second);
+    static bool IsSameSpeaker(const std::string& first, const std::string& second);
 };
 
 #endif

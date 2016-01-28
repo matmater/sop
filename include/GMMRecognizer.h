@@ -27,6 +27,14 @@ public:
      */
     bool IsBackgroundModelEnabled() const;
 
+    /*! \brief Sets the number of clusters.
+     */
+    void SetClusterCount(unsigned int clusterCount);
+    
+    /*! \brief Gets the number of clusters.
+     */
+    unsigned int GetClusterCount() const;
+
     /*! \copydoc Recognizer::Clear()
      */
     virtual void Clear();
@@ -49,11 +57,12 @@ public:
 
 private:
     unsigned int mDimensionCount;
-    unsigned int mClusterCount;
 
-    double mEta;
+    Real mEta;
 
     bool mBackgroundModelEnabled;
+    
+    unsigned int mClusterCount;
 
     bool mValid;
 

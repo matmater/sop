@@ -37,6 +37,19 @@ public:
     /*! \brief Checks if background model is enabled.
      */
     bool IsBackgroundModelEnabled() const;
+    
+    /*! \brief Sets the number of clusters.
+     * 
+     *  Tells the algorithm how many clusters each
+     *  codebook should have.
+     */
+    void SetClusterCount(unsigned int clusterCount);
+    
+    /*! \brief Gets the number of clusters.
+     *
+     *  \sa SetClusterCount()
+     */
+    unsigned int GetClusterCount() const;
 
     /*! \brief Returns the dimension count based on trained codebooks.
      */
@@ -76,6 +89,8 @@ private:
 
 private:
     bool mBackgroundModelEnabled;
+
+    unsigned int mClusterCount;
 
     std::vector<unsigned int> mClusterSamples;
 

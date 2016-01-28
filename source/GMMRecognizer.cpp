@@ -2,7 +2,7 @@
 #include "Utilities.h"
 
 GMMRecognizer::GMMRecognizer()
-    : mBackgroundModelEnabled(false)
+: mBackgroundModelEnabled(false), mClusterCount(128)
 {
     mValid = false;
 }
@@ -20,6 +20,16 @@ void GMMRecognizer::SetBackgroundModelEnabled(bool enabled)
 bool GMMRecognizer::IsBackgroundModelEnabled() const
 {
     return mBackgroundModelEnabled;
+}
+
+void GMMRecognizer::SetClusterCount(unsigned int clusterCount)
+{
+    mClusterCount = clusterCount;
+}
+    
+unsigned int GMMRecognizer::GetClusterCount() const
+{
+    return mClusterCount;
 }
 
 void GMMRecognizer::Clear()
@@ -44,6 +54,7 @@ void GMMRecognizer::Train(const SpeechData& data)
             << " (" << 100 * progress / data.GetSamples().size() << "%)" << std::endl;
 
         GMM& model = mModels[sequence.first];
+        model.SetClusterCount(mClusterCount);
 
         model.Train(sequence.second);
 

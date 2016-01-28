@@ -4,21 +4,6 @@
 
 #include "GMMRecognizer.h"
 #include "VQRecognizer.h"
-/*
- * Debuggauksen käyttö:
- * - Katso definet Common.h-tiedostossa
- * #define DEBUG
- *           ^--- Enabloi debuggauksen = mitään ei tulosteta.
- * #define DEBUG_LEVEL 5 <--- Tulostetaan FATAL, ERROR, WARNING, INFO, TRACE
- * #define DEBUG_LEVEL 4 <--- Tulostetaan FATAL, ERROR, WARNING, INFO
- * #define DEBUG_LEVEL 3 <--- Tulostetaan FATAL, ERROR, WARNING
- * #define DEBUG_LEVEL 2 <--- Tulostetaan FATAL, ERROR
- * #define DEBUG_LEVEL 1 <--- Tulostetaan FATAL
- * #define DEBUG_LEVEL 0 <--- Ei tulosteta viestejä.
- *
- * Esim. tulostus:
- * DEBUG_ERROR("Hello" << ", " << "World!");
- */
 
 void Evaluate(std::map<std::string, RecognitionResult>& results, std::chrono::duration<double> testDur, std::chrono::duration<double> loadDur)
 {
@@ -100,6 +85,7 @@ int main(int argc, char** argv)
         //ANNRecognizer recognizer;
 
         recognizer.SetBackgroundModelEnabled(false);
+        recognizer.SetClusterCount(128);
 
         std::map<std::string, RecognitionResult> result;
 

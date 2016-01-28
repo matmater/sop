@@ -38,17 +38,21 @@ public:
      */
     GMM();
 
-    /*! \brief Returns all clusters.
-     */
-    std::vector<Cluster>& GetClusters();
-
-    /*! \brief Returns all clusters.
-     */
-    const std::vector<Cluster>& GetClusters() const;
-
     /*! \brief Destructor.
      */
     virtual ~GMM();
+
+    /*! \brief Sets the number of clusters.
+     */
+    void SetClusterCount(unsigned int clusterCount);
+    
+    /*! \brief Gets the number of clusters.
+     */
+    unsigned int GetClusterCount() const;
+    
+    /*! \brief Returns all clusters.
+     */
+    const std::vector<Cluster>& GetClusters() const;
 
     /*! \brief Trains the model.
      */
@@ -110,6 +114,8 @@ private:
     void UpdateConstants(Cluster& cluster);
 
 private:
+    unsigned mClusterCount;
+
     Real mEta;
 
     bool mValid;

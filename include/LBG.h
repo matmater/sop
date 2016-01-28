@@ -5,7 +5,7 @@
 
 #include "DynamicVector.h"
 
-/*! \brief Linde–Buzo–Gray algorithm for clustering.
+/*! \brief Linde-Buzo-Gray algorithm for clustering.
  */
 class LBG
 {
@@ -20,6 +20,14 @@ public:
     /*! \brief Virtual destructor.
      */
     virtual ~LBG();
+    
+    /*! \brief Sets the number of clusters.
+     */
+    void SetClusterCount(unsigned int clusterCount);
+    
+    /*! \brief Gets the number of clusters.
+     */
+    unsigned int GetClusterCount() const;
 
     /*! \brief Clusters given samples.
      *

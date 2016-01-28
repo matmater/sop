@@ -2,9 +2,9 @@
 #include "LBG.h"
 
 GMM::GMM()
+: mClusterCount(128), mEta(0.001f)
 {
-    mEta = 0.001f;
-    mValid = false;
+
 }
 
 GMM::~GMM()
@@ -12,9 +12,14 @@ GMM::~GMM()
 
 }
 
-std::vector<GMM::Cluster>& GMM::GetClusters()
+void GMM::SetClusterCount(unsigned int clusterCount)
 {
-    return mClusters;
+    mClusterCount = clusterCount;
+}
+
+unsigned int GMM::GetClusterCount() const
+{
+    return mClusterCount;
 }
 
 const std::vector<GMM::Cluster>& GMM::GetClusters() const
@@ -46,12 +51,10 @@ Real GMM::GetValue(const std::vector< DynamicVector<Real> >& samples)
 
 void GMM::InitClusters(const std::vector< DynamicVector<Real> >& samples)
 {
-    unsigned int clusterCount = 128;
-
     // Create the initial centroid by averaging sample data.
 
     mClusters.clear();
-    mClusters.resize(clusterCount);
+    mClusters.resize(mClusterCount);
 
     for (auto& cluster : mClusters)
     {
@@ -63,15 +66,10 @@ void GMM::InitClusters(const std::vector< DynamicVector<Real> >& samples)
     }
 
     std::vector<unsigned int> indices;
-    indices.resize(samples.size());
-
     std::vector< DynamicVector<Real> > centroids;
-    centroids.resize(clusterCount);
-
     std::vector<unsigned int> sizes;
-    sizes.resize(clusterCount);
 
-    LBG lbg;
+    LBG lbg(mClusterCount);
     lbg.Cluster(samples, indices, centroids, sizes);
 
     for (unsigned int c = 0; c < centroids.size(); c++)

@@ -11,17 +11,35 @@ LBG::~LBG()
 
 }
 
+void LBG::SetClusterCount(unsigned int clusterCount)
+{
+    mClusterCount = clusterCount;
+}
+
+unsigned int LBG::GetClusterCount() const
+{
+    return mClusterCount;
+}
+
 void LBG::Cluster(
     const std::vector< DynamicVector<Real> >& samples,
     std::vector<unsigned int>& indices,
     std::vector< DynamicVector<Real> >& centroids,
     std::vector<unsigned int>& sizes)
 {
-    if (centroids.size() != sizes.size() || samples.size() != indices.size())
+    if (indices.size() != samples.size())
     {
-        std::cerr << "Mismatching cluster vector dimensions." << std::endl;
+        indices.resize(samples.size());
+    }
+    
+    if (centroids.size() != mClusterCount)
+    {
+        centroids.resize(mClusterCount);
+    }
 
-        return;
+    if (sizes.size() != mClusterCount)
+    {
+        sizes.resize(mClusterCount);
     }
 
     // Initialize the feature vectors of the centroids.

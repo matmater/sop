@@ -2,7 +2,8 @@
 #include "Utilities.h"
 
 VQRecognizer::VQRecognizer()
-    : mBackgroundModelEnabled(false)
+    : mBackgroundModelEnabled(false),
+    mClusterCount(128)
 {
 
 }
@@ -20,6 +21,16 @@ void VQRecognizer::SetBackgroundModelEnabled(bool enabled)
 bool VQRecognizer::IsBackgroundModelEnabled() const
 {
     return mBackgroundModelEnabled;
+}
+
+void VQRecognizer::SetClusterCount(unsigned int clusterCount)
+{
+    mClusterCount = clusterCount;
+}
+    
+unsigned int VQRecognizer::GetClusterCount() const
+{
+    return mClusterCount;
 }
 
 unsigned int VQRecognizer::GetDimensionCount()
@@ -233,14 +244,11 @@ void VQRecognizer::Train(const SpeechData& data)
 
 void VQRecognizer::Train(Codebook& codebook, const std::vector< DynamicVector<Real> >& samples)
 {
-    LBG lbg;
+    LBG lbg(mClusterCount);
 
+    codebook.clusterWeights.resize(mClusterCount);
+    
     std::vector<unsigned int> indices;
-    indices.resize(samples.size());
-
-    codebook.clusterCentroids.resize(128);
-    codebook.clusterSizes.resize(128);
-    codebook.clusterWeights.resize(128);
 
     lbg.Cluster(samples, indices, codebook.clusterCentroids, codebook.clusterSizes);
 
@@ -289,40 +297,40 @@ void VQRecognizer::Train(Codebook& codebook, const std::vector< DynamicVector<Re
 
 void VQRecognizer::SaveTrainedData(const std::string& path)
 {
-    std::ofstream outFile;
+    //std::ofstream outFile;
 
-    outFile.open(path);
+    //outFile.open(path);
 
-    for (const auto& entry : mCodebooks)
-    {
-        const auto& centroids = entry.second.clusterCentroids;
-        const auto& sizes = entry.second.clusterSizes;
-        const auto& weights = entry.second.clusterWeights;
+    //for (const auto& entry : mCodebooks)
+    //{
+    //    const auto& centroids = entry.second.clusterCentroids;
+    //    const auto& sizes = entry.second.clusterSizes;
+    //    const auto& weights = entry.second.clusterWeights;
 
-        outFile << entry.first << " ";
+    //    outFile << entry.first << " ";
 
-        for (unsigned int c = 0; c < centroids.size(); c++)
-        {
-            outFile << weights[c] << " ";
+    //    for (unsigned int c = 0; c < centroids.size(); c++)
+    //    {
+    //        outFile << weights[c] << " ";
 
-            for (unsigned int i = 0; i < centroids[c].GetSize(); i++)
-            {
-                outFile << centroids[c][i];
+    //        for (unsigned int i = 0; i < centroids[c].GetSize(); i++)
+    //        {
+    //            outFile << centroids[c][i];
 
-                if (i + 1 != centroids[c].GetSize())
-                {
-                    outFile << " ";
-                }
-            }
+    //            if (i + 1 != centroids[c].GetSize())
+    //            {
+    //                outFile << " ";
+    //            }
+    //        }
 
-            if (c + 1 != centroids.size())
-            {
-                outFile << ",";
-            }
-        }
+    //        if (c + 1 != centroids.size())
+    //        {
+    //            outFile << ",";
+    //        }
+    //    }
 
-        outFile << std::endl;
-    }
+    //    outFile << std::endl;
+    //}
 }
 
 void VQRecognizer::LoadTrainedData(const std::string& path)

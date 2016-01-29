@@ -101,19 +101,17 @@ void GMMRecognizer::Test(const SpeechData& data, std::map<std::string, Recogniti
             }
             if (ubm != nullptr)
             {
-                DEBUG_TRACE(entry.first << "-" << model.first << ":" << model.second.GetValue(entry.second)
+                DEBUG_TRACE(entry.first << "-" << model.first << ":" << model.second.GetLogLikelihood(entry.second)
                     << " ubm:"
-                    << std::log(model.second.GetValue(entry.second) / ubm->GetValue(entry.second))
-                    << ","
-                    << model.second.GetValue(entry.second) / ubm->GetValue(entry.second));
+                    << model.second.GetLogLikelihood(entry.second) - ubm->GetLogLikelihood(entry.second));
             }
 
             else
             {
-                DEBUG_TRACE(entry.first << "-" << model.first << ":" << model.second.GetValue(entry.second));
+                DEBUG_TRACE(entry.first << "-" << model.first << ":" << model.second.GetLogLikelihood(entry.second));
             }
 
-            Real value = model.second.GetValue(entry.second);
+            Real value = model.second.GetLogLikelihood(entry.second);
 
             if (value > maxValue)
             {
@@ -130,7 +128,7 @@ void GMMRecognizer::Test(const SpeechData& data, std::map<std::string, Recogniti
             if (ubm != nullptr)
             {
                 // Divide minMatchDist by UBM distortion.
-                Real ratio = std::log(bestModel->GetValue(entry.second) / ubm->GetValue(entry.second));
+                Real ratio = bestModel->GetLogLikelihood(entry.second) - ubm->GetLogLikelihood(entry.second);
 
                 // UBM is not too close to bestMatch.
                 if (ratio > 0.3f && maxValue >= 10e10f) // UBM Threshold

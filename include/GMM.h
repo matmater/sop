@@ -62,15 +62,15 @@ public:
      */
     void Test(const std::vector< DynamicVector<Real> >& samples);
 
-    /*! \brief Calculates the sum of probability density function
-     *         values over given samples.
+    /*! \brief Calculates a normalized log-likelihood value over given samples.
+     *
+     *  The normalization is done by averaging log-likelihoods by dividing
+     *  the sum of sample log-likelihoods by the number of samples.
      *
      *  \param samples Samples of independent observations.
-     *  \return The sum of probability density function values over given samples.
-     *          See LogClusterGaussianPdf().
-     *  \note The returned value is in linear domain (not log domain).
+     *  \return Normalized log-likelihood.
      */
-    Real GetValue(const std::vector< DynamicVector<Real> >& samples);
+    Real GetLogLikelihood(const std::vector< DynamicVector<Real> >& samples);
 
 private:
     /*! \brief Initializes cluster variables before the actual EM-algorithm.
@@ -99,19 +99,20 @@ private:
     void M(const std::vector< DynamicVector<Real> >& samples);
 
 private:
-    /*! \brief Calculates the log(pdf(values)) of the given cluster.
+    /*! \brief Calculates the log-likelihood of the given sample
+     *         using given cluster values.
      *
      *  \param values Feature values.
      *  \param cluster A cluster that defines the pdf.
-     *  \return log(pdf(values))
+     *  \return Log-likelihood
      */
-    Real LogClusterGaussianPdf(const DynamicVector<Real>& values, const Cluster& cluster);
+    Real GetLogLikelihood(const DynamicVector<Real>& values, const Cluster& cluster);
 
     /*! \brief Precalculates some pdf values for efficiency.
      *
      *  \param cluster A cluster to be modifed.
      */
-    void UpdateConstants(Cluster& cluster);
+    void UpdatePDF(Cluster& cluster);
 
 private:
     unsigned mClusterCount;

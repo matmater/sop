@@ -34,19 +34,25 @@ void GMM::Train(const std::vector< DynamicVector<Real> >& samples)
     EM(samples);
 }
 
-Real GMM::GetValue(const std::vector< DynamicVector<Real> >& samples)
+Real GMM::GetLogLikelihood(const std::vector< DynamicVector<Real> >& samples)
 {
-    Real prob = 0.0;
+    if (samples.size() == 0)
+    {
+        return 0.0f;
+    }
+
+    Real result = 0.0;
+    Real invN = 1.0 / static_cast<Real>(samples.size());
 
     for (const auto& sample : samples)
     {
         for (auto& cluster : mClusters)
         {
-            prob += std::exp(LogClusterGaussianPdf(sample, cluster));
+            result += GetLogLikelihood(sample, cluster) * invN;
         }
     }
 
-    return prob;
+    return result;
 }
 
 void GMM::InitClusters(const std::vector< DynamicVector<Real> >& samples)
@@ -107,7 +113,7 @@ void GMM::EM(const std::vector< DynamicVector<Real> >& samples)
 {
     for (auto& cluster : mClusters)
     {
-        UpdateConstants(cluster);
+        UpdatePDF(cluster);
     }
 
     Real logLikelihood = 0.0f;
@@ -157,7 +163,7 @@ Real GMM::E(const std::vector< DynamicVector<Real> >& samples)
 
         for (auto& cluster : mClusters)
         {
-            cluster.membershipProbability = LogClusterGaussianPdf(sample, cluster);
+            cluster.membershipProbability = GetLogLikelihood(sample, cluster);
 
             if (cluster.membershipProbability > probMax)
                 probMax = cluster.membershipProbability;
@@ -216,11 +222,11 @@ void GMM::M(const std::vector< DynamicVector<Real> >& samples)
 
         cluster.mixingCoefficient = cluster.membershipProbabilitySum / static_cast<Real>(samples.size());
 
-        UpdateConstants(cluster);
+        UpdatePDF(cluster);
     }
 }
 
-Real GMM::LogClusterGaussianPdf(const DynamicVector<Real>& values, const Cluster& cluster)
+Real GMM::GetLogLikelihood(const DynamicVector<Real>& values, const Cluster& cluster)
 {
     Real v = 0.0f;
 
@@ -233,7 +239,7 @@ Real GMM::LogClusterGaussianPdf(const DynamicVector<Real>& values, const Cluster
     return (cluster.pdfConstant - 0.5f * v) + std::log(cluster.mixingCoefficient);
 }
 
-void GMM::UpdateConstants(Cluster& cluster)
+void GMM::UpdatePDF(Cluster& cluster)
 {
     for (unsigned int d = 0; d < mClusters[0].means.GetSize(); ++d)
     {

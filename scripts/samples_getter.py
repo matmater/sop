@@ -1,6 +1,7 @@
 import feature_extractor as fe
 from sys import argv
 import os
+import silence_remover as sr
 	
 if __name__ == '__main__':
     '''
@@ -8,11 +9,14 @@ if __name__ == '__main__':
     name of output file without .txt, test or train
     type (mfcc or lpcc)
     amount of deltas (0, 1 or 2)
+    remove silence (0 (no), 1 (yes))
     '''
     
     outfile = "train"
     type = "mfcc"
     delta_amount = 2
+    
+    remove_silence = 1
 
     if len(argv) > 1:
         outfile = argv[1]
@@ -20,6 +24,8 @@ if __name__ == '__main__':
         type = argv[2]
     if len(argv) > 3:
         delta_amount = int(argv[3])
+    if len(argv) > 4:
+        remove_silence = int(argv[4])
 	
     if outfile == "train":
         #which files are chosen in train set?
@@ -53,4 +59,12 @@ if __name__ == '__main__':
                 name = pathname + "_" + str(y)
             filename = "VCTK-Corpus\wav48\p"+pathname+"\p"+pathname+"_"+z+str(y)+".wav"
             if os.path.exists(filename):
-                fe.extract_and_save(filename, name, outfile, type, delta_amount)
+                if (remove_silence != 0):
+                    sr.remove_silence(filename)
+                    filename = filename + ".sr"
+                    
+                    fe.extract_and_save(filename, name, outfile, type, delta_amount)
+                    os.remove(filename)
+                    
+                else:
+                    fe.extract_and_save(filename, name, outfile, type, delta_amount)

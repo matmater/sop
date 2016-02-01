@@ -240,17 +240,6 @@ void VQRecognizer::Train(const SpeechData& data)
 
         ++progress;
     }
-}
-
-void VQRecognizer::Train(Codebook& codebook, const std::vector< DynamicVector<Real> >& samples)
-{
-    LBG lbg(mClusterCount);
-
-    codebook.clusterWeights.resize(mClusterCount);
-    
-    std::vector<unsigned int> indices;
-
-    lbg.Cluster(samples, indices, codebook.clusterCentroids, codebook.clusterSizes);
 
     for (auto& a : mCodebooks)
     {
@@ -293,6 +282,17 @@ void VQRecognizer::Train(Codebook& codebook, const std::vector< DynamicVector<Re
             a.second.clusterWeights[i] = 1.0f / sum;
         }
     }
+}
+
+void VQRecognizer::Train(Codebook& codebook, const std::vector< DynamicVector<Real> >& samples)
+{
+    LBG lbg(mClusterCount);
+
+    codebook.clusterWeights.resize(mClusterCount);
+    
+    std::vector<unsigned int> indices;
+
+    lbg.Cluster(samples, indices, codebook.clusterCentroids, codebook.clusterSizes);
 }
 
 void VQRecognizer::SaveTrainedData(const std::string& path)

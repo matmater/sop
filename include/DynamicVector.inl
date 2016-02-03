@@ -9,6 +9,14 @@ DynamicVector<T>::~DynamicVector()
 {
 
 }
+template<typename T>
+DynamicVector<T>& DynamicVector<T>::operator= (const DynamicVector& other) const
+{
+    mValues.resize();
+    Assign(other);
+
+    return *this;
+}
 
 template<typename T>
 void DynamicVector<T>::Resize(unsigned int size, T value)

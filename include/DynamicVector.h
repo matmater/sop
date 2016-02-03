@@ -19,6 +19,10 @@ public:
     /*! \brief Virtual destructor.
      */
     virtual ~DynamicVector();
+    
+    /*! \brief Copy assignment operator.
+     */
+    DynamicVector& operator= (const DynamicVector& other) const;
 
     /*! \brief Resizes the vector and initializes new values to
      *         a given default value.

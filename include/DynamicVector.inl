@@ -15,7 +15,7 @@ DynamicVector<T>& DynamicVector<T>::operator= (const DynamicVector& other) const
 {
     if (&other != this)
     {
-        mValues.resize();
+        mValues.resize(other.mValues.size());
         Assign(other);
     }
 

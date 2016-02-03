@@ -87,7 +87,7 @@ public:
 
     /*! \brief Vector subtraction.
      *
-     *  \param other The subtrahend.
+     *  \param other The subtrahend
      */
     void Subtract(const DynamicVector& other);
 

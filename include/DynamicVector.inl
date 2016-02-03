@@ -12,8 +12,11 @@ DynamicVector<T>::~DynamicVector()
 template<typename T>
 DynamicVector<T>& DynamicVector<T>::operator= (const DynamicVector& other) const
 {
-    mValues.resize();
-    Assign(other);
+    if (&other != this)
+    {
+        mValues.resize();
+        Assign(other);
+    }
 
     return *this;
 }

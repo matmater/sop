@@ -7,6 +7,7 @@
 
 #include "DynamicVector.h"
 #include "LBG.h"
+#include "MAP.h"
 #include "Recognizer.h"
 
 /*! \brief A speaker recognizer based on Vector Quantization.
@@ -79,6 +80,10 @@ private:
     /*! \brief Trains a codebook.
      */
     void Train(Codebook& codebook, const std::vector< DynamicVector<Real> >& samples);
+    
+    /*! \brief Trains a codebook with MAP.
+     */
+    void TrainMAP(Codebook& codebook, const std::vector< DynamicVector<Real> >& samples);
 
     /*! \brief Calcualtes the VQ distortion.
      *

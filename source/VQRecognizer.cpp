@@ -229,16 +229,61 @@ void VQRecognizer::Train(const SpeechData& data)
 
     unsigned int progress = 0;
 
-    for (const auto& sequence : data.GetSamples())
+    //Lets check at first if there's UBM data
+    std::vector<DynamicVector<Real> > ubm;
+    int ubmfound = 0;
+    //Try to find UBM from samples
+    auto it = data.GetSamples().find(".ubm");
+
+    //If UBM was not found, it will return map.end
+    if (mBackgroundModelEnabled && it != data.GetSamples().end())
     {
-        std::cout << "Training codebook: " << sequence.first
+        //Was found, give ubm a value (sample vector)
+        ubm = it->second;
+        ubmfound = 1;
+    }
+    
+    if (ubmfound != 0) {
+        //UBM was found, train it first using LBG
+        std::cout << "Training codebook: " << ".ubm"
             << " (" << 100 * progress / data.GetSamples().size() << "%)" << std::endl;
+        
+        Codebook& codebook = mCodebooks[".ubm"];
 
-        Codebook& codebook = mCodebooks[sequence.first];
-
-        Train(codebook, sequence.second);
+        Train(codebook, ubm);
 
         ++progress;
+        
+    }
+    
+    for (const auto& sequence : data.GetSamples())
+    {
+        //UBM exists, train everything else with MAP
+        if (ubmfound != 0) {
+            if (sequence.first != ".ubm") {
+                std::cout << "Training codebook: " << sequence.first
+                    << " (" << 100 * progress / data.GetSamples().size() << "%)" << std::endl;
+                
+                Codebook& codebook = mCodebooks[sequence.first];
+
+                TrainMAP(codebook, sequence.second);
+
+                ++progress;
+            }
+        }
+        
+        //No UBM, use LBG for every sample
+        else {
+            std::cout << "Training codebook: " << sequence.first
+                << " (" << 100 * progress / data.GetSamples().size() << "%)" << std::endl;
+            
+            Codebook& codebook = mCodebooks[sequence.first];
+
+            Train(codebook, sequence.second);
+
+            ++progress;
+            
+        }
     }
 
     for (auto& a : mCodebooks)
@@ -293,6 +338,22 @@ void VQRecognizer::Train(Codebook& codebook, const std::vector< DynamicVector<Re
     std::vector<unsigned int> indices;
 
     lbg.Cluster(samples, indices, codebook.clusterCentroids, codebook.clusterSizes);
+}
+
+
+void VQRecognizer::TrainMAP(Codebook& codebook, const std::vector< DynamicVector<Real> >& samples)
+{
+    //Used for training a codebook with MAP
+    //The algorithm is based on this: ftp://ftp.cs.joensuu.fi/franti/papers/VQMAP-SPL2008.pdf
+    Codebook& ubm = mCodebooks[".ubm"];
+    
+    MAP map(mClusterCount);
+
+    codebook.clusterWeights.resize(mClusterCount);
+    
+    std::vector<unsigned int> indices;
+
+    map.Enroll(samples, indices, codebook.clusterCentroids, codebook.clusterSizes, ubm.clusterCentroids, ubm.clusterSizes);
 }
 
 void VQRecognizer::SaveTrainedData(const std::string& path)

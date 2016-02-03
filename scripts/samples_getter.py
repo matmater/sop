@@ -29,24 +29,23 @@ if __name__ == '__main__':
 	
     if outfile == "train":
         #which files are chosen in train set?
-        ubm_x = 100
-        xstart = 50
-        xend = 55
+        ubm_x = 5
+        xstart = 0
+        xend = 10
         ystart = 1
-        yend = 11
+        yend = 5
     elif outfile == "test":
         #which files are chosen in test set?
-        xstart = 50
-        xend = 80
+        xstart = 0
+        xend = 2
         ystart = 50
-        yend = 54
+        yend = 52
     
     for x in range(xstart,xend):
+        pathname = str(x + 225)
         if (outfile == "train" and x > ubm_x):
             name = ".ubm"
-            pathname = str(x - xend + xstart + 225)
         else:
-            pathname = str(x + 225)
             name = pathname
         for y in range(ystart, yend):
             if y < 10:
@@ -64,7 +63,9 @@ if __name__ == '__main__':
                     filename = filename + ".sr"
                     
                     fe.extract_and_save(filename, name, outfile, type, delta_amount)
+                    print filename
                     os.remove(filename)
                     
                 else:
+                    print filename
                     fe.extract_and_save(filename, name, outfile, type, delta_amount)

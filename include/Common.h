@@ -16,6 +16,7 @@
 #include <thread>
 #include <chrono>
 #include <iomanip>
+#include <memory>
 
 #define DEBUG
 #define DEBUG_LEVEL 5

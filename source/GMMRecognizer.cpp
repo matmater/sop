@@ -2,9 +2,8 @@
 #include "Utilities.h"
 
 GMMRecognizer::GMMRecognizer()
-: mBackgroundModelEnabled(false), mClusterCount(128)
 {
-    mValid = false;
+
 }
 
 GMMRecognizer::~GMMRecognizer()
@@ -12,157 +11,14 @@ GMMRecognizer::~GMMRecognizer()
 
 }
 
-void GMMRecognizer::SetBackgroundModelEnabled(bool enabled)
+void GMMRecognizer::Train(const std::shared_ptr<SpeechData>& data)
 {
-    mBackgroundModelEnabled = enabled;
+    ModelRecognizer<GMModel>::Train(data);
 }
 
-bool GMMRecognizer::IsBackgroundModelEnabled() const
+void GMMRecognizer::Test(const std::shared_ptr<SpeechData>& data, std::map<std::string, RecognitionResult>& results)
 {
-    return mBackgroundModelEnabled;
-}
-
-void GMMRecognizer::SetClusterCount(unsigned int clusterCount)
-{
-    mClusterCount = clusterCount;
-}
-    
-unsigned int GMMRecognizer::GetClusterCount() const
-{
-    return mClusterCount;
-}
-
-void GMMRecognizer::Clear()
-{
-
-}
-
-void GMMRecognizer::Train(const SpeechData& data)
-{
-    if (!data.IsConsistent())
-    {
-        std::cout << "Inconsistent training data." << std::endl;
-
-        return;
-    }
-
-    unsigned int progress = 0;
-
-    for (auto& sequence : data.GetSamples())
-    {
-        std::cout << "Training model: " << sequence.first
-            << " (" << 100 * progress / data.GetSamples().size() << "%)" << std::endl;
-
-        GMM& model = mModels[sequence.first];
-        model.SetClusterCount(mClusterCount);
-
-        model.Train(sequence.second);
-
-        ++progress;
-    }
-}
-
-void GMMRecognizer::Test(const SpeechData& data, std::map<std::string, RecognitionResult>& results)
-{
-    if (!data.IsConsistent())
-    {
-        std::cout << "Inconsistent testing data." << std::endl;
-
-        return;
-    }
-
-    results.clear();
-
-    GMM* ubm = nullptr;
-
-    auto it = mModels.find(".ubm");
-
-    if (mBackgroundModelEnabled && it != mModels.end())
-    {
-        ubm = &it->second;
-    }
-
-    for (auto& entry : data.GetSamples())
-    {
-        GMM* bestModel = nullptr;
-
-        Real maxValue = std::numeric_limits<Real>::min();
-
-        std::string bestModelName = "";
-        bool knownSpeaker = false;
-
-        for (auto& model : mModels)
-        {
-            if (model.first == ".ubm") continue;
-            if (Utilities::IsSameSpeaker(entry.first, model.first))
-            {
-                knownSpeaker = true;
-                std::cout << "THIS IS A KNOWN SPEAKER" << std::endl;
-            }
-            if (ubm != nullptr)
-            {
-                DEBUG_TRACE(entry.first << "-" << model.first << ":" << model.second.GetLogLikelihood(entry.second)
-                    << " ubm:"
-                    << model.second.GetLogLikelihood(entry.second) - ubm->GetLogLikelihood(entry.second));
-            }
-
-            else
-            {
-                DEBUG_TRACE(entry.first << "-" << model.first << ":" << model.second.GetLogLikelihood(entry.second));
-            }
-
-            Real value = model.second.GetLogLikelihood(entry.second);
-
-            if (value > maxValue)
-            {
-                bestModel = &model.second;
-                bestModelName = model.first;
-                maxValue = value;
-            }
-        }
-
-        if (bestModel != nullptr)
-        {
-            // Checking for nullptr ensures that UBM is enabled
-            // and the model actually exists.
-            if (ubm != nullptr)
-            {
-                // Divide minMatchDist by UBM distortion.
-                Real ratio = bestModel->GetLogLikelihood(entry.second) - ubm->GetLogLikelihood(entry.second);
-
-                // UBM is not too close to bestMatch.
-                if (ratio > 0.3f && maxValue >= 10e10f) // UBM Threshold
-                {
-                    results[entry.first] = RecognitionResult(knownSpeaker, bestModelName);
-                }
-
-                // Too close to UBM.
-                else
-                {
-                    results[entry.first] = RecognitionResult(knownSpeaker);
-                }
-            }
-
-            // UBM is not enabled. Select using threshold.
-            else
-            {
-                if (maxValue >= 10e10f)
-                {
-                    results[entry.first] = RecognitionResult(knownSpeaker, bestModelName);
-                }
-
-                else
-                {
-                    results[entry.first] = RecognitionResult(knownSpeaker);
-                }
-            }
-        }
-
-        else
-        {
-            results[entry.first] = RecognitionResult(knownSpeaker);
-        }
-    }
+    ModelRecognizer<GMModel>::Test(data, results);
 }
 
 void GMMRecognizer::SaveTrainedData(const std::string& path)

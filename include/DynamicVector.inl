@@ -11,7 +11,7 @@ DynamicVector<T>::~DynamicVector()
 }
 
 template<typename T>
-DynamicVector<T>& DynamicVector<T>::operator= (const DynamicVector& other) const
+DynamicVector<T>& DynamicVector<T>::operator= (const DynamicVector& other)
 {
     if (&other != this)
     {

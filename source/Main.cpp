@@ -84,20 +84,20 @@ int main(int argc, char** argv)
         //GMMRecognizer recognizer;
         //ANNRecognizer recognizer;
 
-        recognizer.SetBackgroundModelEnabled(false);
-        recognizer.SetClusterCount(128);
+        recognizer.SetBackgroundModelEnabled(true);
+        recognizer.SetOrder(128);
 
         std::map<std::string, RecognitionResult> result;
 
-        SpeechData trainData;
-        trainData.Load("train.txt");
-        //trainData.Normalize();
+        auto trainData = std::make_shared<SpeechData>();
+        trainData->Load("train.txt");
+        trainData->Normalize();
 
-        SpeechData testData;
+        auto testData = std::make_shared<SpeechData>();
 
         auto start = std::chrono::system_clock::now();
-        testData.Load("test.txt");
-        //testData.Normalize();
+        testData->Load("test.txt");
+        testData->Normalize();
         auto end = std::chrono::system_clock::now();
         std::chrono::duration<double> loadDuration = end - start;
 

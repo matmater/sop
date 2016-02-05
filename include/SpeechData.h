@@ -6,6 +6,8 @@
 #include "DynamicVector.h"
 
 /*! \brief A container for speech data of multiple speakers.
+ *
+ *  \todo Add/fix comments.
  */
 class SpeechData
 {

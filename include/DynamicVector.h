@@ -5,6 +5,8 @@
 
 /*! \brief A variable-size vector for aritmetic operations.
  *  \tparam T Main data type of the values.
+ *
+ *  \todo Add/fix comments.
  */
 template<typename T>
 class DynamicVector
@@ -21,8 +23,10 @@ public:
     virtual ~DynamicVector();
     
     /*! \brief Copy assignment operator.
+     *
+     *  Copies all elements.
      */
-    DynamicVector& operator= (const DynamicVector& other) const;
+    DynamicVector& operator= (const DynamicVector& other);
 
     /*! \brief Resizes the vector and initializes new values to
      *         a given default value.
@@ -32,9 +36,9 @@ public:
      */
     void Resize(unsigned int size, T value = T());
 
-    /*! \brief Returns the size of the vector (dimensions).
+    /*! \brief Returns the size of the vector (dimension count).
      *
-     *  \return The size of the vector (dimensions).
+     *  \return The size of the vector (dimension count).
      */
     unsigned int GetSize() const;
 
@@ -74,6 +78,8 @@ public:
     /*! \brief Vector copying.
      *
      *  Copies and assigns values from another vector.
+     *  
+     *  \note Vector sizes must match.
      *
      *  \param other The other vector.
      */

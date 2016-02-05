@@ -4,6 +4,8 @@
 #include "Common.h"
 
 /*! \brief The result of a speaker recognition task.
+ *
+ *  \todo Add/fix comments.
  */
 class RecognitionResult
 {

@@ -161,8 +161,7 @@ void SpeechData::Normalize()
     {
         for (auto& s : seq.second)
         {
-            s.Multiply(1.0f / 26.0f);
-            s.Add(1.0f);
+            s.Multiply(1.0f / 39.0f);
         }
     }
 }

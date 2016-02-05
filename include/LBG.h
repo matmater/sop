@@ -6,6 +6,8 @@
 #include "DynamicVector.h"
 
 /*! \brief Linde-Buzo-Gray algorithm for clustering.
+ *
+ *  \todo Add/fix comments.
  */
 class LBG
 {

@@ -214,8 +214,7 @@ Real VQModel::GetDistortion(const std::vector< DynamicVector<Real> >& samples) c
         distortion += samples[s].Distance(centroids[mClusterSamples[s]]);
     }
     
-    return 1.0f / (distortion * static_cast<Real>(samples.size()));
-    return 1.0f / (distortion / static_cast<Real>(samples.size()));
+    return distortion;
 }
 
 Real VQModel::GetWeightedSimilarity(const std::vector< DynamicVector<Real> >& samples) const

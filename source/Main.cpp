@@ -76,6 +76,7 @@ void Evaluate(std::map<std::string, RecognitionResult>& results, std::chrono::du
 
 int main(int argc, char** argv)
 {
+    /*
     {
         std::cout << "VQ Test" << std::endl;
 
@@ -84,7 +85,7 @@ int main(int argc, char** argv)
         //GMMRecognizer recognizer;
         //ANNRecognizer recognizer;
 
-        recognizer.SetBackgroundModelEnabled(true);
+        recognizer.SetBackgroundModelEnabled(false);
         recognizer.SetOrder(128);
 
         std::map<std::string, RecognitionResult> result;
@@ -110,9 +111,43 @@ int main(int argc, char** argv)
 
         // Result will be analyzed here.
         Evaluate(result, loadDuration, testDuration);
+    }
+    */
+    VQRecognizer recognizer;
+    recognizer.SetBackgroundModelEnabled(true);
+    recognizer.SetOrder(128);
+    auto trainData = std::make_shared<SpeechData>();
+    trainData->Load("trainubm.txt");
+    trainData->Normalize();
+    auto testData = std::make_shared<SpeechData>();
+    std::string claimedSpeaker = "225";
+    recognizer.Train(trainData);   
+    std::ofstream recresults;
+    recresults.open("recresults.txt", std::ios::app);  
+    std::vector<Real> verification_results;
+    std::string testFile;
+    
 
-        std::cout << "done" << std::endl;
+    testFile = "test.txt";
+    claimedSpeaker = "225";
+    testData->Load(testFile);
+    testData->Normalize();
+    verification_results = recognizer.Verify(claimedSpeaker, testData);
+    for (auto& entry : verification_results)
+    {
+        recresults << entry << " ";
     }
 
-    //system("pause");
+    recresults << std::endl;
+
+    testFile = "test2.txt";
+    testData->Load(testFile);
+    testData->Normalize();
+    verification_results = recognizer.Verify(claimedSpeaker, testData);
+    for (auto& entry : verification_results)
+    {
+        recresults << entry << " ";
+    } 
+
+    recresults.close();
 }

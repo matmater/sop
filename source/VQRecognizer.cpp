@@ -33,6 +33,11 @@ void VQRecognizer::Test(const std::shared_ptr<SpeechData>& data, std::map<std::s
     ModelRecognizer<VQModel>::Test(data, results);
 }
 
+std::vector<Real> VQRecognizer::Verify(const std::string& speaker, const std::shared_ptr<SpeechData>& data)
+{
+    return ModelRecognizer<VQModel>::GetMultipleVerificationScore(speaker, data);
+}
+
 void VQRecognizer::SaveTrainedData(const std::string& path)
 {
     //std::ofstream outFile;

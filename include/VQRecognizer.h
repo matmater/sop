@@ -40,6 +40,10 @@ public:
     /*! \copydoc Recognizer::Test()
      */
     virtual void Test(const std::shared_ptr<SpeechData>& data, std::map<std::string, RecognitionResult>& results) override;
-};
+
+    /*! \copydoc Recognizer::Verify()
+     */
+    virtual std::vector<Real> Verify(const std::string& speaker, const std::shared_ptr<SpeechData>& data) override;
+    };
 
 #endif

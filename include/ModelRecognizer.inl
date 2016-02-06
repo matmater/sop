@@ -97,7 +97,7 @@ void ModelRecognizer<T>::Train(const std::shared_ptr<SpeechData>& data)
             return;
         }
     }
-    
+
     if (IsBackgroundModelEnabled())
     {
         // UBM was found, train it first using normal training.
@@ -109,7 +109,7 @@ void ModelRecognizer<T>::Train(const std::shared_ptr<SpeechData>& data)
 
         ++progress;
     }
-    
+
     for (const auto& sequence : data->GetSamples())
     {
         // UBM exists, train everything else with adaptation.
@@ -119,7 +119,7 @@ void ModelRecognizer<T>::Train(const std::shared_ptr<SpeechData>& data)
             {
                 std::cout << "Training codebook: " << sequence.first
                           << " (" << 100 * progress / data->GetSamples().size() << "%)" << std::endl;
-                
+
                 auto model = std::make_shared<T>();
                 mSpeakerModels[sequence.first] = model;
 
@@ -128,16 +128,16 @@ void ModelRecognizer<T>::Train(const std::shared_ptr<SpeechData>& data)
                 ++progress;
             }
         }
-        
+
         // No UBM, train normally.
         else
         {
             std::cout << "Training codebook: " << sequence.first
                       << " (" << 100 * progress / data->GetSamples().size() << "%)" << std::endl;
-            
+
             auto model = std::make_shared<T>();
             mSpeakerModels[sequence.first] = model;
-            
+
             model->SetOrder(GetOrder());
             model->Train(sequence.second);
 
@@ -177,7 +177,7 @@ void ModelRecognizer<T>::Test(const std::shared_ptr<SpeechData>& data, std::map<
     {
         std::string bestModelName = "";
         std::shared_ptr<T> bestModel = nullptr;
-        
+
         bool knownSpeaker = false;
         Real bestModelScore = std::numeric_limits<Real>::min();
 
@@ -187,11 +187,11 @@ void ModelRecognizer<T>::Test(const std::shared_ptr<SpeechData>& data, std::map<
             {
                 knownSpeaker = true;
             }
-            
+
             // Do not confuse these!
             Real modelScore = model.second->GetScore(entry.second);
             Real modelLogScore = model.second->GetLogScore(entry.second);
-            
+
             // Notice logarithmic domain.
             Real ubmLogScore = std::numeric_limits<Real>::max();
 
@@ -224,7 +224,7 @@ void ModelRecognizer<T>::Test(const std::shared_ptr<SpeechData>& data, std::map<
                 Real logRatio = bestModel->GetLogScore(entry.second) - mBackgroundModel->GetLogScore(entry.second);
 
                 // UBM is not too close to bestMatch.
-                if (logRatio > 0.3f && bestModelScore >= 0.135f) // UBM Threshold
+                if (logRatio > 0.3f && bestModelScore >= 0.08f) // UBM Threshold
                 {
                     results[entry.first] = RecognitionResult(knownSpeaker, bestModelName);
                 }
@@ -269,7 +269,7 @@ Real ModelRecognizer<T>::GetVerificationScore(const std::string& speaker, const 
         std::cout << "Speaker model '" << speaker << "' not found." << std::endl;
         return 0.0f;
     }
-    
+
     if (IsBackgroundModelEnabled() && (mBackgroundModel != nullptr))
     {
         return it->second->GetLogScore(samples) - mBackgroundModel->GetLogScore(samples);
@@ -277,6 +277,53 @@ Real ModelRecognizer<T>::GetVerificationScore(const std::string& speaker, const 
 
     return it->second->GetScore(samples);
 }
+
+template<typename T>
+std::vector<Real> ModelRecognizer<T>::GetMultipleVerificationScore(const std::string& speaker, const std::shared_ptr<SpeechData>& data)
+{
+    std::vector<Real> results;
+    if (!data->IsConsistent())
+    {
+        std::cout << "Inconsistent testing data." << std::endl;
+
+        return results;
+    }
+
+    if (GetDimensionCount() != data->GetDimensionCount())
+    {
+        std::cout << "Incompatible testing data dimensions." << std::endl;
+
+        return results;
+    }
+
+    if (IsBackgroundModelEnabled() && mBackgroundModel == nullptr)
+    {
+        std::cout << "Background model not created." << std::endl;
+
+        return results;
+    }
+
+    auto it = mSpeakerModels.find(speaker);
+
+    if (it == mSpeakerModels.end())
+    {
+        std::cout << "Speaker model '" << speaker << "' not found." << std::endl;
+        return results;
+    }
+
+    for (auto& entry : data->GetSamples())
+    {
+        if (IsBackgroundModelEnabled() && (mBackgroundModel != nullptr))
+        {
+            results.push_back(it->second->GetLogScore(entry.second) - mBackgroundModel->GetLogScore(entry.second));
+        }
+
+        results.push_back(it->second->GetScore(entry.second));
+    }
+    return results;
+}
+
+
 
 template<typename T>
 unsigned int ModelRecognizer<T>::GetDimensionCount() const

@@ -33,6 +33,10 @@ public:
     /*! \brief Tests samples on the trained recognizer.
      */
     virtual void Test(const std::shared_ptr<SpeechData>& data, std::map<std::string, RecognitionResult>& results) = 0;
+
+    /*! \brief Verifies samples on the trained recognizer.
+     */
+    virtual std::vector<Real> Verify(const std::string& speaker, const std::shared_ptr<SpeechData>& data) = 0;
 };
 
 #endif

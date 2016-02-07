@@ -55,7 +55,7 @@ public:
      */
     virtual void Train(const std::vector< DynamicVector<Real> >& samples) override;
     
-    /*! \brief Maximum A Priori adaptation.
+    /*! \brief Maximum a Posteriori adaptation.
      */
     virtual void Adapt(const std::shared_ptr<Model>& other, const std::vector< DynamicVector<Real> >& samples,
                unsigned int iterations = 2, Real relevanceFactor = 16.0f) override;
@@ -80,11 +80,11 @@ public:
      */
     virtual Real GetScore(const std::vector< DynamicVector<Real> >& samples) const override;
     
-    /*! \copydoc Model::GetScore()
+    /*! \copydoc Model::GetLogScore()
      */
     virtual Real GetLogScore(const std::vector< DynamicVector<Real> >& samples) const override;
     
-    /*! \copydoc Model::GetScore()
+    /*! \copydoc Model::GetDimensionCount()
      */
     virtual unsigned int GetDimensionCount() const override;
 

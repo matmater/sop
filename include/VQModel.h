@@ -57,11 +57,11 @@ public:
      */
     virtual Real GetScore(const std::vector< DynamicVector<Real> >& samples) const override;
     
-    /*! \copydoc Model::GetScore()
+    /*! \copydoc Model::GetLogScore()
      */
     virtual Real GetLogScore(const std::vector< DynamicVector<Real> >& samples) const override;
     
-    /*! \copydoc Model::GetScore()
+    /*! \copydoc Model::GetDimensionCount()
      */
     virtual unsigned int GetDimensionCount() const override;
 

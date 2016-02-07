@@ -163,4 +163,48 @@ inline Real RandomGaussian()
     return (u * std::sqrt((-2.0f * std::log(s)) / s));
 }
 
+inline Real Mean(const std::vector<Real>& values)
+{
+    if (values.size() == 0)
+    {
+        DEBUG_ERROR("Mean could not be calculated: no values.");
+
+        return 0.0f;
+    }
+
+    Real sum = 0.0f;
+
+    for (Real value : values)
+    {
+        sum += value;
+    }
+
+    return sum / static_cast<float>(values.size());
+}
+
+inline Real Variance(const std::vector<Real>& values, Real mean)
+{
+    if (values.size() < 2)
+    {
+        DEBUG_ERROR("Variance could not be calculated: not enough values.");
+
+        return 0.0f;
+    }
+
+    Real sum = 0.0f;
+
+    for (Real value : values)
+    {
+        Real tmp = value - mean;
+        sum += tmp * tmp;
+    }
+
+    return sum / static_cast<float>(values.size() - 1);
+}
+
+inline Real Deviation(const std::vector<Real>& values, Real mean)
+{
+    return std::sqrt(Variance(values, mean));
+}
+
 #endif

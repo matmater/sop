@@ -78,21 +78,24 @@ int main(int argc, char** argv)
 {
     /*
     {
-        std::cout << "VQ Test" << std::endl;
+        std::cout << "Test" << std::endl;
 
-        VQRecognizer recognizer;
+        GMMRecognizer recognizer;
 
         //GMMRecognizer recognizer;
         //ANNRecognizer recognizer;
-
-        recognizer.SetBackgroundModelEnabled(false);
-        recognizer.SetOrder(128);
-
-        std::map<std::string, RecognitionResult> result;
-
+        
         auto trainData = std::make_shared<SpeechData>();
         trainData->Load("train.txt");
         trainData->Normalize();
+
+        recognizer.SetBackgroundModelEnabled(true);
+        recognizer.SetOrder(128);
+        //recognizer.SetWeightingEnabled(true);
+        recognizer.SetScoreNormalizationType(NormalizationType::ZERO_TEST);
+        recognizer.SetImpostorSpeakerData(trainData);
+
+        std::map<std::string, RecognitionResult> result;
 
         auto testData = std::make_shared<SpeechData>();
 
@@ -113,6 +116,7 @@ int main(int argc, char** argv)
         Evaluate(result, loadDuration, testDuration);
     }
     */
+
     VQRecognizer recognizer;
     recognizer.SetBackgroundModelEnabled(true);
     recognizer.SetOrder(128);

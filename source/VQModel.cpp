@@ -35,6 +35,11 @@ void VQModel::Train(const std::vector< DynamicVector<Real> >& samples)
 
     mClusterWeights.resize(GetOrder());
     
+    for (Real& weight : mClusterWeights)
+    {
+        weight = 1.0f;
+    }
+
     std::vector<unsigned int> indices;
 
     lbg.Cluster(samples, indices, mClusterCentroids, mClusterSizes);
@@ -63,7 +68,7 @@ void VQModel::Adapt(const std::shared_ptr<Model>& other, const std::vector< Dyna
         mClusterCentroids[c] = model->mClusterCentroids[c];
     }
 
-    //Run the algorithm mI times
+    // Do the iterations.
     for (unsigned int i = 0; i < iterations; i++)
     {
         //Find the closest centroid to each sample

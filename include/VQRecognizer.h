@@ -1,5 +1,5 @@
-#ifndef _VQ_H_
-#define _VQ_H_
+#ifndef _VQRECOGNIZER_H_
+#define _VQRECOGNIZER_H_
 
 #include "SpeechData.h"
 
@@ -25,9 +25,15 @@ public:
      */
     virtual ~VQRecognizer();
 
+    void SetWeightingEnabled(bool enabled);
+
+    bool IsWeightingEnabled() const;
+
     /*! \copydoc Recognizer::Train()
      */
     virtual void Train(const std::shared_ptr<SpeechData>& data) override;
+
+    virtual void PostProcessModels();
 
     /*! \copydoc Recognizer::SaveTrainedData()
      */
@@ -41,9 +47,8 @@ public:
      */
     virtual void Test(const std::shared_ptr<SpeechData>& data, std::map<std::string, RecognitionResult>& results) override;
 
-    /*! \copydoc Recognizer::Verify()
-     */
-    virtual std::vector<Real> Verify(const std::string& speaker, const std::shared_ptr<SpeechData>& data) override;
-    };
+private:
+    bool mWeightingEnabled;
+};
 
 #endif

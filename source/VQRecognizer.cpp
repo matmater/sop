@@ -3,6 +3,7 @@
 #include "VQModel.h"
 
 VQRecognizer::VQRecognizer()
+ : mWeightingEnabled(true)
 {
 
 }
@@ -12,30 +13,47 @@ VQRecognizer::~VQRecognizer()
 
 }
 
+void VQRecognizer::SetWeightingEnabled(bool enabled)
+{
+    mWeightingEnabled = enabled;
+}
+
+bool VQRecognizer::IsWeightingEnabled() const
+{
+    return mWeightingEnabled;
+}
+
 void VQRecognizer::Train(const std::shared_ptr<SpeechData>& data)
 {
     ModelRecognizer<VQModel>::Train(data);
+}
 
-    // Is this necessary?
-    if (IsBackgroundModelEnabled() && GetBackgroundModel() != nullptr)
-    {
-        GetBackgroundModel()->Weight(GetSpeakerModels());
-    }
+void VQRecognizer::PostProcessModels()
+{
+    ModelRecognizer<VQModel>::PostProcessModels();
 
-    for (auto& model : GetSpeakerModels())
+    if (mWeightingEnabled)
     {
-        model.second->Weight(GetSpeakerModels());
+        std::map< std::string, std::shared_ptr<VQModel> > weightModels;
+        
+        weightModels.emplace(".ubm", GetBackgroundModel());
+
+        // Include speaker models.
+        weightModels.insert(GetSpeakerModels().begin(), GetSpeakerModels().end());
+
+        // Include impostor models for now.
+        weightModels.insert(GetImpostorModels().begin(), GetImpostorModels().end());
+
+        for (auto& model : weightModels)
+        {
+            model.second->Weight(weightModels);
+        }
     }
 }
 
 void VQRecognizer::Test(const std::shared_ptr<SpeechData>& data, std::map<std::string, RecognitionResult>& results)
 {
     ModelRecognizer<VQModel>::Test(data, results);
-}
-
-std::vector<Real> VQRecognizer::Verify(const std::string& speaker, const std::shared_ptr<SpeechData>& data)
-{
-    return ModelRecognizer<VQModel>::GetMultipleVerificationScore(speaker, data);
 }
 
 void VQRecognizer::SaveTrainedData(const std::string& path)

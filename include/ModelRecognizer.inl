@@ -39,7 +39,7 @@ void ModelRecognizer<T>::SetScoreNormalizationType(NormalizationType type)
 }
 
 template<typename T>
-typename NormalizationType ModelRecognizer<T>::GetScoreNormalizationType() const
+NormalizationType ModelRecognizer<T>::GetScoreNormalizationType() const
 {
     return mScoreNormalizationType;
 }
@@ -128,7 +128,7 @@ void ModelRecognizer<T>::Train(const std::shared_ptr<SpeechData>& data)
     }
 
     progress = 0;
-    
+
     std::cout << "Training speaker models." << std::endl;
     for (const auto& sequence : data->GetSamples())
     {
@@ -136,10 +136,10 @@ void ModelRecognizer<T>::Train(const std::shared_ptr<SpeechData>& data)
         {
             continue;
         }
-        
+
         auto model = std::make_shared<T>();
         mSpeakerModels[sequence.first] = model;
-        
+
         std::cout << "Training model: " << sequence.first
                     << " (" << 100 * progress / data->GetSamples().size() << "%)" << std::endl;
 
@@ -156,10 +156,10 @@ void ModelRecognizer<T>::Train(const std::shared_ptr<SpeechData>& data)
 
             model->Train(sequence.second);
         }
-        
+
         ++progress;
     }
-    
+
     PostProcessModels();
 
     progress = 0;
@@ -241,7 +241,7 @@ void ModelRecognizer<T>::Train(const std::shared_ptr<SpeechData>& data)
                 }
 
                 auto& zd = mImpostorDistributions[model.first];
-            
+
                 zd.mean = Mean(scores);
                 zd.deviation = Deviation(scores, zd.mean);
             }
@@ -392,10 +392,10 @@ Real ModelRecognizer<T>::GetVerificationScore(const std::string& speaker, const 
     {
         return score;
     }
-    
+
     Distribution zd;
     Distribution td;
-    
+
     if (   mScoreNormalizationType == NormalizationType::ZERO
         || mScoreNormalizationType == NormalizationType::ZERO_TEST
         || mScoreNormalizationType == NormalizationType::TEST_ZERO)
@@ -427,10 +427,10 @@ Real ModelRecognizer<T>::GetVerificationScore(const std::string& speaker, const 
     {
     case NormalizationType::ZERO:
         return (score - zd.mean) / zd.deviation;
-        
+
     case NormalizationType::TEST:
         return (score - td.mean) / td.deviation;
-        
+
     case NormalizationType::ZERO_TEST:
         return (((score - zd.mean) / zd.deviation) - td.mean) / td.deviation;
 
@@ -456,7 +456,7 @@ std::vector<Real> ModelRecognizer<T>::GetMultipleVerificationScore(const std::st
 
     if (GetDimensionCount() != data->GetDimensionCount())
     {
-        std::cout << "Incompatible testing data dimensions." << std::endl;
+        std::cout << "Incompatible testing data dimensions: " << GetDimensionCount() << " " << data->GetDimensionCount() << std::endl;
 
         return results;
     }
@@ -530,7 +530,7 @@ std::map< std::string, std::shared_ptr<T> >& ModelRecognizer<T>::GetImpostorMode
 {
     return mImpostorModels;
 }
-    
+
 template<typename T>
 const std::map< std::string, std::shared_ptr<T> >& ModelRecognizer<T>::GetImpostorModels() const
 {

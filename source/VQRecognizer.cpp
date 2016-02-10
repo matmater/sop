@@ -35,9 +35,10 @@ void VQRecognizer::PostProcessModels()
     if (mWeightingEnabled)
     {
         std::map< std::string, std::shared_ptr<VQModel> > weightModels;
-        
-        weightModels.emplace(".ubm", GetBackgroundModel());
-
+        if (GetBackgroundModel() != nullptr)
+        {    
+            weightModels.emplace(".ubm", GetBackgroundModel());
+        }
         // Include speaker models.
         weightModels.insert(GetSpeakerModels().begin(), GetSpeakerModels().end());
 

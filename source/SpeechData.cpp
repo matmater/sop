@@ -12,74 +12,89 @@ SpeechData::~SpeechData()
 
 }
 
-void SpeechData::Load(const std::string& path)
+void SpeechData::Load(const std::string& path, unsigned int sl, unsigned int gl, bool train)
 {
-    Clear();
+    //Clear();
 
     std::ifstream file(path);
 
     std::string line;
 
-    unsigned int totalLines = 0;
-
+    unsigned int totalLines = sl+gl-1;
+    /*
     while (std::getline(file, line))
     {
         ++totalLines;
     }
+    
+    totalLines = std::min(totalLines, sl+gl-1);
+    std::cout << "Lines: " << totalLines << std::endl;
+
 
     file.clear();
     file.seekg(0);
+    */
 
-    unsigned int lineCounter = 0;
+    unsigned int lineCounter = 1;
 
     while(std::getline(file, line))
     {
-        std::stringstream ssFeatures(line);
-
-        std::string label;
-
-        if (ssFeatures >> label)
+        if (lineCounter >= sl)
         {
-            std::cout << "Loading samples: " << label
-                << " (" << 100 * lineCounter / totalLines << "%)" << std::endl;
+            std::stringstream ssFeatures(line);
 
-            std::string features;
-
-            auto& userSamples = mSamples[label];
-
-            while (std::getline(ssFeatures, features, ','))
-            {
-                userSamples.emplace_back();
-
-                std::stringstream ssFeature(features);
-                std::string feature;
-
-                while (std::getline(ssFeature, feature, ' '))
+            std::string label;
+            if (ssFeatures >> label)
+            {         
+                if (train)
                 {
-                    if (feature.size() > 0 && feature[0] != ' ')
+                    label.erase(3);
+                }        
+                std::cout << "Loading samples: " << label
+                    << " (" << 100 * (lineCounter-sl) / (totalLines-sl) << "%)" << std::endl;
+
+                std::string features;
+
+                auto& userSamples = mSamples[label];
+
+                while (std::getline(ssFeatures, features, ','))
+                {
+                    userSamples.emplace_back();
+
+                    std::stringstream ssFeature(features);
+                    std::string feature;
+
+                    while (std::getline(ssFeature, feature, ' '))
                     {
-                        userSamples.back().Push(ConvertString<Real>(feature));
+                        if (feature.size() > 0 && feature[0] != ' ')
+                        {
+                            userSamples.back().Push(ConvertString<Real>(feature));
+                        }
+                    }
+
+                    if (userSamples.back().GetSize() == 0)
+                    {
+                        userSamples.pop_back();
                     }
                 }
 
-                if (userSamples.back().GetSize() == 0)
+                if (userSamples.size() == 0)
                 {
-                    userSamples.pop_back();
+                    mSamples.erase(label);
+
+                    std::cout << "Error: missing sample data." << std::endl;
                 }
             }
-
-            if (userSamples.size() == 0)
-            {
-                mSamples.erase(label);
-
-                std::cout << "Error: missing sample data." << std::endl;
-            }
+        }
+        if (lineCounter == totalLines)
+        {
+            break;
         }
 
         ++lineCounter;
     }
 
-    Validate();
+    //Validate();
 }
 
 void SpeechData::Validate()

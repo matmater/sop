@@ -20,9 +20,9 @@ public:
      */
     virtual ~SpeechData();
 
-    /*! \brief Clears old data and loads new data.
+    /*! \brief Loads data from text file(s)
      */
-    void Load(const std::string& path);
+    void Load(const std::string& path, unsigned int sl, unsigned int gl, bool train);
 
     /*! \brief Validates loaded data.
      *

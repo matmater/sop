@@ -15,13 +15,22 @@
 if __name__ == '__main__':
     import plotly.plotly as py
     from plotly.graph_objs import *
-    py.sign_in('', '')      #need sign-in info
+    py.sign_in('santerim', '471tt4gor6')      #need sign-in info
 
+    resultsCor = []
+    resultsInc = []
+    
     # recresults.txt has values for correct speakers on the first line and incorrect speakers on the second line
-    file = open('recresults.txt', 'r')
-    content = file.readlines()
-    resultsCor = content[0].split()
-    resultsInc = content[1].split()
+    with open('verificationResults.txt', 'r') as file:
+        i = 0
+        for line in file:
+            if i = 0:
+                resultsCor += line.split()
+            else:
+                resultsInc += line.split()
+            i += 1
+            i %= 2
+
     resultsCor = [float(i) for i in resultsCor]
     resultsInc = [float(i) for i in resultsInc]
     cor = float(len(resultsCor))

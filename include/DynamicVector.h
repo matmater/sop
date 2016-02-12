@@ -62,12 +62,24 @@ public:
      *  \param value The value to be assigned.
      */
     void Assign(T value);
-
+    
     /*! \brief Multiplies every dimension value by a given multiplier.
      *
      *  \param value The multiplier.
      */
     void Multiply(T value);
+    
+    /*! \brief Multiplies by another vector dimension by dimension.
+     *
+     *  \param other The other vector.
+     */
+    void Multiply(const DynamicVector& other);
+
+    /*! \brief Divides by another vector dimension by dimension.
+     *
+     *  \param other The other vector.
+     */
+    void Divide(const DynamicVector& other);
 
     /*! \brief Adds a given value to each dimension.
      *

@@ -1,7 +1,8 @@
 #include "SpeechData.h"
 
 SpeechData::SpeechData()
-    : mConsistent(true),
+    : mNormalizationType(FeatureNormalizationType::CEPSTRAL_MEAN),
+    mConsistent(true),
     mDimensionCount(0)
 {
 
@@ -12,7 +13,77 @@ SpeechData::~SpeechData()
 
 }
 
-void SpeechData::Load(const std::string& path, unsigned int sl, unsigned int gl, bool train)
+void SpeechData::Load(const std::string& path)
+{
+    Clear();
+
+    std::ifstream file(path);
+
+    std::string line;
+
+    unsigned int totalLines = 0;
+
+    while (std::getline(file, line))
+    {
+        ++totalLines;
+    }
+
+    file.clear();
+    file.seekg(0);
+
+    unsigned int lineCounter = 0;
+
+    while(std::getline(file, line))
+    {
+        std::stringstream ssFeatures(line);
+
+        std::string label;
+
+        if (ssFeatures >> label)
+        {
+            std::cout << "Loading samples: " << label
+                << " (" << 100 * lineCounter / totalLines << "%)" << std::endl;
+
+            std::string features;
+
+            auto& userSamples = mSamples[label];
+
+            while (std::getline(ssFeatures, features, ','))
+            {
+                userSamples.emplace_back();
+
+                std::stringstream ssFeature(features);
+                std::string feature;
+
+                while (std::getline(ssFeature, feature, ' '))
+                {
+                    if (feature.size() > 0 && feature[0] != ' ')
+                    {
+                        userSamples.back().Push(ConvertString<Real>(feature));
+                    }
+                }
+
+                if (userSamples.back().GetSize() == 0)
+                {
+                    userSamples.pop_back();
+                }
+            }
+
+            if (userSamples.size() == 0)
+            {
+                mSamples.erase(label);
+
+                std::cout << "Error: missing sample data." << std::endl;
+            }
+        }
+
+        ++lineCounter;
+    }
+
+    Validate();
+}
+
+void SpeechData::Load(const std::string& path, unsigned int sl, unsigned int gl, bool train, const std::string& alias)
 {
     //Clear();
 
@@ -44,8 +115,16 @@ void SpeechData::Load(const std::string& path, unsigned int sl, unsigned int gl,
             std::stringstream ssFeatures(line);
 
             std::string label;
+
             if (ssFeatures >> label)
-            {         
+            {
+                if (alias.size() >= 3)
+                {
+                    label[0] = alias[0];
+                    label[1] = alias[1];
+                    label[2] = alias[2];
+                }
+
                 if (train)
                 {
                     label.erase(3);
@@ -102,9 +181,7 @@ void SpeechData::Validate()
     mTotalSampleCount = 0;
     mConsistent = false;
 
-    std::cout << "Validating..." << std::endl;
-
-    std::cout << "Calculating inputs..." << std::endl;
+    std::cout << "Validating speech data..." << std::endl;
 
     unsigned int featureCount = 0;
 
@@ -115,19 +192,15 @@ void SpeechData::Validate()
         featureCount = (*mSamples.begin()).second.front().GetSize();
     }
 
-    std::cout << "Checking training sample data dimensions and calculating sample training count..." << std::endl;
-
     for (const auto& entry : mSamples)
     {
-        std::cout << "Checking samples of " << entry.first << "..." << std::endl;
-
         for (const auto& sample : entry.second)
         {
             if (sample.GetSize() != featureCount)
             {
                 std::cout << featureCount << std::endl;
                 std::cout << sample.GetSize() << std::endl;
-                std::cout << "Error: feature count mismatch." << std::endl;
+                std::cout << "Speech data not valid: feature count mismatch." << std::endl;
 
                 mTotalSampleCount = 0;
 
@@ -138,7 +211,7 @@ void SpeechData::Validate()
         }
     }
 
-    std::cout << "Data CONSISTENT." << std::endl;
+    std::cout << "Speech data valid." << std::endl;
 
     mDimensionCount = featureCount;
     mConsistent = true;
@@ -170,14 +243,72 @@ unsigned int SpeechData::GetDimensionCount() const
     return mDimensionCount;
 }
 
+void SpeechData::SetNormalizationType(FeatureNormalizationType normalizationType)
+{
+    mNormalizationType = normalizationType;
+}
+
+FeatureNormalizationType SpeechData::GetNormalizationType() const
+{
+    return mNormalizationType;
+}
+
 void SpeechData::Normalize()
 {
-    for (auto& seq : mSamples)
+    //for (auto& seq : mSamples)
+    //{
+    //    for (auto& s : seq.second)
+    //    {
+    //        s.Multiply(1.0f / 39.0f);
+    //    }
+    //}
+
+    switch (mNormalizationType)
     {
-        for (auto& s : seq.second)
+    case FeatureNormalizationType::NONE:
+        break;
+
+    case FeatureNormalizationType::CEPSTRAL_MEAN:
         {
-            s.Multiply(1.0f / 39.0f);
+            DynamicVector<Real> means;
+            DynamicVector<Real> deviations;
+
+            means.Resize(GetDimensionCount());
+            deviations.Resize(GetDimensionCount());
+
+            // Normalize entry by entry.
+            for (auto& sample : mSamples)
+            {
+                // Normalize dimensions separately.
+                for (unsigned int d = 0; d < GetDimensionCount(); d++)
+                {
+                    std::vector<Real> values;
+
+                    for (const auto& value : sample.second)
+                    {
+                        values.push_back(value[d]);
+                    }
+
+                    // Get mean & deviation over all samples.
+                    Real mean = Mean(values);
+                    Real deviation = Deviation(values, mean);
+
+                    means[d] = mean;
+                    deviations[d] = deviation;
+                }
+
+                for (auto& value : sample.second)
+                {
+                    value.Subtract(means);
+                    value.Divide(deviations);
+                }
+            }
         }
+
+        break;
+
+    default:
+        std::cout << "Unknown feature normalization type." << std::endl;
     }
 }
 

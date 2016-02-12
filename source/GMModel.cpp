@@ -263,7 +263,7 @@ void GMModel::EM(const std::vector< DynamicVector<Real> >& samples)
     Real logLikelihood = 0.0f;
     Real newLogLikelihood = 0.0f;
 
-    for (unsigned int e = 0; e < 200; ++e)
+    for (unsigned int e = 0; e < 60; ++e)
     {
         //std::cout << "Iteration:" << e << std::endl;
 
@@ -330,7 +330,7 @@ Real GMModel::E(const std::vector< DynamicVector<Real> >& samples)
             for (unsigned int d = 0; d < cluster.means.GetSize(); ++d)
             {
                 // Mean sum(p*x)
-                cluster.meansTmp[d] += sample[d] * cluster.membershipProbability;
+                 cluster.meansTmp[d] += sample[d] * cluster.membershipProbability;
 
                 // Variance sum(p*x^2) (- mu^2)
                 cluster.variancesTmp[d] += sample[d] * sample[d] * cluster.membershipProbability;

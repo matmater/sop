@@ -5,6 +5,12 @@
 
 #include "DynamicVector.h"
 
+enum class FeatureNormalizationType
+{
+    NONE = 0,
+    CEPSTRAL_MEAN
+};
+
 /*! \brief A container for speech data of multiple speakers.
  *
  *  \todo Add/fix comments.
@@ -20,9 +26,13 @@ public:
      */
     virtual ~SpeechData();
 
+    /*! \brief Loads data from text file. (Old version).
+     */
+    void Load(const std::string& path);
+    
     /*! \brief Loads data from text file(s)
      */
-    void Load(const std::string& path, unsigned int sl, unsigned int gl, bool train);
+    void Load(const std::string& path, unsigned int sl, unsigned int gl, bool train, const std::string& alias = "");
 
     /*! \brief Validates loaded data.
      *
@@ -36,14 +46,14 @@ public:
 
     /*! \brief Checks if data is consistent.
      *
-     *  Data is considered consistet if all speaker
-     *  samples have same number of dimensions.
+     *  Data is considered consistent if all speaker
+     *  samples have the same number of dimensions.
      */
     bool IsConsistent() const;
 
     /*! \brief Checks if two speech data sets are consistent (compatible).
      *
-     *  \see IsConsistent().
+     *  \sa IsConsistent().
      */
     bool IsCompatible(const SpeechData& other);
 
@@ -58,12 +68,20 @@ public:
      *  \todo Check range ([0,1] or [-1,1]).
      */
     void Normalize();
+    
+    /*! \brief Sets the feature normalization type.
+     */
+    void SetNormalizationType(FeatureNormalizationType normalizationType);
+    
+    /*! \brief Gets the feature normalization type.
+     */
+    FeatureNormalizationType GetNormalizationType() const;
 
     /*! \brief Returns the number of loaded speakers.
      */
     unsigned int GetSpeakerCount() const;
 
-    /*! \brief Returns the total number of speech samples of all speakers.
+    /*! \brief Returns the total number of speech samples over all speakers.
      */
     unsigned int GetTotalSampleCount() const;
 
@@ -72,6 +90,8 @@ public:
     const std::map<std::string, std::vector<DynamicVector<Real> > >& GetSamples() const;
 
 private:
+    FeatureNormalizationType mNormalizationType;
+
     std::map<std::string, std::vector<DynamicVector<Real> > > mSamples;
 
     bool mConsistent;

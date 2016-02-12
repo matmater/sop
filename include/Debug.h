@@ -8,31 +8,31 @@
     #define DEBUG_CONTENT(a) a
 
     #if DEBUG_LEVEL >= 5
-        #define DEBUG_FATAL(a) std::cout << "FATAL ERROR: " << a << std::endl; std::exit(EXIT_FAILURE);
-        #define DEBUG_ERROR(a) std::cout << "ERROR: " << a << std::endl;
-        #define DEBUG_WARNING(a) std::cout << "WARNING: " << a << std::endl;
-        #define DEBUG_INFO(a) std::cout << "INFO: " << a << std::endl;
-        #define DEBUG_TRACE(a) std::cout << "TRACE: " << a << std::endl;
+        #define DEBUG_FATAL(a) std::cout << "Fatal error: " << a << std::endl; std::exit(EXIT_FAILURE);
+        #define DEBUG_ERROR(a) std::cout << "Error: " << a << std::endl;
+        #define DEBUG_WARNING(a) std::cout << "Warning: " << a << std::endl;
+        #define DEBUG_INFO(a) std::cout << "Info: " << a << std::endl;
+        #define DEBUG_TRACE(a) std::cout << "Trace: " << a << std::endl;
     #elif DEBUG_LEVEL == 4
-        #define DEBUG_FATAL(a) std::cout << "FATAL ERROR: " << a << std::endl; std::exit(EXIT_FAILURE);
-        #define DEBUG_ERROR(a) std::cout << "ERROR: " << a << std::endl;
-        #define DEBUG_WARNING(a) std::cout << "WARNING: " << a << std::endl;
-        #define DEBUG_INFO(a) std::cout << "INFO: " << a << std::endl;
+        #define DEBUG_FATAL(a) std::cout << "Fatal error: " << a << std::endl; std::exit(EXIT_FAILURE);
+        #define DEBUG_ERROR(a) std::cout << "Error: " << a << std::endl;
+        #define DEBUG_WARNING(a) std::cout << "Warning: " << a << std::endl;
+        #define DEBUG_INFO(a) std::cout << "Info: " << a << std::endl;
         #define DEBUG_TRACE(a)
     #elif DEBUG_LEVEL == 3
-        #define DEBUG_FATAL(a) std::cout  << "FATAL ERROR: " << a << std::endl; std::exit(EXIT_FAILURE)
-        #define DEBUG_ERROR(a) std::cout << "ERROR: " << a << std::endl;
-        #define DEBUG_WARNING(a) std::cout << "WARNING: " << a << std::endl;
+        #define DEBUG_FATAL(a) std::cout  << "Fatal error: " << a << std::endl; std::exit(EXIT_FAILURE)
+        #define DEBUG_ERROR(a) std::cout << "Error: " << a << std::endl;
+        #define DEBUG_WARNING(a) std::cout << "Warning: " << a << std::endl;
         #define DEBUG_INFO(a)
         #define DEBUG_TRACE(a)
     #elif DEBUG_LEVEL == 2
-        #define DEBUG_FATAL(a) std::cout << "FATAL ERROR: " << a << std::endl; std::exit(EXIT_FAILURE)
-        #define DEBUG_ERROR(a) std::cout << "ERROR: " << a << std::endl;
+        #define DEBUG_FATAL(a) std::cout << "Fatal error: " << a << std::endl; std::exit(EXIT_FAILURE)
+        #define DEBUG_ERROR(a) std::cout << "Error: " << a << std::endl;
         #define DEBUG_WARNING(a)
         #define DEBUG_INFO(a)
         #define DEBUG_TRACE(a)
     #elif DEBUG_LEVEL == 1
-        #define DEBUG_FATAL(a) std::cout << "FATAL ERROR: " << a << std::endl; std::exit(EXIT_FAILURE)
+        #define DEBUG_FATAL(a) std::cout << "Fatal error: " << a << std::endl; std::exit(EXIT_FAILURE)
         #define DEBUG_ERROR(a)
         #define DEBUG_WARNING(a)
         #define DEBUG_INFO(a)

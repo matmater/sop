@@ -80,6 +80,24 @@ void DynamicVector<T>::Multiply(T value)
 }
 
 template<typename T>
+void DynamicVector<T>::Multiply(const DynamicVector& other)
+{
+    for (unsigned int i = 0; i < mValues.size(); i++)
+    {
+        mValues[i] *= other.mValues[i];
+    }
+}
+
+template<typename T>
+void DynamicVector<T>::Divide(const DynamicVector& other)
+{
+    for (unsigned int i = 0; i < mValues.size(); i++)
+    {
+        mValues[i] /= other.mValues[i];
+    }
+}
+
+template<typename T>
 void DynamicVector<T>::Add(T value)
 {
     for (unsigned int i = 0; i < mValues.size(); i++)

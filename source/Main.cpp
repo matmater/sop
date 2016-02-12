@@ -1,3 +1,4 @@
+#include <fstream>
 #include "Common.h"
 #include "Utilities.h"
 #include <chrono>
@@ -5,6 +6,19 @@
 #include "GMMRecognizer.h"
 #include "VQRecognizer.h"
 
+#define INDEXFIX
+#undef INDEXFIX
+
+#ifdef INDEXFIX
+static std::vector<std::string> speakerFiles;
+#endif
+
+bool FileExists(const std::string& path)
+{
+    std::ifstream file(path);
+
+    return file.good();
+}
 
 template <typename T> 
 std::string toString(const T& n)
@@ -19,9 +33,14 @@ void LoadTextSamples(const std::shared_ptr<SpeechData>& data, unsigned int sf, u
     data->Clear();
     for (unsigned int i = 0; i < gf; i++)
     {
+#ifdef INDEXFIX
+        std::cout << speakerFiles[i+sf-225] << std::endl;
+        data->Load(speakerFiles[i+sf-225], sl, gl, train, toString(sf+i));
+#else
         std::string file = "samples/samples_" + toString(sf+i) + ".txt";
         std::cout << file << std::endl;
         data->Load(file, sl, gl, train);
+#endif
     }
     data->Validate();
     data->Normalize();
@@ -98,9 +117,9 @@ void Evaluate(std::map<std::string, RecognitionResult>& results, std::vector<uns
 void RecognitionTest()
 {
     unsigned int sf = 240;  // startfile, speaker to start with
-    unsigned int gf = 2;    // getfiles, number of files to get
+    unsigned int gf = 5;    // getfiles, number of files to get
     unsigned int sl = 1;    // startline, line to start at
-    unsigned int gl = 4;    // getlines, number of lines to get
+    unsigned int gl = 5;    // getlines, number of lines to get
     unsigned int trainingCycles = 2;
     unsigned int correctClaimed = 5;
     
@@ -109,7 +128,7 @@ void RecognitionTest()
     recognizer.SetBackgroundModelEnabled(false);
     recognizer.SetOrder(128);
     recognizer.SetWeightingEnabled(false);
-    //recognizer.SetScoreNormalizationType(NormalizationType::ZERO_TEST);    
+    recognizer.SetScoreNormalizationType(ScoreNormalizationType::ZERO_TEST);    
     auto trainData = std::make_shared<SpeechData>();
     auto testData = std::make_shared<SpeechData>();
     std::map<std::string, RecognitionResult> result;
@@ -119,7 +138,7 @@ void RecognitionTest()
     {
         std::cout << i+1 << "/" << trainingCycles << std::endl;
         LoadTextSamples(trainData, sf, gf, sl, gl, true);
-        //recognizer.SetImpostorSpeakerData(trainData);
+        recognizer.SetImpostorSpeakerData(trainData);
         recognizer.Train(trainData);
  
         //auto start = std::chrono::system_clock::now();            
@@ -153,7 +172,7 @@ std::cout << "Correctly recognized:   " << finalRecResults[0] << " " << 100.0 * 
 void VerificationTest()
 {
     unsigned int sf = 240;  // startfile, speaker to start with
-    unsigned int gf = 2;    // getfiles, number of files to get
+    unsigned int gf = 5;    // getfiles, number of files to get
     unsigned int sl = 1;    // startline, line to start at
     unsigned int gl = 5;    // getlines, number of lines to get
     unsigned int trainingCycles = 5;
@@ -164,8 +183,8 @@ void VerificationTest()
     VQRecognizer recognizer;
     recognizer.SetBackgroundModelEnabled(false);
     recognizer.SetOrder(128);
-    recognizer.SetWeightingEnabled(false);
-    recognizer.SetScoreNormalizationType(NormalizationType::ZERO_TEST);
+    recognizer.SetWeightingEnabled(true);
+    recognizer.SetScoreNormalizationType(ScoreNormalizationType::ZERO_TEST);
     auto trainData = std::make_shared<SpeechData>();
     auto testData = std::make_shared<SpeechData>();
     auto testData2 = std::make_shared<SpeechData>();
@@ -178,6 +197,7 @@ void VerificationTest()
     {
         std::cout << i+1 << "/" << trainingCycles << std::endl;
         LoadTextSamples(trainData, sf, gf, sl, gl, true);
+        recognizer.SetImpostorSpeakerData(trainData);
         recognizer.Train(trainData);
         LoadTextSamples(testData2, sf+gf, incorrectClaimed, sl, gl, false);          
         for (unsigned int j = 0; j < gf; j++)
@@ -204,23 +224,33 @@ void VerificationTest()
 
 int main(int argc, char** argv)
 {
-    RecognitionTest();
-    //VerificationTest();
-    
-    /*
+#ifdef INDEXFIX
+    for (unsigned int i = 225; i <= 376; ++i)
     {
+        std::string fname = "samples/samples_" + toString(i) + ".txt";
+
+        if (FileExists(fname))
+        {
+            speakerFiles.push_back(fname);
+        }
+    }
+#endif
+
+    //RecognitionTest();
+    VerificationTest();
+    
+    if (false) {
         std::cout << "Verification Test" << std::endl;
         GMMRecognizer recognizer;
         // GMMRecognizer recognizer;
         // ANNRecognizer recognizer;
-
         auto trainData = std::make_shared<SpeechData>();
         trainData->Load("train.txt");
         trainData->Normalize();
         recognizer.SetBackgroundModelEnabled(true);
         recognizer.SetOrder(128);
         // recognizer.SetWeightingEnabled(true);
-        recognizer.SetScoreNormalizationType(NormalizationType::ZERO_TEST);
+        recognizer.SetScoreNormalizationType(ScoreNormalizationType::ZERO_TEST);
         recognizer.SetImpostorSpeakerData(trainData);
         std::map<std::string, RecognitionResult> result;
         std::vector<unsigned int> finalRecResults (4,0);
@@ -237,5 +267,4 @@ int main(int argc, char** argv)
         std::chrono::duration<double> testDuration = end - start;
         Evaluate(result, finalRecResults);
     }
-    */   
 }

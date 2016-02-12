@@ -167,39 +167,41 @@ inline Real Mean(const std::vector<Real>& values)
 {
     if (values.size() == 0)
     {
-        DEBUG_ERROR("Mean could not be calculated: no values.");
+        std::cout << "Mean could not be calculated: no values." << std::endl;
 
         return 0.0f;
     }
 
     Real sum = 0.0f;
+    Real invSize = 1.0f / static_cast<float>(values.size());
 
     for (Real value : values)
     {
-        sum += value;
+        sum += value * invSize;
     }
 
-    return sum / static_cast<float>(values.size());
+    return sum;
 }
 
 inline Real Variance(const std::vector<Real>& values, Real mean)
 {
     if (values.size() < 2)
     {
-        DEBUG_ERROR("Variance could not be calculated: not enough values.");
+        std::cout << "Variance could not be calculated: not enough values." << std::endl;
 
         return 0.0f;
     }
 
     Real sum = 0.0f;
+    Real invSize = 1.0f / static_cast<float>(values.size() - 1);
 
     for (Real value : values)
     {
         Real tmp = value - mean;
-        sum += tmp * tmp;
+        sum += tmp * tmp * invSize;
     }
 
-    return sum / static_cast<float>(values.size() - 1);
+    return sum;
 }
 
 inline Real Deviation(const std::vector<Real>& values, Real mean)

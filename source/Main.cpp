@@ -118,12 +118,12 @@ void RecognitionTest()
     for (unsigned int i = 0; i < trainingCycles ; i++)
     {
         std::cout << i+1 << "/" << trainingCycles << std::endl;
-        LoadTextSamples(trainData, sf+i, gf, sl, gl, true);
+        LoadTextSamples(trainData, sf, gf, sl, gl, true);
         //recognizer.SetImpostorSpeakerData(trainData);
         recognizer.Train(trainData);
  
         //auto start = std::chrono::system_clock::now();            
-        LoadTextSamples(testData, sf+i, gf, sl+gl, correctClaimed, false);                      
+        LoadTextSamples(testData, sf, gf, sl+gl, correctClaimed, false);                      
         //auto end = std::chrono::system_clock::now();
         //std::chrono::duration<double> loadDuration = end - start;            
         //start = std::chrono::system_clock::now();
@@ -131,6 +131,7 @@ void RecognitionTest()
         //end = std::chrono::system_clock::now();
         //std::chrono::duration<double> testDuration = end - start;
         Evaluate(result, finalRecResults);
+        sf+=gl;
     }
         
     unsigned int sum = 0;
@@ -176,13 +177,13 @@ void VerificationTest()
     for (unsigned int i = 0; i < trainingCycles ; i++)
     {
         std::cout << i+1 << "/" << trainingCycles << std::endl;
-        LoadTextSamples(trainData, sf+i, gf, sl, gl, true);
+        LoadTextSamples(trainData, sf, gf, sl, gl, true);
         recognizer.Train(trainData);
-        LoadTextSamples(testData2, sf+i+gf, incorrectClaimed, sl, gl, false);          
+        LoadTextSamples(testData2, sf+gf, incorrectClaimed, sl, gl, false);          
         for (unsigned int j = 0; j < gf; j++)
         {
-            LoadTextSamples(testData, sf+i+j, 1, sl+gl, correctClaimed, false);          
-            claimedSpeaker = toString(sf+i+j);
+            LoadTextSamples(testData, sf+j, 1, sl+gl, correctClaimed, false);          
+            claimedSpeaker = toString(sf+j);
             verificationResults = recognizer.Verify(claimedSpeaker, testData);
             for (auto& entry : verificationResults)
             {

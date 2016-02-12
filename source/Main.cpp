@@ -19,7 +19,7 @@ void LoadTextSamples(const std::shared_ptr<SpeechData>& data, unsigned int sf, u
     data->Clear();
     for (unsigned int i = 0; i < gf; i++)
     {
-        std::string file = "samples_" + toString(sf+i) + ".txt";
+        std::string file = "samples/samples_" + toString(sf+i) + ".txt";
         std::cout << file << std::endl;
         data->Load(file, sl, gl, train);
     }
@@ -27,12 +27,12 @@ void LoadTextSamples(const std::shared_ptr<SpeechData>& data, unsigned int sf, u
     data->Normalize();
 }
 
-void Evaluate(std::map<std::string, RecognitionResult>& results, std::chrono::duration<double> testDur, std::chrono::duration<double> loadDur)
+void Evaluate(std::map<std::string, RecognitionResult>& results, std::vector<unsigned int>& finalresults)
 {
-    int correctlyRecognized = 0;
-    int correctlyRejected = 0;
-    int incorrectlyRecognized = 0;
-    int incorrectlyRejected = 0;
+    unsigned int correctlyRecognized = 0;
+    unsigned int correctlyRejected = 0;
+    unsigned int incorrectlyRecognized = 0;
+    unsigned int incorrectlyRejected = 0;
 
     for (auto& result : results)
     {
@@ -88,61 +88,83 @@ void Evaluate(std::map<std::string, RecognitionResult>& results, std::chrono::du
         << incorrectlyRecognized
         << " "
         << incorrectlyRejected);
-
-    std::ofstream resultss;
-    resultss.open("results.txt", std::ios::app);
-    resultss << correctlyRecognized << " " << correctlyRejected << " " << incorrectlyRecognized << " " << incorrectlyRejected << " "
-    << loadDur.count() << " " << testDur.count() << std::endl;
-    resultss.close();
+      
+    finalresults[0] += correctlyRecognized;
+    finalresults[1] += correctlyRejected;   
+    finalresults[2] += incorrectlyRecognized;    
+    finalresults[3] += incorrectlyRejected;
 }
 
-int main(int argc, char** argv)
+void RecognitionTest()
 {
-    /*
+    unsigned int sf = 240;  // startfile, speaker to start with
+    unsigned int gf = 2;    // getfiles, number of files to get
+    unsigned int sl = 1;    // startline, line to start at
+    unsigned int gl = 4;    // getlines, number of lines to get
+    unsigned int trainingCycles = 2;
+    unsigned int correctClaimed = 5;
+    
+    std::cout << "Recognition Test" << std::endl;
+    VQRecognizer recognizer;
+    recognizer.SetBackgroundModelEnabled(false);
+    recognizer.SetOrder(128);
+    recognizer.SetWeightingEnabled(false);
+    //recognizer.SetScoreNormalizationType(NormalizationType::ZERO_TEST);    
+    auto trainData = std::make_shared<SpeechData>();
+    auto testData = std::make_shared<SpeechData>();
+    std::map<std::string, RecognitionResult> result;
+    std::vector<unsigned int> finalRecResults (4,0);
+    
+    for (unsigned int i = 0; i < trainingCycles ; i++)
     {
-        std::cout << "Test" << std::endl;
-        GMMRecognizer recognizer;
-        //GMMRecognizer recognizer;
-        //ANNRecognizer recognizer;
-
-        auto trainData = std::make_shared<SpeechData>();
-        trainData->Load("train.txt");
-        trainData->Normalize();
-        recognizer.SetBackgroundModelEnabled(true);
-        recognizer.SetOrder(128);
-        //recognizer.SetWeightingEnabled(true);
-        recognizer.SetScoreNormalizationType(NormalizationType::ZERO_TEST);
-        recognizer.SetImpostorSpeakerData(trainData);
-        std::map<std::string, RecognitionResult> result;
-        auto testData = std::make_shared<SpeechData>();
-        auto start = std::chrono::system_clock::now();
-        testData->Load("test.txt");
-        testData->Normalize();
-        auto end = std::chrono::system_clock::now();
-        std::chrono::duration<double> loadDuration = end - start;
+        std::cout << i+1 << "/" << trainingCycles << std::endl;
+        LoadTextSamples(trainData, sf+i, gf, sl, gl, true);
+        //recognizer.SetImpostorSpeakerData(trainData);
         recognizer.Train(trainData);
-        start = std::chrono::system_clock::now();
+ 
+        //auto start = std::chrono::system_clock::now();            
+        LoadTextSamples(testData, sf+i, gf, sl+gl, correctClaimed, false);                      
+        //auto end = std::chrono::system_clock::now();
+        //std::chrono::duration<double> loadDuration = end - start;            
+        //start = std::chrono::system_clock::now();
         recognizer.Test(testData, result);
-        end = std::chrono::system_clock::now();
-        std::chrono::duration<double> testDuration = end - start;
-        // Result will be analyzed here.
-        Evaluate(result, loadDuration, testDuration);
+        //end = std::chrono::system_clock::now();
+        //std::chrono::duration<double> testDuration = end - start;
+        Evaluate(result, finalRecResults);
     }
-    */
+        
+    unsigned int sum = 0;
+    for (unsigned int n : finalRecResults)
+        sum += n;
+    
+std::cout << "Correctly recognized:   " << finalRecResults[0] << " " << 100.0 * finalRecResults[0] / sum << "%" << std::endl
+              << "Correctly rejected:     " << finalRecResults[1] << " " << 100.0 * finalRecResults[1] / sum << "%" << std::endl
+              << "Incorrectly recognized: " << finalRecResults[2] << " " << 100.0 * finalRecResults[2] / sum << "%" << std::endl          
+              << "Incorrectly rejected:   " << finalRecResults[3] << " " << 100.0 * finalRecResults[3] / sum << "%" << std::endl;
+              
+    std::ofstream resultss;
+    resultss.open("recognitionresults.txt", std::ios::app);
+    resultss << finalRecResults[0] << " " << finalRecResults[1] << " " << finalRecResults[2] << " " << finalRecResults[3] << std::endl;
+    //loadDur.count()
+    resultss.close();    
+}
 
-    unsigned int sf = 240;   // startfile, speaker to start with
+void VerificationTest()
+{
+    unsigned int sf = 240;  // startfile, speaker to start with
     unsigned int gf = 2;    // getfiles, number of files to get
     unsigned int sl = 1;    // startline, line to start at
     unsigned int gl = 5;    // getlines, number of lines to get
     unsigned int trainingCycles = 5;
     unsigned int incorrectClaimed = 5;
     unsigned int correctClaimed = 5;
-
-    
+   
+    std::cout << "Verification test" << std::endl;
     VQRecognizer recognizer;
     recognizer.SetBackgroundModelEnabled(false);
     recognizer.SetOrder(128);
     recognizer.SetWeightingEnabled(false);
+    recognizer.SetScoreNormalizationType(NormalizationType::ZERO_TEST);
     auto trainData = std::make_shared<SpeechData>();
     auto testData = std::make_shared<SpeechData>();
     auto testData2 = std::make_shared<SpeechData>();
@@ -176,44 +198,43 @@ int main(int argc, char** argv)
         }
         sf += gf;
     }
-   
+    vresults.close();    
+}
 
-/*
-
-    trainData->Load("trainubm.txt");
-    trainData->Normalize();
-    auto testData = std::make_shared<SpeechData>();
-    std::string claimedSpeaker = "225";
-    recognizer.Train(trainData);
-    std::ofstream recresults;
-    recresults.open("recresults.txt", std::ios::app);
-    std::vector<Real> verification_results;
-    std::string testFile;
-
-
-    testFile = "test2.txt";
-    claimedSpeaker = "225";
-    testData->Load(testFile);
-    testData->Normalize();
-    verification_results = recognizer.Verify(claimedSpeaker, testData);
-    for (auto& entry : verification_results)
+int main(int argc, char** argv)
+{
+    RecognitionTest();
+    //VerificationTest();
+    
+    /*
     {
-        recresults << entry << " ";
+        std::cout << "Verification Test" << std::endl;
+        GMMRecognizer recognizer;
+        // GMMRecognizer recognizer;
+        // ANNRecognizer recognizer;
+
+        auto trainData = std::make_shared<SpeechData>();
+        trainData->Load("train.txt");
+        trainData->Normalize();
+        recognizer.SetBackgroundModelEnabled(true);
+        recognizer.SetOrder(128);
+        // recognizer.SetWeightingEnabled(true);
+        recognizer.SetScoreNormalizationType(NormalizationType::ZERO_TEST);
+        recognizer.SetImpostorSpeakerData(trainData);
+        std::map<std::string, RecognitionResult> result;
+        std::vector<unsigned int> finalRecResults (4,0);
+        auto testData = std::make_shared<SpeechData>();
+        auto start = std::chrono::system_clock::now();
+        testData->Load("test.txt");
+        testData->Normalize();
+        auto end = std::chrono::system_clock::now();
+        std::chrono::duration<double> loadDuration = end - start;
+        recognizer.Train(trainData);
+        start = std::chrono::system_clock::now();
+        recognizer.Test(testData, result);
+        end = std::chrono::system_clock::now();
+        std::chrono::duration<double> testDuration = end - start;
+        Evaluate(result, finalRecResults);
     }
-
-    recresults << std::endl;
-
-    testFile = "test3.txt";
-    testData->Load(testFile);
-    testData->Normalize();
-    verification_results = recognizer.Verify(claimedSpeaker, testData);
-    for (auto& entry : verification_results)
-    {
-        recresults << entry << " ";
-    }
-
-    recresults.close();
-
-*/
-
+    */   
 }

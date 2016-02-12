@@ -131,7 +131,7 @@ void RecognitionTest()
         //end = std::chrono::system_clock::now();
         //std::chrono::duration<double> testDuration = end - start;
         Evaluate(result, finalRecResults);
-        sf+=gl;
+        sf+=gf;
     }
         
     unsigned int sum = 0;

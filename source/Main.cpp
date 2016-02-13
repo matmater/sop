@@ -176,28 +176,36 @@ void VerificationTest()
     unsigned int sl = 1;    // startline, line to start at
     unsigned int gl = 5;    // getlines, number of lines to get
     unsigned int trainingCycles = 5;
-    unsigned int incorrectClaimed = 5;
-    unsigned int correctClaimed = 5;
+    unsigned int incorrectClaimed = 2;
+    unsigned int correctClaimed = 25;
    
     std::cout << "Verification test" << std::endl;
-    VQRecognizer recognizer;
-    recognizer.SetBackgroundModelEnabled(false);
+    GMMRecognizer recognizer;
+    recognizer.SetBackgroundModelEnabled(true);
     recognizer.SetOrder(128);
-    recognizer.SetWeightingEnabled(true);
+    recognizer.SetSpeakerImpostorsEnabled(true);
+    recognizer.SetAdaptationIterations(2);
+    //recognizer.SetWeightingEnabled(true);
     recognizer.SetScoreNormalizationType(ScoreNormalizationType::ZERO_TEST);
     auto trainData = std::make_shared<SpeechData>();
     auto testData = std::make_shared<SpeechData>();
     auto testData2 = std::make_shared<SpeechData>();
+    auto ubmData = std::make_shared<SpeechData>();
+    auto impostorData = std::make_shared<SpeechData>();
+    LoadTextSamples(ubmData, 225 + 70, 3, 1, 2, true);
+    LoadTextSamples(impostorData, 225 + 50, 3, 1, 2, true);
     std::string claimedSpeaker;
     std::ofstream vresults;
     vresults.open("verificationresults.txt", std::ios::app);
     std::vector<Real> verificationResults;
+
+    recognizer.SetBackgroundModelData(ubmData);
+    recognizer.SetImpostorSpeakerData(impostorData);
     
     for (unsigned int i = 0; i < trainingCycles ; i++)
     {
         std::cout << i+1 << "/" << trainingCycles << std::endl;
         LoadTextSamples(trainData, sf, gf, sl, gl, true);
-        recognizer.SetImpostorSpeakerData(trainData);
         recognizer.Train(trainData);
         LoadTextSamples(testData2, sf+gf, incorrectClaimed, sl, gl, false);          
         for (unsigned int j = 0; j < gf; j++)
@@ -247,8 +255,9 @@ int main(int argc, char** argv)
         auto trainData = std::make_shared<SpeechData>();
         trainData->Load("train.txt");
         trainData->Normalize();
-        recognizer.SetBackgroundModelEnabled(true);
+        recognizer.SetBackgroundModelEnabled(false);
         recognizer.SetOrder(128);
+        recognizer.SetAdaptationIterations(3);
         // recognizer.SetWeightingEnabled(true);
         recognizer.SetScoreNormalizationType(ScoreNormalizationType::ZERO_TEST);
         recognizer.SetImpostorSpeakerData(trainData);

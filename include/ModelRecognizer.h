@@ -90,6 +90,16 @@ public:
     /*! \brief Returns impostor speaker data.
      */
     virtual std::shared_ptr<SpeechData> GetImpostorSpeakerData();
+    
+    /*! \brief Enables/disables speaker models to be used also as impostors.
+     *
+     *  Disabled by default.
+     */
+    void SetSpeakerImpostorsEnabled(bool enabled);
+    
+    /*! \brief Checks if speaker models are used also as impostors.
+     */
+    bool IsSpeakerImpostorsEnabled() const;
 
     /*! \brief Sets the order of this model.
      *
@@ -104,6 +114,8 @@ public:
     unsigned int GetOrder() const;
     
     /*! \brief Sets the number of iterations used for model adaptation.
+     *
+     *  Default number of iterations is 2.
      */
     void SetAdaptationIterations(unsigned int iterations);
     
@@ -112,6 +124,8 @@ public:
     unsigned int GetAdaptationIterations() const;
 
     /*! \brief Sets the relevance factor used for model adaptation.
+     *
+     *  Default relevance factor is 16.
      */
     void SetRelevanceFactor(Real factor);
     
@@ -181,11 +195,16 @@ private:
     ScoreNormalizationType mScoreNormalizationType;
     
     bool mBackgroundModelEnabled;
+    
+    bool mSpeakerImpostorsEnabled;
 
     std::shared_ptr<T> mBackgroundModel;
     
     std::shared_ptr<SpeechData> mImpostorSpeakerData;
+    std::shared_ptr<SpeechData> mTrainedImpostorSpeakerData;
+
     std::shared_ptr<SpeechData> mBackgroundModelData;
+    std::shared_ptr<SpeechData> mTrainedBackgroundModelData;
 
     std::map< std::string, std::shared_ptr<T> > mSpeakerModels;
     std::map< std::string, std::shared_ptr<T> > mImpostorModels;

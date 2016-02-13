@@ -31,6 +31,12 @@ public:
     void Load(const std::string& path);
     
     /*! \brief Loads data from text file(s)
+     *
+     *  \param sl Start line.
+     *  \param gl Number of lines to fetch.
+     *  \param train If this flag is true, test specific labels will be removed.
+     *
+     *  \note Line indexing starts from 1.
      */
     void Load(const std::string& path, unsigned int sl, unsigned int gl, bool train, const std::string& alias = "");
 

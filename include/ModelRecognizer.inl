@@ -4,7 +4,8 @@ ModelRecognizer<T>::ModelRecognizer()
     mAdaptationIterations(2),
     mRelevanceFactor(16.0f),
     mScoreNormalizationType(ScoreNormalizationType::NONE),
-    mBackgroundModelEnabled(false)
+    mBackgroundModelEnabled(false),
+    mSpeakerImpostorsEnabled(false)
 {
 
 }
@@ -19,9 +20,9 @@ template<typename T>
 void ModelRecognizer<T>::ClearTrainedData()
 {
     mSpeakerModels.clear();
-    mImpostorModels.clear();
     mImpostorDistributions.clear();
-    mBackgroundModel = nullptr;
+    //mImpostorModels.clear();
+    //mBackgroundModel = nullptr;
 }
 
 template<typename T>
@@ -95,6 +96,18 @@ std::shared_ptr<SpeechData> ModelRecognizer<T>::GetImpostorSpeakerData()
 {
     return mImpostorSpeakerData;
 }
+    
+template<typename T>
+void ModelRecognizer<T>::SetSpeakerImpostorsEnabled(bool enabled)
+{
+    mSpeakerImpostorsEnabled = enabled;
+}
+    
+template<typename T>
+bool ModelRecognizer<T>::IsSpeakerImpostorsEnabled() const
+{
+    return mSpeakerImpostorsEnabled;
+}
 
 template<typename T>
 void ModelRecognizer<T>::PostProcessModels()
@@ -125,29 +138,39 @@ void ModelRecognizer<T>::Train(const std::shared_ptr<SpeechData>& data)
     }
 
     ClearTrainedData();
-
+    
     unsigned int progress = 0;
 
     // Check if the background model can actually be created.
     if (IsBackgroundModelEnabled() && mBackgroundModelData != nullptr)
     {
-        mBackgroundModel = std::make_shared<T>();
-
-        // UBM was found, train it first using normal training.
-        std::cout << "Training background model." << std::endl;
-
-        std::vector< DynamicVector<Real> > samples;
-        
-        for (const auto& speaker : mBackgroundModelData->GetSamples())
+        if (mTrainedBackgroundModelData != mBackgroundModelData)
         {
-            for (const auto& sample : speaker.second)
+            mBackgroundModel = std::make_shared<T>();
+
+            // UBM was found, train it first using normal training.
+            std::cout << "Training background model." << std::endl;
+
+            std::vector< DynamicVector<Real> > samples;
+        
+            for (const auto& speaker : mBackgroundModelData->GetSamples())
             {
-                samples.push_back(sample);
+                for (const auto& sample : speaker.second)
+                {
+                    samples.push_back(sample);
+                }
             }
+
+            mBackgroundModel->SetOrder(GetOrder());
+            mBackgroundModel->Train(samples);
+
+            mTrainedBackgroundModelData = mBackgroundModelData;
         }
 
-        mBackgroundModel->SetOrder(GetOrder());
-        mBackgroundModel->Train(samples);
+        else
+        {
+            std::cout << "Using an already trained background model." << std::endl;
+        }
     }
 
     progress = 0;
@@ -183,7 +206,7 @@ void ModelRecognizer<T>::Train(const std::shared_ptr<SpeechData>& data)
 
     progress = 0;
 
-    // T, Z norm
+    // Train T-norm impostor models.
     if (   (mScoreNormalizationType == ScoreNormalizationType::TEST
          || mScoreNormalizationType == ScoreNormalizationType::ZERO_TEST
          || mScoreNormalizationType == ScoreNormalizationType::TEST_ZERO)
@@ -194,6 +217,8 @@ void ModelRecognizer<T>::Train(const std::shared_ptr<SpeechData>& data)
         // If one happens to use same speaker data for impostors.
         if (mImpostorSpeakerData == data)
         {
+            mImpostorModels.clear();
+
             std::cout << "Using existing models." << std::endl;
 
             // Set models for T-normalization.
@@ -205,30 +230,42 @@ void ModelRecognizer<T>::Train(const std::shared_ptr<SpeechData>& data)
 
         else
         {
-            // Train models for T-normalization.
-            for (const auto& sequence : mImpostorSpeakerData->GetSamples())
+            if (mTrainedImpostorSpeakerData != mImpostorSpeakerData)
             {
-                ++progress;
+                mImpostorModels.clear();
 
-                auto model = std::make_shared<T>();
-                mImpostorModels[sequence.first] = model;
-
-                std::cout << "Training model: " << sequence.first
-                    << " (" << 100 * progress / mImpostorSpeakerData->GetSamples().size() << "%)" << std::endl;
-
-                // UBM exists, train everything else with adaptation.
-                if (IsBackgroundModelEnabled() && mBackgroundModel != nullptr)
+                // Train models for T-normalization.
+                for (const auto& sequence : mImpostorSpeakerData->GetSamples())
                 {
-                    model->Adapt(mBackgroundModel, sequence.second, mAdaptationIterations, mRelevanceFactor);
+                    ++progress;
+
+                    auto model = std::make_shared<T>();
+                    mImpostorModels[sequence.first] = model;
+
+                    std::cout << "Training model: " << sequence.first
+                        << " (" << 100 * progress / mImpostorSpeakerData->GetSamples().size() << "%)" << std::endl;
+
+                    // UBM exists, train everything else with adaptation.
+                    if (IsBackgroundModelEnabled() && mBackgroundModel != nullptr)
+                    {
+                        model->Adapt(mBackgroundModel, sequence.second, mAdaptationIterations, mRelevanceFactor);
+                    }
+
+                    // No UBM, train normally.
+                    else
+                    {
+                        model->SetOrder(GetOrder());
+
+                        model->Train(sequence.second);
+                    }
                 }
 
-                // No UBM, train normally.
-                else
-                {
-                    model->SetOrder(GetOrder());
+                mTrainedImpostorSpeakerData = mImpostorSpeakerData;
+            }
 
-                    model->Train(sequence.second);
-                }
+            else
+            {
+                std::cout << "Using already trained impostor models." << std::endl;
             }
         }
     }
@@ -238,14 +275,25 @@ void ModelRecognizer<T>::Train(const std::shared_ptr<SpeechData>& data)
         || mScoreNormalizationType == ScoreNormalizationType::ZERO_TEST
         || mScoreNormalizationType == ScoreNormalizationType::TEST_ZERO)
     {
-        if (mImpostorSpeakerData == nullptr)
+        if (mImpostorSpeakerData == nullptr && !mSpeakerImpostorsEnabled)
         {
-            std::cout << "Missing impostor speaker data." << std::endl;
+            std::cout << "Missing impostor speaker data for normalization." << std::endl;
         }
 
         else
         {
             progress = 0;
+
+            std::cout << "Calculating Z-norm scores using: ";
+            
+            std::cout << "impostors, ";
+
+            if (mSpeakerImpostorsEnabled)
+            {
+                std::cout << "speakers";
+            }
+
+            std::cout << "." << std::endl;
 
             for (auto& model : mSpeakerModels)
             {
@@ -266,6 +314,26 @@ void ModelRecognizer<T>::Train(const std::shared_ptr<SpeechData>& data)
                         scores.push_back(GetRatio(model.second, impostor.second));
 
                         ++impostors;
+                    }
+                }
+                
+                if (mSpeakerImpostorsEnabled)
+                {
+                    for (auto& impostor : data->GetSamples())
+                    {
+                        // Already checked.
+                        if (mImpostorSpeakerData->GetSamples().find(impostor.first)
+                            != mImpostorSpeakerData->GetSamples().end())
+                        {
+                            continue;
+                        }
+
+                        if (impostor.first != model.first)
+                        {
+                            scores.push_back(GetRatio(model.second, impostor.second));
+
+                            ++impostors;
+                        }
                     }
                 }
 
@@ -455,7 +523,7 @@ Real ModelRecognizer<T>::GetVerificationScore(const std::string& speaker, const 
 
         for (auto& impostor : mImpostorModels)
         {
-            if (impostor.first == it->first)
+            if (impostor.first == speaker)
             {
                 continue;
             }
@@ -463,6 +531,28 @@ Real ModelRecognizer<T>::GetVerificationScore(const std::string& speaker, const 
             ++impostors;
 
             scores.push_back(GetRatio(impostor.second, samples));
+        }
+
+        if (mSpeakerImpostorsEnabled)
+        {
+            for (auto& impostor : mSpeakerModels)
+            {
+                // Already checked.
+                if (mImpostorModels.find(impostor.first)
+                    != mImpostorModels.end())
+                {
+                    continue;
+                }
+
+                if (impostor.first == speaker)
+                {
+                    continue;
+                }
+            
+                ++impostors;
+
+                scores.push_back(GetRatio(impostor.second, samples));
+            }
         }
 
         if (impostors > 1)

@@ -129,7 +129,7 @@ void GMModel::Adapt(const std::shared_ptr<Model>& other, const std::vector< Dyna
             UpdatePDF(cluster);
         }
 
-        //std::cout << std::abs(logLikelihood - newLogLikelihood) << std::endl;
+        DEBUG_TRACE(std::abs(logLikelihood - newLogLikelihood));
 
         if (std::abs(logLikelihood - newLogLikelihood) < mEta)
         {
@@ -278,8 +278,8 @@ void GMModel::EM(const std::vector< DynamicVector<Real> >& samples)
         newLogLikelihood = E(samples);
 
         M(samples);
-
-        //std::cout << std::abs(logLikelihood - newLogLikelihood) << std::endl;
+        
+        DEBUG_TRACE(std::abs(logLikelihood - newLogLikelihood));
 
         if (std::abs(logLikelihood - newLogLikelihood) < mEta)
         {

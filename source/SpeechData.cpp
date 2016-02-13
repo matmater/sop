@@ -38,6 +38,7 @@ void SpeechData::Load(const std::string& path)
         std::stringstream ssFeatures(line);
 
         std::string label;
+        SpeakerKey key;
 
         if (ssFeatures >> label)
         {
@@ -46,7 +47,9 @@ void SpeechData::Load(const std::string& path)
 
             std::string features;
 
-            auto& userSamples = mSamples[label];
+            key = SpeakerKey(label);
+
+            auto& userSamples = mSamples[SpeakerKey(label)];
 
             while (std::getline(ssFeatures, features, ','))
             {
@@ -71,7 +74,7 @@ void SpeechData::Load(const std::string& path)
 
             if (userSamples.size() == 0)
             {
-                mSamples.erase(label);
+                mSamples.erase(key);
 
                 std::cout << "Error: missing sample data." << std::endl;
             }
@@ -115,6 +118,7 @@ void SpeechData::Load(const std::string& path, unsigned int sl, unsigned int gl,
             std::stringstream ssFeatures(line);
 
             std::string label;
+            SpeakerKey key;
 
             if (ssFeatures >> label)
             {
@@ -134,7 +138,9 @@ void SpeechData::Load(const std::string& path, unsigned int sl, unsigned int gl,
 
                 std::string features;
 
-                auto& userSamples = mSamples[label];
+                key = SpeakerKey(label);
+
+                auto& userSamples = mSamples[key];
 
                 while (std::getline(ssFeatures, features, ','))
                 {
@@ -159,7 +165,7 @@ void SpeechData::Load(const std::string& path, unsigned int sl, unsigned int gl,
 
                 if (userSamples.size() == 0)
                 {
-                    mSamples.erase(label);
+                    mSamples.erase(key);
 
                     std::cout << "Error: missing sample data." << std::endl;
                 }
@@ -322,7 +328,7 @@ unsigned int SpeechData::GetTotalSampleCount() const
     return mTotalSampleCount;
 }
 
-const std::map<std::string, std::vector<DynamicVector<Real> > >& SpeechData::GetSamples() const
+const std::map<SpeakerKey, std::vector<DynamicVector<Real> > >& SpeechData::GetSamples() const
 {
     return mSamples;
 }

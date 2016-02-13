@@ -18,6 +18,8 @@
 #include <iomanip>
 #include <memory>
 #include <vector>
+#include <iomanip>
+#include <functional>
 
 #define DEBUG
 #define DEBUG_LEVEL 5
@@ -37,7 +39,6 @@ int Sign(const T& value)
 {
     return (T(0) < value) - (value < T(0));
 }
-
 
 /*! \brief Converts a given string to a type T.
  *
@@ -163,6 +164,10 @@ inline Real RandomGaussian()
     return (u * std::sqrt((-2.0f * std::log(s)) / s));
 }
 
+/*! \brief Calculates the mean of the values.
+ *  
+ *  Equation: Sum(values)/Size(values)
+ */
 inline Real Mean(const std::vector<Real>& values)
 {
     if (values.size() == 0)
@@ -183,6 +188,10 @@ inline Real Mean(const std::vector<Real>& values)
     return sum;
 }
 
+/*! \brief Returns the variance of the values with a given mean value.
+ *  
+ *  Equation: Sum(values)/(Size(values) - 1)
+ */
 inline Real Variance(const std::vector<Real>& values, Real mean)
 {
     if (values.size() < 2)
@@ -204,6 +213,11 @@ inline Real Variance(const std::vector<Real>& values, Real mean)
     return sum;
 }
 
+/*! \brief Returns the standard deviation of the
+ *  values with a given mean value.
+ *  
+ *  Equation: sqrt[sum(values)/(size(values) - 1)]
+ */
 inline Real Deviation(const std::vector<Real>& values, Real mean)
 {
     return std::sqrt(Variance(values, mean));

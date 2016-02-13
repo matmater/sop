@@ -38,10 +38,10 @@ public:
     
     /*! \copydoc Recognizer::Test()
      */
-    void Test(const SpeechData& data, std::map<std::string, RecognitionResult>& results);
+    void Test(const SpeechData& data, std::map<SpeakerKey, RecognitionResult>& results);
 
 private:
-    std::map<unsigned int, std::string> mNeuronMapping; /*!< Speaker Id, Label */
+    std::map<unsigned int, SpeakerKey> mNeuronMapping; /*!< Speaker Id, Label */
 
     ANNTrainData mTrainData;
 

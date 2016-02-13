@@ -5,7 +5,8 @@ ModelRecognizer<T>::ModelRecognizer()
     mRelevanceFactor(16.0f),
     mScoreNormalizationType(ScoreNormalizationType::NONE),
     mBackgroundModelEnabled(false),
-    mSpeakerImpostorsEnabled(false)
+    mBackgroundModelTrainingEnabled(true),
+    mPrepared(false)
 {
 
 }
@@ -19,9 +20,11 @@ ModelRecognizer<T>::~ModelRecognizer()
 template<typename T>
 void ModelRecognizer<T>::ClearTrainedData()
 {
+    mPrepared = false;
+    mModelCache.clear();
     mSpeakerModels.clear();
     mImpostorDistributions.clear();
-    //mImpostorModels.clear();
+    mImpostorModels.clear();
     //mBackgroundModel = nullptr;
 }
 
@@ -86,31 +89,31 @@ bool ModelRecognizer<T>::IsBackgroundModelEnabled() const
 }
 
 template<typename T>
-void ModelRecognizer<T>::SetImpostorSpeakerData(std::shared_ptr<SpeechData> data)
+void ModelRecognizer<T>::SetBackgroundModelTrainingEnabled(bool enabled)
 {
-    mImpostorSpeakerData = data;
+    mBackgroundModelTrainingEnabled = enabled;
 }
 
 template<typename T>
-std::shared_ptr<SpeechData> ModelRecognizer<T>::GetImpostorSpeakerData()
+bool ModelRecognizer<T>::IsBackgroundModelTrainingEnabled() const
 {
-    return mImpostorSpeakerData;
-}
-    
-template<typename T>
-void ModelRecognizer<T>::SetSpeakerImpostorsEnabled(bool enabled)
-{
-    mSpeakerImpostorsEnabled = enabled;
-}
-    
-template<typename T>
-bool ModelRecognizer<T>::IsSpeakerImpostorsEnabled() const
-{
-    return mSpeakerImpostorsEnabled;
+    return mBackgroundModelTrainingEnabled;
 }
 
 template<typename T>
-void ModelRecognizer<T>::PostProcessModels()
+void ModelRecognizer<T>::SetSpeakerData(std::shared_ptr<SpeechData> data)
+{
+    mSpeakerData = data;
+}
+
+template<typename T>
+std::shared_ptr<SpeechData> ModelRecognizer<T>::GetSpeakerData()
+{
+    return mSpeakerData;
+}
+
+template<typename T>
+void ModelRecognizer<T>::PrepareModels()
 {
     // Virtual
 }
@@ -128,9 +131,16 @@ std::shared_ptr<SpeechData> ModelRecognizer<T>::GetBackgroundModelData()
 }
 
 template<typename T>
-void ModelRecognizer<T>::Train(const std::shared_ptr<SpeechData>& data)
+void ModelRecognizer<T>::Train()
 {
-    if (!data->IsConsistent())
+    if (mSpeakerData == nullptr)
+    {
+        std::cout << "Missing speaker data." << std::endl;
+
+        return;
+    }
+
+    if (!mSpeakerData->IsConsistent())
     {
         std::cout << "Inconsistent training data." << std::endl;
 
@@ -142,50 +152,40 @@ void ModelRecognizer<T>::Train(const std::shared_ptr<SpeechData>& data)
     unsigned int progress = 0;
 
     // Check if the background model can actually be created.
-    if (IsBackgroundModelEnabled() && mBackgroundModelData != nullptr)
+    if (IsBackgroundModelTrainingEnabled() && IsBackgroundModelEnabled() && mBackgroundModelData != nullptr)
     {
-        if (mTrainedBackgroundModelData != mBackgroundModelData)
-        {
-            mBackgroundModel = std::make_shared<T>();
+        mBackgroundModel = std::make_shared<T>();
 
-            // UBM was found, train it first using normal training.
-            std::cout << "Training background model." << std::endl;
+        // UBM was found, train it first using normal training.
+        std::cout << "Training background model." << std::endl;
 
-            std::vector< DynamicVector<Real> > samples;
+        std::vector< DynamicVector<Real> > samples;
         
-            for (const auto& speaker : mBackgroundModelData->GetSamples())
-            {
-                for (const auto& sample : speaker.second)
-                {
-                    samples.push_back(sample);
-                }
-            }
-
-            mBackgroundModel->SetOrder(GetOrder());
-            mBackgroundModel->Train(samples);
-
-            mTrainedBackgroundModelData = mBackgroundModelData;
-        }
-
-        else
+        for (const auto& speaker : mBackgroundModelData->GetSamples())
         {
-            std::cout << "Using an already trained background model." << std::endl;
+            for (const auto& sample : speaker.second)
+            {
+                samples.push_back(sample);
+            }
         }
+
+        mBackgroundModel->SetOrder(GetOrder());
+        mBackgroundModel->Train(samples);
     }
 
     progress = 0;
 
     std::cout << "Training speaker models." << std::endl;
 
-    for (const auto& sequence : data->GetSamples())
+    for (const auto& sequence : mSpeakerData->GetSamples())
     {
         ++progress;
 
         auto model = std::make_shared<T>();
-        mSpeakerModels[sequence.first] = model;
+        mModelCache[sequence.first] = model;
 
         std::cout << "Training model: " << sequence.first
-                    << " (" << 100 * progress / data->GetSamples().size() << "%)" << std::endl;
+                    << " (" << 100 * progress / mSpeakerData->GetSamples().size() << "%)" << std::endl;
 
         // UBM exists, train everything else with adaptation.
         if (IsBackgroundModelEnabled() && mBackgroundModel != nullptr)
@@ -201,163 +201,128 @@ void ModelRecognizer<T>::Train(const std::shared_ptr<SpeechData>& data)
             model->Train(sequence.second);
         }
     }
+}
 
-    PostProcessModels();
-
-    progress = 0;
-
-    // Train T-norm impostor models.
-    if (   (mScoreNormalizationType == ScoreNormalizationType::TEST
-         || mScoreNormalizationType == ScoreNormalizationType::ZERO_TEST
-         || mScoreNormalizationType == ScoreNormalizationType::TEST_ZERO)
-         && mImpostorSpeakerData != nullptr)
+template<typename T>
+void ModelRecognizer<T>::Prepare()
+{
+    // Is everything already OK?
+    if (mPrepared)
     {
-        std::cout << "Training impostor models." << std::endl;
-
-        // If one happens to use same speaker data for impostors.
-        if (mImpostorSpeakerData == data)
-        {
-            mImpostorModels.clear();
-
-            std::cout << "Using existing models." << std::endl;
-
-            // Set models for T-normalization.
-            for (auto& speakerModel : mSpeakerModels)
-            {
-                mImpostorModels[speakerModel.first] = speakerModel.second;
-            }
-        }
-
-        else
-        {
-            if (mTrainedImpostorSpeakerData != mImpostorSpeakerData)
-            {
-                mImpostorModels.clear();
-
-                // Train models for T-normalization.
-                for (const auto& sequence : mImpostorSpeakerData->GetSamples())
-                {
-                    ++progress;
-
-                    auto model = std::make_shared<T>();
-                    mImpostorModels[sequence.first] = model;
-
-                    std::cout << "Training model: " << sequence.first
-                        << " (" << 100 * progress / mImpostorSpeakerData->GetSamples().size() << "%)" << std::endl;
-
-                    // UBM exists, train everything else with adaptation.
-                    if (IsBackgroundModelEnabled() && mBackgroundModel != nullptr)
-                    {
-                        model->Adapt(mBackgroundModel, sequence.second, mAdaptationIterations, mRelevanceFactor);
-                    }
-
-                    // No UBM, train normally.
-                    else
-                    {
-                        model->SetOrder(GetOrder());
-
-                        model->Train(sequence.second);
-                    }
-                }
-
-                mTrainedImpostorSpeakerData = mImpostorSpeakerData;
-            }
-
-            else
-            {
-                std::cout << "Using already trained impostor models." << std::endl;
-            }
-        }
+        return;
     }
+
+    PrepareModels();
+
+    unsigned int progress = 0;
 
     // Z norm
     if (   mScoreNormalizationType == ScoreNormalizationType::ZERO
         || mScoreNormalizationType == ScoreNormalizationType::ZERO_TEST
         || mScoreNormalizationType == ScoreNormalizationType::TEST_ZERO)
     {
-        if (mImpostorSpeakerData == nullptr && !mSpeakerImpostorsEnabled)
+        progress = 0;
+
+        std::cout << "Calculating Z-norm scores." << std::endl;
+
+        for (auto& model : mSpeakerModels)
         {
-            std::cout << "Missing impostor speaker data for normalization." << std::endl;
-        }
+            ++progress;
 
-        else
-        {
-            progress = 0;
+            std::cout << "Calculating Z-norm scores: " << model.first
+                << " (" << 100 * progress / mSpeakerModels.size() << "%)" << std::endl;
 
-            std::cout << "Calculating Z-norm scores using: ";
-            
-            std::cout << "impostors, ";
+            std::vector<Real> scores;
+                
+            unsigned int impostors = 0;
 
-            if (mSpeakerImpostorsEnabled)
+            // Z-norm scores.
+            for (auto& impostor : mImpostorModels)
             {
-                std::cout << "speakers";
+                auto it = mSpeakerData->GetSamples().find(impostor.first);
+
+                if (it == mSpeakerData->GetSamples().end())
+                {
+                    std::cout << "Impostor speaker data not found." << std::endl;
+
+                    continue;
+                }
+
+                if (impostor.first != model.first)
+                {
+                    scores.push_back(GetRatio(model.second, it->second));
+
+                    ++impostors;
+                }
             }
 
-            std::cout << "." << std::endl;
-
-            for (auto& model : mSpeakerModels)
+            if (impostors > 1)
             {
-                ++progress;
-
-                std::cout << "Calculating Z-norm scores: " << model.first
-                    << " (" << 100 * progress / mSpeakerModels.size() << "%)" << std::endl;
-
-                std::vector<Real> scores;
+                // Initialize speaker-specific Z-normalization parameters.
+                auto& zd = mImpostorDistributions[model.first];
                 
-                unsigned int impostors = 0;
+                zd.mean = Mean(scores);
+                zd.deviation = Deviation(scores, zd.mean);
+            }
 
-                // Z-norm scores.
-                for (auto& impostor : mImpostorSpeakerData->GetSamples())
-                {
-                    if (impostor.first != model.first)
-                    {
-                        scores.push_back(GetRatio(model.second, impostor.second));
-
-                        ++impostors;
-                    }
-                }
-                
-                if (mSpeakerImpostorsEnabled)
-                {
-                    for (auto& impostor : data->GetSamples())
-                    {
-                        // Already checked.
-                        if (mImpostorSpeakerData->GetSamples().find(impostor.first)
-                            != mImpostorSpeakerData->GetSamples().end())
-                        {
-                            continue;
-                        }
-
-                        if (impostor.first != model.first)
-                        {
-                            scores.push_back(GetRatio(model.second, impostor.second));
-
-                            ++impostors;
-                        }
-                    }
-                }
-
-                if (impostors > 1)
-                {
-                    // Initialize speaker-specific Z-normalization parameters.
-                    auto& zd = mImpostorDistributions[model.first];
-                
-                    zd.mean = Mean(scores);
-                    zd.deviation = Deviation(scores, zd.mean);
-                }
-
-                else
-                {
-                    std::cout << "Not enough impostors for Z-normalization was found." << std::endl;
-                }
+            else
+            {
+                std::cout << "Not enough impostors for Z-normalization was found." << std::endl;
             }
         }
+    }
+
+    mPrepared = true;
+}
+
+template<typename T>
+void ModelRecognizer<T>::SelectSpeakerModels(const std::vector<SpeakerKey>& models)
+{
+    mPrepared = false;
+
+    mSpeakerModels.clear();
+
+    for (const auto& key : models)
+    {
+        auto it = mModelCache.find(key);
+
+        if (it == mModelCache.end())
+        {
+            std::cout << "Speaker model '" << key << "' could not be selected." << std::endl;
+            continue;
+        }
+
+        mSpeakerModels[key] = it->second;
     }
 }
 
 template<typename T>
-void ModelRecognizer<T>::Test(const std::shared_ptr<SpeechData>& data, std::map<std::string, RecognitionResult>& results)
+void ModelRecognizer<T>::SelectImpostorModels(const std::vector<SpeakerKey>& models)
 {
+    mPrepared = false;
+
+    mImpostorModels.clear();
+    mImpostorDistributions.clear();
+        
+    for (const auto& key : models)
+    {
+        auto it = mModelCache.find(key);
+
+        if (it == mModelCache.end())
+        {
+            std::cout << "Impostor model '" << key << "' could not be selected." << std::endl;
+            continue;
+        }
+
+        mImpostorModels[key] = it->second;
+    }
+}
+
+template<typename T>
+void ModelRecognizer<T>::Test(const std::shared_ptr<SpeechData>& data, std::map<SpeakerKey, RecognitionResult>& results)
+{
+    Prepare();
+
     if (!data->IsConsistent())
     {
         std::cout << "Inconsistent testing data." << std::endl;
@@ -384,7 +349,7 @@ void ModelRecognizer<T>::Test(const std::shared_ptr<SpeechData>& data, std::map<
 
     for (auto& entry : data->GetSamples())
     {
-        std::string bestModelName = "";
+        SpeakerKey bestModelName;
         std::shared_ptr<T> bestModel = nullptr;
 
         bool knownSpeaker = false;
@@ -392,7 +357,7 @@ void ModelRecognizer<T>::Test(const std::shared_ptr<SpeechData>& data, std::map<
 
         for (auto& model : mSpeakerModels)
         {
-            if (Utilities::IsSameSpeaker(entry.first, model.first))
+            if (entry.first.IsSameSpeaker(model.first))
             {
                 knownSpeaker = true;
             }
@@ -482,8 +447,39 @@ Real ModelRecognizer<T>::GetRatio(const std::shared_ptr<T>& model, const std::ve
 }
 
 template<typename T>
-Real ModelRecognizer<T>::GetVerificationScore(const std::string& speaker, const std::vector< DynamicVector<Real> >& samples)
+bool ModelRecognizer<T>::IsRecognized(const SpeakerKey& speaker, const std::vector< DynamicVector<Real> >& samples)
 {
+    Prepare();
+
+    if (mSpeakerModels.empty())
+    {
+        std::cout << "Speaker not recognized: no speaker models found." << std::endl;
+
+        return false;
+    }
+
+    Real bestScore = std::numeric_limits<Real>::min();
+    SpeakerKey bestSpeaker;
+    
+    for (auto& model : mSpeakerModels)
+    {
+        Real score = model.second->GetScore(samples);
+
+        if (score > bestScore)
+        {
+            bestScore = score;
+            bestSpeaker = model.first;
+        }
+    }
+
+    return bestSpeaker == speaker;
+}
+
+template<typename T>
+Real ModelRecognizer<T>::GetVerificationScore(const SpeakerKey& speaker, const std::vector< DynamicVector<Real> >& samples)
+{
+    Prepare();
+
     auto it = mSpeakerModels.find(speaker);
 
     if (it == mSpeakerModels.end())
@@ -533,28 +529,6 @@ Real ModelRecognizer<T>::GetVerificationScore(const std::string& speaker, const 
             scores.push_back(GetRatio(impostor.second, samples));
         }
 
-        if (mSpeakerImpostorsEnabled)
-        {
-            for (auto& impostor : mSpeakerModels)
-            {
-                // Already checked.
-                if (mImpostorModels.find(impostor.first)
-                    != mImpostorModels.end())
-                {
-                    continue;
-                }
-
-                if (impostor.first == speaker)
-                {
-                    continue;
-                }
-            
-                ++impostors;
-
-                scores.push_back(GetRatio(impostor.second, samples));
-            }
-        }
-
         if (impostors > 1)
         {
             td.mean = Mean(scores);
@@ -589,8 +563,10 @@ Real ModelRecognizer<T>::GetVerificationScore(const std::string& speaker, const 
 }
 
 template<typename T>
-std::vector<Real> ModelRecognizer<T>::GetMultipleVerificationScore(const std::string& speaker, const std::shared_ptr<SpeechData>& data)
+std::vector<Real> ModelRecognizer<T>::GetMultipleVerificationScore(const SpeakerKey& speaker, const std::shared_ptr<SpeechData>& data)
 {
+    Prepare();
+
     std::vector<Real> results;
 
     if (!data->IsConsistent())
@@ -632,14 +608,18 @@ std::vector<Real> ModelRecognizer<T>::GetMultipleVerificationScore(const std::st
 }
 
 template<typename T>
-std::vector<Real> ModelRecognizer<T>::Verify(const std::string& speaker, const std::shared_ptr<SpeechData>& data)
+std::vector<Real> ModelRecognizer<T>::Verify(const SpeakerKey& speaker, const std::shared_ptr<SpeechData>& data)
 {
+    Prepare();
+
     return GetMultipleVerificationScore(speaker, data);
 }
 
 template<typename T>
-unsigned int ModelRecognizer<T>::GetDimensionCount() const
+unsigned int ModelRecognizer<T>::GetDimensionCount()
 {
+    Prepare();
+
     if (mSpeakerModels.size() == 0)
     {
         return 0;
@@ -669,25 +649,25 @@ std::shared_ptr<T> ModelRecognizer<T>::GetBackgroundModel()
 }
 
 template<typename T>
-std::map< std::string, std::shared_ptr<T> >& ModelRecognizer<T>::GetImpostorModels()
+std::map<SpeakerKey, std::shared_ptr<T> >& ModelRecognizer<T>::GetImpostorModels()
 {
     return mImpostorModels;
 }
 
 template<typename T>
-const std::map< std::string, std::shared_ptr<T> >& ModelRecognizer<T>::GetImpostorModels() const
+const std::map<SpeakerKey, std::shared_ptr<T> >& ModelRecognizer<T>::GetImpostorModels() const
 {
     return mImpostorModels;
 }
 
 template<typename T>
-const std::map< std::string, std::shared_ptr<T> >& ModelRecognizer<T>::GetSpeakerModels() const
+const std::map<SpeakerKey, std::shared_ptr<T> >& ModelRecognizer<T>::GetSpeakerModels() const
 {
     return mSpeakerModels;
 }
 
 template<typename T>
-std::map< std::string, std::shared_ptr<T> >& ModelRecognizer<T>::GetSpeakerModels()
+std::map<SpeakerKey, std::shared_ptr<T> >& ModelRecognizer<T>::GetSpeakerModels()
 {
     return mSpeakerModels;
 }

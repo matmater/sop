@@ -1,5 +1,4 @@
 #include "GMMRecognizer.h"
-#include "Utilities.h"
 
 GMMRecognizer::GMMRecognizer()
 {
@@ -11,12 +10,12 @@ GMMRecognizer::~GMMRecognizer()
 
 }
 
-void GMMRecognizer::Train(const std::shared_ptr<SpeechData>& data)
+void GMMRecognizer::Train()
 {
-    ModelRecognizer<GMModel>::Train(data);
+    ModelRecognizer<GMModel>::Train();
 }
 
-void GMMRecognizer::Test(const std::shared_ptr<SpeechData>& data, std::map<std::string, RecognitionResult>& results)
+void GMMRecognizer::Test(const std::shared_ptr<SpeechData>& data, std::map<SpeakerKey, RecognitionResult>& results)
 {
     ModelRecognizer<GMModel>::Test(data, results);
 }

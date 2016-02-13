@@ -9,7 +9,6 @@
 
 #include "Recognizer.h"
 #include "Model.h"
-#include "Utilities.h"
 
 enum class ScoreNormalizationType
 {
@@ -25,6 +24,7 @@ enum class ScoreNormalizationType
  *  \todo Add missing functionalities.
  *  \todo Add/fix comments.
  *  \todo Check normalization.
+ *  \todo Check correctness.
  */
 template<typename T>
 class ModelRecognizer : public Recognizer
@@ -68,6 +68,10 @@ public:
      */
     bool IsBackgroundModelEnabled() const;
     
+    void SetBackgroundModelTrainingEnabled(bool enabled);
+
+    bool IsBackgroundModelTrainingEnabled() const;
+
     /*! \brief Sets background model data.
      *
      *  This takes effect when the model is trained and the background model is enabled.
@@ -79,27 +83,13 @@ public:
      */
     virtual std::shared_ptr<SpeechData> GetBackgroundModelData();
     
-    /*! \brief Sets impostor speaker data.
-     *
-     *  Impostor speaker data can be any speaker data. In case impostor data is
-     *  equal to training data no duplicate models will be trained. Also it is guaranteed
-     *  that the speakers that are also in impostor data are not used as their impostors.
+    /*! \brief !!!!!!!!!!!!
      */
-    virtual void SetImpostorSpeakerData(std::shared_ptr<SpeechData> data);
+    virtual void SetSpeakerData(std::shared_ptr<SpeechData> data);
 
-    /*! \brief Returns impostor speaker data.
+    /*! \brief !!!!!!!!!!!!
      */
-    virtual std::shared_ptr<SpeechData> GetImpostorSpeakerData();
-    
-    /*! \brief Enables/disables speaker models to be used also as impostors.
-     *
-     *  Disabled by default.
-     */
-    void SetSpeakerImpostorsEnabled(bool enabled);
-    
-    /*! \brief Checks if speaker models are used also as impostors.
-     */
-    bool IsSpeakerImpostorsEnabled() const;
+    virtual std::shared_ptr<SpeechData> GetSpeakerData();
 
     /*! \brief Sets the order of this model.
      *
@@ -135,12 +125,30 @@ public:
 
     /*! \copydoc Recognizer::Train()
      */
-    virtual void Train(const std::shared_ptr<SpeechData>& data) override;
+    virtual void Train() override;
+
+    virtual void SelectSpeakerModels(const std::vector<SpeakerKey>& models);
+
+    virtual void SelectImpostorModels(const std::vector<SpeakerKey>& models);
     
     /*! \copydoc Recognizer::Test()
      */
-    virtual void Test(const std::shared_ptr<SpeechData>& data, std::map<std::string, RecognitionResult>& results) override;
+    virtual void Test(const std::shared_ptr<SpeechData>& data, std::map<SpeakerKey, RecognitionResult>& results) override;
     
+    virtual void Prepare();
+
+    /*! \brief Checks if a given speaker is recognized.
+     *
+     *  All speaker models are checked against given samples. The model that gives the highest
+     *  score will be chosen as the recognized speaker.
+     *
+     *  \param speaker Correct speaker.
+     *  \param samples Correct speaker samples to be tested.
+     * 
+     *  \return True if the recognized speaker and the given speaker match. False, otherwise.
+     */
+    virtual bool IsRecognized(const SpeakerKey& speaker, const std::vector< DynamicVector<Real> >& samples);
+
     /*! \brief Calculates a verification score for a claimed speaker based on given samples.
      *
      *  This calculates the final verification score:
@@ -150,22 +158,22 @@ public:
      *  If the background model is not available the raw score of the speaker will be returned and normalized
      *  if required.
      */
-    virtual Real GetVerificationScore(const std::string& speaker, const std::vector< DynamicVector<Real> >& samples);
+    virtual Real GetVerificationScore(const SpeakerKey& speaker, const std::vector< DynamicVector<Real> >& samples);
 
     /*! \brief Returns verification scores of multiple samples.
      *
      *  \sa GetVerificationScore()
      */
-    virtual std::vector<Real> GetMultipleVerificationScore(const std::string& speaker, const std::shared_ptr<SpeechData>& data);
+    virtual std::vector<Real> GetMultipleVerificationScore(const SpeakerKey& speaker, const std::shared_ptr<SpeechData>& data);
     
     /*! \copydoc Recognizer::Verify()
      */
-    virtual std::vector<Real> Verify(const std::string& speaker, const std::shared_ptr<SpeechData>& data) override;
+    virtual std::vector<Real> Verify(const SpeakerKey& speaker, const std::shared_ptr<SpeechData>& data) override;
 
 protected:
     /*! \brief Post-process models after training.
      */
-    virtual void PostProcessModels();
+    virtual void PrepareModels();
     
     /*! \brief Unnormalized version of GetMultipleVerificationScore().
      */
@@ -175,15 +183,15 @@ protected:
 
     virtual void SetBackgroundModel(std::shared_ptr<T> model);
     
-    std::map< std::string, std::shared_ptr<T> >& GetImpostorModels();
+    std::map<SpeakerKey, std::shared_ptr<T> >& GetImpostorModels();
     
-    const std::map< std::string, std::shared_ptr<T> >& GetImpostorModels() const;
+    const std::map<SpeakerKey, std::shared_ptr<T> >& GetImpostorModels() const;
 
-    std::map< std::string, std::shared_ptr<T> >& GetSpeakerModels();
+    std::map<SpeakerKey, std::shared_ptr<T> >& GetSpeakerModels();
     
-    const std::map< std::string, std::shared_ptr<T> >& GetSpeakerModels() const;
+    const std::map<SpeakerKey, std::shared_ptr<T> >& GetSpeakerModels() const;
 
-    virtual unsigned int GetDimensionCount() const;
+    virtual unsigned int GetDimensionCount();
 
 private:
     unsigned int mOrder;
@@ -195,21 +203,23 @@ private:
     ScoreNormalizationType mScoreNormalizationType;
     
     bool mBackgroundModelEnabled;
-    
-    bool mSpeakerImpostorsEnabled;
+
+    bool mBackgroundModelTrainingEnabled;
+
+    bool mPrepared;
 
     std::shared_ptr<T> mBackgroundModel;
     
-    std::shared_ptr<SpeechData> mImpostorSpeakerData;
-    std::shared_ptr<SpeechData> mTrainedImpostorSpeakerData;
+    std::map<SpeakerKey, std::shared_ptr<T> > mModelCache;
+
+    std::shared_ptr<SpeechData> mSpeakerData;
 
     std::shared_ptr<SpeechData> mBackgroundModelData;
-    std::shared_ptr<SpeechData> mTrainedBackgroundModelData;
 
-    std::map< std::string, std::shared_ptr<T> > mSpeakerModels;
-    std::map< std::string, std::shared_ptr<T> > mImpostorModels;
+    std::map<SpeakerKey, std::shared_ptr<T> > mSpeakerModels;
+    std::map<SpeakerKey, std::shared_ptr<T> > mImpostorModels;
 
-    std::map< std::string, Distribution> mImpostorDistributions;
+    std::map<SpeakerKey, Distribution> mImpostorDistributions;
 };
 
 #include "ModelRecognizer.inl"

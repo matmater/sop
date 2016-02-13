@@ -1,14 +1,6 @@
 #include "RecognitionResult.h"
 
-/*
-RecognitionResult::RecognitionResult(Type type, const std::string& speaker)
-    : mType(type), mSpeaker(speaker)
-{
-
-}
-*/
-
-RecognitionResult::RecognitionResult(const bool known, const std::string& speaker)
+RecognitionResult::RecognitionResult(const bool known, const SpeakerKey& speaker)
     : mKnown(known), mSpeaker(speaker)
 {
 
@@ -24,7 +16,7 @@ bool RecognitionResult::GetKnown() const
     return mKnown;
 }
 
-const std::string& RecognitionResult::GetSpeaker() const
+const SpeakerKey& RecognitionResult::GetSpeaker() const
 {
     return mSpeaker;
 }

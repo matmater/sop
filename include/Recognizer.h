@@ -20,7 +20,7 @@ public:
 
     /*! \brief Trains the recognizer with given speech data.
      */
-    virtual void Train(const std::shared_ptr<SpeechData>& data) = 0;
+    virtual void Train() = 0;
 
     /*! \brief Loads trained data.
      */
@@ -32,11 +32,11 @@ public:
 
     /*! \brief Tests samples on the trained recognizer.
      */
-    virtual void Test(const std::shared_ptr<SpeechData>& data, std::map<std::string, RecognitionResult>& results) = 0;
+    virtual void Test(const std::shared_ptr<SpeechData>& data, std::map<SpeakerKey, RecognitionResult>& results) = 0;
 
     /*! \brief Verifies samples on the trained recognizer.
      */
-    virtual std::vector<Real> Verify(const std::string& speaker, const std::shared_ptr<SpeechData>& data) = 0;
+    virtual std::vector<Real> Verify(const SpeakerKey& speaker, const std::shared_ptr<SpeechData>& data) = 0;
 };
 
 #endif

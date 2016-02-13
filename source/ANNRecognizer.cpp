@@ -1,5 +1,4 @@
 #include "ANNRecognizer.h"
-#include "Utilities.h"
 
 ANNRecognizer::ANNRecognizer()
 {
@@ -110,7 +109,7 @@ void ANNRecognizer::LoadTrainedData(const std::string& path)
 
 }
 
-void ANNRecognizer::Test(const SpeechData& data, std::map<std::string, RecognitionResult>& results)
+void ANNRecognizer::Test(const SpeechData& data, std::map<SpeakerKey, RecognitionResult>& results)
 {
     if (!data.IsConsistent())
     {
@@ -168,7 +167,7 @@ void ANNRecognizer::Test(const SpeechData& data, std::map<std::string, Recogniti
 
         for (Real res : mResult)
         {
-            if (Utilities::IsSameSpeaker(entry.first, mNeuronMapping[id]))
+            if (entry.first.IsSameSpeaker(mNeuronMapping[id]))
             {
                 knownSpeaker = true;
                 std::cout << "THIS IS A KNOWN SPEAKER" << std::endl;				

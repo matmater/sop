@@ -28,7 +28,7 @@ public:
 
     /*! \brief Weights centroids.
      */
-    void Weight(const std::map< std::string, std::shared_ptr<VQModel> >& models);
+    void Weight(const std::map< SpeakerKey, std::shared_ptr<VQModel> >& models);
 
     /*! \brief Trains the model.
      */
@@ -39,7 +39,7 @@ public:
      *  MAP algorithm for adapting a speaker model. Based on: ftp://ftp.cs.joensuu.fi/franti/papers/VQMAP-SPL2008.pdf
      */
     virtual void Adapt(const std::shared_ptr<Model>& other, const std::vector< DynamicVector<Real> >& samples,
-                       unsigned int iterations = 2, Real relevanceFactor = 16.0f) override;
+                       unsigned int iterations = 2, Real relevanceFactor = 12.0f) override;
     
     /*! \brief Returns squared-error distortion measure
      *  divided by the number of samples.

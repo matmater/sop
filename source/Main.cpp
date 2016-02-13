@@ -1,6 +1,5 @@
 #include <fstream>
 #include "Common.h"
-#include "Utilities.h"
 #include <chrono>
 
 #include "GMMRecognizer.h"
@@ -46,127 +45,102 @@ void LoadTextSamples(const std::shared_ptr<SpeechData>& data, unsigned int sf, u
     data->Normalize();
 }
 
-void Evaluate(std::map<std::string, RecognitionResult>& results, std::vector<unsigned int>& finalresults)
-{
-    unsigned int correctlyRecognized = 0;
-    unsigned int correctlyRejected = 0;
-    unsigned int incorrectlyRecognized = 0;
-    unsigned int incorrectlyRejected = 0;
-
-    for (auto& result : results)
-    {
-        const RecognitionResult& rr = result.second;
-
-        if (rr.GetKnown())
-        {
-            // Known speaker
-            if (Utilities::IsSameSpeaker(result.first, rr.GetSpeaker()))
-            {
-                correctlyRecognized++;
-            }
-
-            else if (rr.GetSpeaker() == "")
-            {
-                incorrectlyRejected++;
-            }
-            else
-            {
-                incorrectlyRecognized++;
-            }
-        }
-
-        else
-        {
-            // Unknown speaker
-            if (rr.GetSpeaker() == "")
-            {
-                correctlyRejected++;
-            }
-
-            else
-            {
-                incorrectlyRecognized++;
-            }
-        }
-    }
-
-    DEBUG_TRACE(
-        "correctlyRecognized"
-        << " "
-        << "correctlyRejected"
-        << " "
-        << "incorrectlyRecognized"
-        << " "
-        << "incorrectlyRejected");
-
-    DEBUG_TRACE(
-        correctlyRecognized
-        << " "
-        << correctlyRejected
-        << " "
-        << incorrectlyRecognized
-        << " "
-        << incorrectlyRejected);
-      
-    finalresults[0] += correctlyRecognized;
-    finalresults[1] += correctlyRejected;   
-    finalresults[2] += incorrectlyRecognized;    
-    finalresults[3] += incorrectlyRejected;
-}
-
 void RecognitionTest()
 {
     unsigned int sf = 240;  // startfile, speaker to start with
     unsigned int gf = 5;    // getfiles, number of files to get
     unsigned int sl = 1;    // startline, line to start at
-    unsigned int gl = 5;    // getlines, number of lines to get
-    unsigned int trainingCycles = 2;
+    unsigned int gl = 3;    // getlines, number of lines to get
+    unsigned int trainingCycles = 4;
     unsigned int correctClaimed = 5;
     
+    std::ofstream results;
+    results.open("recognitionresults.txt", std::ios::app);
+
     std::cout << "Recognition Test" << std::endl;
+
+    //recognizer.SetScoreNormalizationType(ScoreNormalizationType::ZERO_TEST);
+    auto trainData = std::make_shared<SpeechData>();
+    auto testData = std::make_shared<SpeechData>();
+    
+    // Test utterances
+    LoadTextSamples(testData, sf, trainingCycles * 10, gl+1, gl, false); // Not sure about that +1
+
+    // Speaker model data
+    LoadTextSamples(trainData, sf, trainingCycles * 10, 1, gl, true);
+    
     VQRecognizer recognizer;
     recognizer.SetBackgroundModelEnabled(false);
     recognizer.SetOrder(128);
     recognizer.SetWeightingEnabled(false);
-    recognizer.SetScoreNormalizationType(ScoreNormalizationType::ZERO_TEST);    
-    auto trainData = std::make_shared<SpeechData>();
-    auto testData = std::make_shared<SpeechData>();
-    std::map<std::string, RecognitionResult> result;
-    std::vector<unsigned int> finalRecResults (4,0);
+    recognizer.SetSpeakerData(trainData);
+
+    recognizer.Train();
+
+    // Only after training models can be selected for testing.
+
+    std::vector<unsigned int> finalRecResults (2,0);
     
-    for (unsigned int i = 0; i < trainingCycles ; i++)
+    for (unsigned int i = 1; i <= trainingCycles ; i++)
     {
-        std::cout << i+1 << "/" << trainingCycles << std::endl;
-        LoadTextSamples(trainData, sf, gf, sl, gl, true);
-        recognizer.SetImpostorSpeakerData(trainData);
-        recognizer.Train(trainData);
- 
-        //auto start = std::chrono::system_clock::now();            
-        LoadTextSamples(testData, sf, gf, sl+gl, correctClaimed, false);                      
-        //auto end = std::chrono::system_clock::now();
-        //std::chrono::duration<double> loadDuration = end - start;            
-        //start = std::chrono::system_clock::now();
-        recognizer.Test(testData, result);
-        //end = std::chrono::system_clock::now();
-        //std::chrono::duration<double> testDuration = end - start;
-        Evaluate(result, finalRecResults);
-        sf+=gf;
-    }
+        std::cout << i << "/" << trainingCycles << std::endl;
         
-    unsigned int sum = 0;
-    for (unsigned int n : finalRecResults)
-        sum += n;
+        unsigned int population = i * 10;
+        unsigned int correct = 0;
+        unsigned int incorrect = 0;
+        
+        // Select trained speakers.
+        std::vector<SpeakerKey> speakers;
+        for (unsigned int k = 0; k < population; ++k)
+        {
+            SpeakerKey key(toString(sf + k));
+
+            // Debug check.
+            if (trainData->GetSamples().find(key) == trainData->GetSamples().end())
+            {
+                std::cout << "Speaker '" << key << "'not loaded." << std::endl;
+                continue;
+            }
+
+            speakers.push_back(key);
+        }
+
+        recognizer.SelectSpeakerModels(speakers);
+        
+        // Check test data against selected speakers.
+        // Slow but works.
+        for (const auto& samples : testData->GetSamples())
+        {
+            for (const auto& speaker : speakers)
+            {
+                if (samples.first.IsSameSpeaker(speaker))
+                {
+                    if (recognizer.IsRecognized(speaker, samples.second))
+                    {
+                        ++correct;
+                    }
+
+                    else
+                    {
+                        ++incorrect;
+                    }
+
+                    break;
+                }
+            }
+        }
+
+        if (correct > 0 || incorrect > 0)
+        {
+            std::cout << "Speakers " << population
+                      << ", accuracy "
+                      << 100.0f * static_cast<float>(correct) / static_cast<float>(correct + incorrect) << "%" << std::endl;
+        }
+
+        results << population << " " << correct << " " << incorrect << std::endl;
+    }
     
-std::cout << "Correctly recognized:   " << finalRecResults[0] << " " << 100.0 * finalRecResults[0] / sum << "%" << std::endl
-              << "Correctly rejected:     " << finalRecResults[1] << " " << 100.0 * finalRecResults[1] / sum << "%" << std::endl
-              << "Incorrectly recognized: " << finalRecResults[2] << " " << 100.0 * finalRecResults[2] / sum << "%" << std::endl          
-              << "Incorrectly rejected:   " << finalRecResults[3] << " " << 100.0 * finalRecResults[3] / sum << "%" << std::endl;
-              
-    std::ofstream resultss;
-    resultss.open("recognitionresults.txt", std::ios::app);
-    resultss << finalRecResults[0] << " " << finalRecResults[1] << " " << finalRecResults[2] << " " << finalRecResults[3] << std::endl;
-    //loadDur.count()
-    resultss.close();    
+    results.close();
 }
 
 void VerificationTest()
@@ -174,51 +148,114 @@ void VerificationTest()
     unsigned int sf = 240;  // startfile, speaker to start with
     unsigned int gf = 5;    // getfiles, number of files to get
     unsigned int sl = 1;    // startline, line to start at
-    unsigned int gl = 5;    // getlines, number of lines to get
-    unsigned int trainingCycles = 5;
-    unsigned int incorrectClaimed = 2;
-    unsigned int correctClaimed = 25;
+    unsigned int gl = 3;    // getlines, number of lines to get
+    unsigned int trainingCycles = 3;
+    unsigned int incorrectClaimed = 5;
+    unsigned int correctClaimed = 5;
+
+    unsigned int ubmSpeakerCount = 10; // Max ~ 30.
+    unsigned int ubmLineCount = 2;
+
+    unsigned int impostorSpeakerCount = 5; // Max = 20.
+    // Line count same as gl.
    
     std::cout << "Verification test" << std::endl;
-    GMMRecognizer recognizer;
-    recognizer.SetBackgroundModelEnabled(true);
-    recognizer.SetOrder(128);
-    recognizer.SetSpeakerImpostorsEnabled(true);
-    recognizer.SetAdaptationIterations(2);
-    //recognizer.SetWeightingEnabled(true);
-    recognizer.SetScoreNormalizationType(ScoreNormalizationType::ZERO_TEST);
+
     auto trainData = std::make_shared<SpeechData>();
     auto testData = std::make_shared<SpeechData>();
     auto testData2 = std::make_shared<SpeechData>();
     auto ubmData = std::make_shared<SpeechData>();
-    auto impostorData = std::make_shared<SpeechData>();
-    LoadTextSamples(ubmData, 225 + 70, 3, 1, 2, true);
-    LoadTextSamples(impostorData, 225 + 50, 3, 1, 2, true);
+
     std::string claimedSpeaker;
     std::ofstream vresults;
     vresults.open("verificationresults.txt", std::ios::app);
     std::vector<Real> verificationResults;
+    
+    // Load background model data.
+    LoadTextSamples(ubmData, sf + 70, ubmSpeakerCount, sl, gl, true);
+
+    // Load ALL speakers to be tested (including impostors).
+    LoadTextSamples(trainData, sf, gf * trainingCycles + impostorSpeakerCount, sl, gl, true);
+    
+    VQRecognizer recognizer;
+    recognizer.SetBackgroundModelEnabled(true);
+    recognizer.SetOrder(256);
+    recognizer.SetAdaptationIterations(2);
+    //recognizer.SetWeightingEnabled(true);
+    recognizer.SetScoreNormalizationType(ScoreNormalizationType::ZERO_TEST);
 
     recognizer.SetBackgroundModelData(ubmData);
-    recognizer.SetImpostorSpeakerData(impostorData);
+    recognizer.SetSpeakerData(trainData);
+
+    recognizer.Train();
+
+    // Only after training models can be selected for testing.
+    
+    //Avoid training the background model again:
+    //recognizer.SetBackgroundModelTrainingEnabled(true);
+    //recognizer.Train();
+    //recognizer.SetBackgroundModelTrainingEnabled(false);
+    //...
+    //recognizer.SetSpeakerData(...)
+    //recognizer.Train()
+    //recognizer.SelectSpeakerModels(...)
+    //recognizer.SelectImpostorModels(...)
+    //...
+
+    // Select trained impostors.
+    std::vector<SpeakerKey> impostors;
+    for (unsigned int i = 0; i < impostorSpeakerCount; ++i)
+    {
+        SpeakerKey key(toString(sf + gf * trainingCycles + i));
+
+        // Debug check.
+        if (trainData->GetSamples().find(key) == trainData->GetSamples().end())
+        {
+            std::cout << "Impostor '" << key << "'not loaded." << std::endl;
+            continue;
+        }
+
+        impostors.push_back(key);
+    }
+    recognizer.SelectImpostorModels(impostors);
     
     for (unsigned int i = 0; i < trainingCycles ; i++)
     {
         std::cout << i+1 << "/" << trainingCycles << std::endl;
-        LoadTextSamples(trainData, sf, gf, sl, gl, true);
-        recognizer.Train(trainData);
+        
+        // Select trained speakers.
+        std::vector<SpeakerKey> speakers;
+        for (unsigned int k = 0; k < gf; ++k)
+        {
+            SpeakerKey key(toString(sf + k));
+
+            // Debug check.
+            if (trainData->GetSamples().find(key) == trainData->GetSamples().end())
+            {
+                std::cout << "Speaker '" << i << "'not loaded." << std::endl;
+                continue;
+            }
+
+            speakers.push_back(key);
+        }
+        recognizer.SelectSpeakerModels(speakers);
+
+        // Test
+
         LoadTextSamples(testData2, sf+gf, incorrectClaimed, sl, gl, false);          
         for (unsigned int j = 0; j < gf; j++)
         {
+            std::cout << "Verification check " << j+1 << "/" << gf << std::endl;
+        
             LoadTextSamples(testData, sf+j, 1, sl+gl, correctClaimed, false);          
             claimedSpeaker = toString(sf+j);
-            verificationResults = recognizer.Verify(claimedSpeaker, testData);
+            verificationResults = recognizer.Verify(SpeakerKey(claimedSpeaker), testData);
             for (auto& entry : verificationResults)
             {
                 vresults << entry << " ";
             }
             vresults << std::endl;
-            verificationResults = recognizer.Verify(claimedSpeaker, testData2);
+            verificationResults = recognizer.Verify(SpeakerKey(claimedSpeaker), testData2);
             for (auto& entry : verificationResults)
             {
                 vresults << entry << " ";
@@ -227,7 +264,6 @@ void VerificationTest()
         }
         sf += gf;
     }
-    vresults.close();    
 }
 
 int main(int argc, char** argv)
@@ -244,36 +280,6 @@ int main(int argc, char** argv)
     }
 #endif
 
-    //RecognitionTest();
-    VerificationTest();
-    
-    if (false) {
-        std::cout << "Verification Test" << std::endl;
-        GMMRecognizer recognizer;
-        // GMMRecognizer recognizer;
-        // ANNRecognizer recognizer;
-        auto trainData = std::make_shared<SpeechData>();
-        trainData->Load("train.txt");
-        trainData->Normalize();
-        recognizer.SetBackgroundModelEnabled(false);
-        recognizer.SetOrder(128);
-        recognizer.SetAdaptationIterations(3);
-        // recognizer.SetWeightingEnabled(true);
-        recognizer.SetScoreNormalizationType(ScoreNormalizationType::ZERO_TEST);
-        recognizer.SetImpostorSpeakerData(trainData);
-        std::map<std::string, RecognitionResult> result;
-        std::vector<unsigned int> finalRecResults (4,0);
-        auto testData = std::make_shared<SpeechData>();
-        auto start = std::chrono::system_clock::now();
-        testData->Load("test.txt");
-        testData->Normalize();
-        auto end = std::chrono::system_clock::now();
-        std::chrono::duration<double> loadDuration = end - start;
-        recognizer.Train(trainData);
-        start = std::chrono::system_clock::now();
-        recognizer.Test(testData, result);
-        end = std::chrono::system_clock::now();
-        std::chrono::duration<double> testDuration = end - start;
-        Evaluate(result, finalRecResults);
-    }
+    RecognitionTest();
+    //VerificationTest();
 }

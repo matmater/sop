@@ -1,5 +1,4 @@
 #include "VQModel.h"
-#include "Utilities.h"
 
 VQModel::VQModel()
 {
@@ -126,7 +125,7 @@ void VQModel::Adapt(const std::shared_ptr<Model>& other, const std::vector< Dyna
     }
 }
 
-void VQModel::Weight(const std::map< std::string, std::shared_ptr<VQModel> >& models)
+void VQModel::Weight(const std::map< SpeakerKey, std::shared_ptr<VQModel> >& models)
 {
     // Following Speaker Discriminative Weighting Method for VQ-based Speaker identification
     // http://www.cs.joensuu.fi/pages/tkinnu/webpage/pdf/DiscriminativeWeightingMethod.pdf

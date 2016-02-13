@@ -3,6 +3,8 @@
 
 #include "Common.h"
 
+#include "SpeechData.h"
+
 /*! \brief The result of a speaker recognition task.
  *
  *  \todo Add/fix comments.
@@ -19,17 +21,8 @@ public:
 
 public:
     /*! \brief Constructor with parameters.
-     *
-     *  \param type The recognition type.
-     *  \param speaker The string identifier of the speaker (if recognized).
      */
-    /*
-    RecognitionResult(Type type = Type::UNKNOWN, const std::string& speaker = "", bool placeholder = false);
-    */
-
-    /*! \brief Constructor with parameters.
-     */
-    RecognitionResult(const bool known = false, const std::string& speaker = "");
+    RecognitionResult(const bool known = false, const SpeakerKey& speaker = SpeakerKey());
 
     /*! \brief Virtual destructor.
      */
@@ -41,7 +34,7 @@ public:
 
     /*! \brief Returns the string identifier of the speaker.
      */
-    const std::string& GetSpeaker() const;
+    const SpeakerKey& GetSpeaker() const;
 
     /*! A flag that tells if the speaker existed in database.
      */
@@ -52,7 +45,7 @@ private:
 
     Type mType;
 
-    std::string mSpeaker;
+    SpeakerKey mSpeaker;
 };
 
 #endif

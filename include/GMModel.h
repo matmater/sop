@@ -44,6 +44,22 @@ public:
     /*! \brief Destructor.
      */
     virtual ~GMModel();
+    
+    /*! \brief Sets the (maximum) number of iterations used in training.
+     */
+    void SetTrainingIterations(unsigned int iterations);
+    
+    /*! \brief Sets the (maximum) number of iterations used in training.
+     */
+    unsigned int GetTrainingIterations() const;
+
+    /*! \brief Sets the training threshold used in training as a stopping condition.
+     */
+    void SetTrainingThreshold(Real threshold);
+    
+    /*! \brief Sets the training threshold used in training as a stopping condition.
+     */
+    Real GetTrainingThreshold() const;
 
     void Init();
 
@@ -131,6 +147,8 @@ private:
     void UpdatePDF(Cluster& cluster);
 
 private:
+    unsigned int mTrainingIterations;
+    
     Real mEta;
 
     bool mValid;

@@ -31,9 +31,9 @@ public:
 
     /*! \copydoc Recognizer::Train()
      */
-    virtual void Train(const std::shared_ptr<SpeechData>& data) override;
+    virtual void Train() override;
 
-    virtual void PostProcessModels();
+    virtual void PrepareModels();
 
     /*! \copydoc Recognizer::SaveTrainedData()
      */
@@ -45,7 +45,7 @@ public:
 
     /*! \copydoc Recognizer::Test()
      */
-    virtual void Test(const std::shared_ptr<SpeechData>& data, std::map<std::string, RecognitionResult>& results) override;
+    virtual void Test(const std::shared_ptr<SpeechData>& data, std::map<SpeakerKey, RecognitionResult>& results) override;
 
 private:
     bool mWeightingEnabled;

@@ -11,6 +11,49 @@ enum class FeatureNormalizationType
     CEPSTRAL_MEAN
 };
 
+/*! A speaker-specific key.
+ */
+struct SpeakerKey
+{
+    explicit SpeakerKey(const std::string& id = "")
+    : mId(id) { }
+
+    std::string GetId() const
+    {
+        return mId;
+    }
+
+    bool operator< (const SpeakerKey& rhs) const
+    {
+        return mId < rhs.mId;
+    }
+
+    bool operator== (const SpeakerKey& rhs) const
+    {
+        return mId == rhs.mId;
+    }
+
+    bool operator!= (const SpeakerKey& rhs) const
+    {
+        return mId != rhs.mId;
+    }
+
+    bool IsSameSpeaker(const SpeakerKey& rhs) const
+    {
+        return (mId.compare(0, 3, rhs.mId) == 0);
+    }
+
+    friend std::ostream& operator<< (std::ostream& stream, const SpeakerKey& key)
+    {
+        stream << key.mId;
+
+        return stream;
+    }
+
+private:
+    std::string mId;
+};
+
 /*! \brief A container for speech data of multiple speakers.
  *
  *  \todo Add/fix comments.
@@ -93,12 +136,12 @@ public:
 
     /*! \brief Returns all samples identified by speaker strings.
      */
-    const std::map<std::string, std::vector<DynamicVector<Real> > >& GetSamples() const;
+    const std::map<SpeakerKey, std::vector<DynamicVector<Real> > >& GetSamples() const;
 
 private:
     FeatureNormalizationType mNormalizationType;
 
-    std::map<std::string, std::vector<DynamicVector<Real> > > mSamples;
+    std::map<SpeakerKey, std::vector<DynamicVector<Real> > > mSamples;
 
     bool mConsistent;
 

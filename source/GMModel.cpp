@@ -2,7 +2,8 @@
 #include "LBG.h"
 
 GMModel::GMModel()
-: mEta(0.001f)
+: mTrainingIterations(75),
+  mEta(0.001f)
 {
 
 }
@@ -253,6 +254,26 @@ void GMModel::InitClusters(const std::vector< DynamicVector<Real> >& samples)
     }
 }
 
+void GMModel::SetTrainingIterations(unsigned int iterations)
+{
+    mTrainingIterations = iterations;
+}
+
+unsigned int GMModel::GetTrainingIterations() const
+{
+    return mTrainingIterations;
+}
+
+void GMModel::SetTrainingThreshold(Real threshold)
+{
+    mEta = threshold;
+}
+
+Real GMModel::GetTrainingThreshold() const
+{
+    return mEta;
+}
+
 void GMModel::EM(const std::vector< DynamicVector<Real> >& samples)
 {
     for (auto& cluster : mClusters)
@@ -263,7 +284,7 @@ void GMModel::EM(const std::vector< DynamicVector<Real> >& samples)
     Real logLikelihood = 0.0f;
     Real newLogLikelihood = 0.0f;
 
-    for (unsigned int e = 0; e < 60; ++e)
+    for (unsigned int e = 0; e < mTrainingIterations; ++e)
     {
         //std::cout << "Iteration:" << e << std::endl;
 

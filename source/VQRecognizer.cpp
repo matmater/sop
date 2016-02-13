@@ -1,5 +1,4 @@
 #include "VQRecognizer.h"
-#include "Utilities.h"
 #include "VQModel.h"
 
 VQRecognizer::VQRecognizer()
@@ -23,22 +22,22 @@ bool VQRecognizer::IsWeightingEnabled() const
     return mWeightingEnabled;
 }
 
-void VQRecognizer::Train(const std::shared_ptr<SpeechData>& data)
+void VQRecognizer::Train()
 {
-    ModelRecognizer<VQModel>::Train(data);
+    ModelRecognizer<VQModel>::Train();
 }
 
-void VQRecognizer::PostProcessModels()
+void VQRecognizer::PrepareModels()
 {
-    ModelRecognizer<VQModel>::PostProcessModels();
+    ModelRecognizer<VQModel>::PrepareModels();
 
     if (mWeightingEnabled)
     {
-        std::map< std::string, std::shared_ptr<VQModel> > weightModels;
+        std::map< SpeakerKey, std::shared_ptr<VQModel> > weightModels;
         
         if (GetBackgroundModel() != nullptr)
         {    
-            weightModels.emplace(".ubm", GetBackgroundModel());
+            weightModels.emplace(SpeakerKey(".ubm"), GetBackgroundModel());
         }
 
         // Include speaker models.
@@ -54,7 +53,7 @@ void VQRecognizer::PostProcessModels()
     }
 }
 
-void VQRecognizer::Test(const std::shared_ptr<SpeechData>& data, std::map<std::string, RecognitionResult>& results)
+void VQRecognizer::Test(const std::shared_ptr<SpeechData>& data, std::map<SpeakerKey, RecognitionResult>& results)
 {
     ModelRecognizer<VQModel>::Test(data, results);
 }

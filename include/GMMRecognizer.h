@@ -23,7 +23,7 @@ public:
 
     /*! \copydoc Recognizer::Train()
      */
-    virtual void Train(const std::shared_ptr<SpeechData>& data);
+    virtual void Train();
 
     /*! \copydoc Recognizer::SaveTrainedData()
      */
@@ -35,7 +35,7 @@ public:
 
     /*! \copydoc Recognizer::Test()
      */
-    virtual void Test(const std::shared_ptr<SpeechData>& data, std::map<std::string, RecognitionResult>& results) override;
+    virtual void Test(const std::shared_ptr<SpeechData>& data, std::map<SpeakerKey, RecognitionResult>& results) override;
 
 private:
     std::map<std::string, GMModel> mModels;

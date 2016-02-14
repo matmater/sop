@@ -6,7 +6,7 @@
 #include "VQRecognizer.h"
 
 #define INDEXFIX
-#undef INDEXFIX
+//#undef INDEXFIX
 
 #ifdef INDEXFIX
 static std::vector<std::string> speakerFiles;
@@ -62,36 +62,36 @@ void RecognitionTest()
     //recognizer.SetScoreNormalizationType(ScoreNormalizationType::ZERO_TEST);
     auto trainData = std::make_shared<SpeechData>();
     auto testData = std::make_shared<SpeechData>();
-    
+
     // Test utterances
-    LoadTextSamples(testData, sf, trainingCycles * 10, gl+1, gl, false); // Not sure about that +1
+    LoadTextSamples(testData, sf, trainingCycles * gf, gl+1, gl, false); // Not sure about indexing, hence +1.
 
     // Speaker model data
-    LoadTextSamples(trainData, sf, trainingCycles * 10, 1, gl, true);
+    LoadTextSamples(trainData, sf, trainingCycles * gf, 1, gl, true);
     
     VQRecognizer recognizer;
-    recognizer.SetBackgroundModelEnabled(false);
+    recognizer.SetBackgroundModelEnabled(true);
     recognizer.SetOrder(128);
-    recognizer.SetWeightingEnabled(false);
+    recognizer.SetWeightingEnabled(true);
     recognizer.SetSpeakerData(trainData);
 
     recognizer.Train();
 
     // Only after training models can be selected for testing.
-
-    std::vector<unsigned int> finalRecResults (2,0);
     
-    for (unsigned int i = 1; i <= trainingCycles ; i++)
+    std::vector<unsigned int> correctTotal(trainingCycles, 0);
+    std::vector<unsigned int> incorrectTotal(trainingCycles, 0);
+    
+    for (unsigned int i = 0; i < trainingCycles; i++)
     {
-        std::cout << i << "/" << trainingCycles << std::endl;
+        std::cout << i + 1 << "/" << trainingCycles << std::endl;
         
-        unsigned int population = i * 10;
         unsigned int correct = 0;
         unsigned int incorrect = 0;
         
         // Select trained speakers.
         std::vector<SpeakerKey> speakers;
-        for (unsigned int k = 0; k < population; ++k)
+        for (unsigned int k = 0; k < gf; ++k)
         {
             SpeakerKey key(toString(sf + k));
 
@@ -117,12 +117,12 @@ void RecognitionTest()
                 {
                     if (recognizer.IsRecognized(speaker, samples.second))
                     {
-                        ++correct;
+                        ++correctTotal[i];
                     }
 
                     else
                     {
-                        ++incorrect;
+                        ++incorrectTotal[i];
                     }
 
                     break;
@@ -130,14 +130,22 @@ void RecognitionTest()
             }
         }
 
-        if (correct > 0 || incorrect > 0)
-        {
-            std::cout << "Speakers " << population
-                      << ", accuracy "
-                      << 100.0f * static_cast<float>(correct) / static_cast<float>(correct + incorrect) << "%" << std::endl;
-        }
+        sf += gf;
+    }
+    
+    unsigned int correct = 0;
+    unsigned int incorrect = 0;
+    
+    for (unsigned int i = 1; i <= trainingCycles; i++)
+    {
+        correct += correctTotal[i-1];
+        incorrect += incorrectTotal[i-1];
 
-        results << population << " " << correct << " " << incorrect << std::endl;
+        std::cout << "Speakers " << i * gf
+            << ", accuracy "
+            << 100.0f * static_cast<float>(correct) / static_cast<float>(correct + incorrect) << "%" << std::endl;
+
+        results << i * gf << " " << correct << " " << incorrect << std::endl;
     }
     
     results.close();
@@ -232,7 +240,7 @@ void VerificationTest()
             // Debug check.
             if (trainData->GetSamples().find(key) == trainData->GetSamples().end())
             {
-                std::cout << "Speaker '" << i << "'not loaded." << std::endl;
+                std::cout << "Speaker '" << sf + k << "'not loaded." << std::endl;
                 continue;
             }
 

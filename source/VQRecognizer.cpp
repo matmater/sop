@@ -30,7 +30,7 @@ void VQRecognizer::Train()
 void VQRecognizer::PrepareModels()
 {
     ModelRecognizer<VQModel>::PrepareModels();
-
+    
     if (mWeightingEnabled)
     {
         std::map< SpeakerKey, std::shared_ptr<VQModel> > weightModels;
@@ -49,6 +49,21 @@ void VQRecognizer::PrepareModels()
         for (auto& model : weightModels)
         {
             model.second->Weight(weightModels);
+        }
+    }
+
+    else
+    {
+        GetBackgroundModel()->ResetWeights();
+        
+        for (auto& model : GetSpeakerModels())
+        {
+            model.second->ResetWeights();
+        }
+
+        for (auto& model : GetImpostorModels())
+        {
+            model.second->ResetWeights();
         }
     }
 }

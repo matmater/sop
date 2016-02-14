@@ -10,6 +10,14 @@ VQModel::~VQModel()
 
 }
 
+void VQModel::ResetWeights()
+{
+    for (Real& weight : mClusterWeights)
+    {
+        weight = 1.0f;
+    }
+}
+
 void VQModel::Init()
 {
     if (mClusterCentroids.size() != GetOrder())
@@ -34,10 +42,7 @@ void VQModel::Train(const std::vector< DynamicVector<Real> >& samples)
 
     mClusterWeights.resize(GetOrder());
     
-    for (Real& weight : mClusterWeights)
-    {
-        weight = 1.0f;
-    }
+    ResetWeights();
 
     std::vector<unsigned int> indices;
 

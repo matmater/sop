@@ -24,6 +24,8 @@ public:
      */
     virtual ~VQModel();
     
+    void ResetWeights();
+
     void Init();
 
     /*! \brief Weights centroids.

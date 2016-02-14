@@ -15,6 +15,8 @@ VQRecognizer::~VQRecognizer()
 void VQRecognizer::SetWeightingEnabled(bool enabled)
 {
     mWeightingEnabled = enabled;
+
+    Unprepare();
 }
 
 bool VQRecognizer::IsWeightingEnabled() const

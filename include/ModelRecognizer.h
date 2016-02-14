@@ -175,6 +175,8 @@ protected:
      */
     virtual void PrepareModels();
     
+    virtual void Unprepare();
+
     /*! \brief Unnormalized version of GetMultipleVerificationScore().
      */
     virtual Real GetRatio(const std::shared_ptr<T>& model, const std::vector< DynamicVector<Real> >& samples);

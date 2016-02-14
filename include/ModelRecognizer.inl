@@ -113,6 +113,12 @@ std::shared_ptr<SpeechData> ModelRecognizer<T>::GetSpeakerData()
 }
 
 template<typename T>
+void ModelRecognizer<T>::Unprepare()
+{
+    mPrepared = false;
+}
+
+template<typename T>
 void ModelRecognizer<T>::PrepareModels()
 {
     // Virtual

@@ -3,7 +3,7 @@ from matplotlib import pyplot as plt
 from matplotlib.ticker import ScalarFormatter
 import sys
 
-def DETCurve(results):
+def DETCurve(results, eerDfc):
     """
     Given false positive and false negative rates, produce a DET Curve.
     The false positive rate is assumed to be increasing while the false
@@ -12,12 +12,16 @@ def DETCurve(results):
 
     axis_min = min(min(results))
     fig,ax = plt.subplots()
-    for entry in results:
-        plt.plot(entry[0], entry[1], linewidth = 2)
+    for r in range(len(results)):
+        plt.plot(results[r][0], results[r][1], linewidth = 2, label = results[r][2][:-4])
+        if r == len(results)-1:
+            plt.plot(eerDfc[r][2][0], eerDfc[r][2][1], 'kD', markersize=6, label = "DFC minimipisteet")
+        else:
+            plt.plot(eerDfc[r][2][0], eerDfc[r][2][1], 'kD', markersize=6)
     plt.yscale('log')
     plt.xscale('log')
-    ticks_to_use = [0.01,0.02,0.05,0.1,0.2,0.5,1,2,5,10,20,50]
-    #ticks_to_use = [0.001,0.05,1,10,50]
+    ticks_to_use = [0.01,0.02,0.05,0.1,0.2,0.5,1,2,5,10,20,50,100]
+    #ticks_to_use = [10,20,30,40,50,60,70,80,90,100]
     ax.xaxis.set_major_formatter(ScalarFormatter())
     ax.yaxis.set_major_formatter(ScalarFormatter())
     ax.set_xticks(ticks_to_use)
@@ -26,15 +30,18 @@ def DETCurve(results):
     plt.axis('tight')
     plt.xlabel('false positive rate (%)')
     plt.ylabel('false negative rate (%)')
+    #plt.legend(loc = 0)
+    plt.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc=3,ncol=2, borderaxespad=0.) # legend above the plot
+    ax.grid(True)
     plt.show()
     
 def GetResults(files):
     results = []
     
-    for j in range(len(files)):
+    for f in files:
         resultsCor = []
         resultsInc = []
-        with open(files[j], 'r') as file:
+        with open(f, 'r') as file:
             i = 0
             for line in file:
                 if i == 0:
@@ -49,8 +56,8 @@ def GetResults(files):
         cor = float(len(resultsCor))
         inc = float(len(resultsInc))
         
-        print resultsCor
-        print resultsInc 
+        #print resultsCor
+        #print resultsInc 
         
         i = max(resultsCor)
         fns = []
@@ -74,10 +81,27 @@ def GetResults(files):
             fpr.append(100*entry/inc)
         for entry in fns:
             fnr.append(100*entry/cor)
-        results.append([fpr,fnr])
+        results.append([fpr,fnr,f])
         
     return results
-
+    
+def EERandDCF(results):
+    eerDcf = []
+    for entry in results:
+        minDcf = 109.0
+        minDiff = 10.0
+        for i in range(len(entry[0])):          
+            dcf = 0.001*entry[1][i] + 0.0099*entry[0][i]    # 0.1 * P(false negative) + 0.99 * P(false positive)
+            if dcf < minDcf:
+                minDcf = dcf
+                dcfPoint = [entry[0][i],entry[1][i]]
+            if abs(entry[0][i] - entry[1][i]) < minDiff:        
+                minDiff = abs(entry[0][i] - entry[1][i])
+                eer = entry[0][i]
+        eerDcf.append([eer, minDcf, dcfPoint])
+    
+    return eerDcf
+ 
 if __name__ == '__main__':
     files = []
     if len(sys.argv) > 1:
@@ -86,5 +110,7 @@ if __name__ == '__main__':
     else:
         files.append("verificationresults.txt")
     results = GetResults(files)
-           
-    DETCurve(results)
+    
+    eerDcf = EERandDCF(results)
+    print eerDcf
+    DETCurve(results, eerDcf)

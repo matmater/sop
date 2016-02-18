@@ -30,11 +30,11 @@ public:
 
     /*! \brief Weights centroids.
      */
-    void Weight(const std::map< SpeakerKey, std::shared_ptr<VQModel> >& models);
+    void Weight(const std::map< SpeakerKey, std::shared_ptr<Model> >& models);
 
     /*! \brief Trains the model.
      */
-    virtual void Train(const std::vector< DynamicVector<Real> >& samples) override;
+    virtual void Train(const std::vector< DynamicVector<Real> >& samples, unsigned int iterations) override;
     
     /*! \brief Trains the model using MAP adaptation.
      *

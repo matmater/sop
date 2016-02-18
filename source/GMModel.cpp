@@ -21,8 +21,10 @@ void GMModel::Init()
     }
 }
 
-void GMModel::Train(const std::vector< DynamicVector<Real> >& samples)
+void GMModel::Train(const std::vector< DynamicVector<Real> >& samples, unsigned int iterations)
 {
+    SetTrainingIterations(iterations);
+
     Init();
 
     InitClusters(samples);
@@ -130,9 +132,9 @@ void GMModel::Adapt(const std::shared_ptr<Model>& other, const std::vector< Dyna
             UpdatePDF(cluster);
         }
 
-        DEBUG_TRACE(std::abs(logLikelihood - newLogLikelihood));
+        DEBUG_TRACE(std::abs(logLikelihood - newLogLikelihood) / samples.size());
 
-        if (std::abs(logLikelihood - newLogLikelihood) < mEta)
+        if (std::abs(logLikelihood - newLogLikelihood) / samples.size() < mEta)
         {
             break;
         }
@@ -377,7 +379,8 @@ void GMModel::M(const std::vector< DynamicVector<Real> >& samples)
 
             // Limit variance value.
             // When multiplying many numbers with values < 1.0 it is likely that
-            // the value goes near zero and it causes instability in the implementation.
+            // the value goes near zero and it causes instability in the implementation especially
+            // when using a diagonal covariance matrix.
 
             if (cluster.variances[d] < 1.0e-5f)
             {

@@ -22,7 +22,7 @@ public:
 
     virtual unsigned int GetOrder() const;
     
-    virtual void Train(const std::vector< DynamicVector<Real> >& samples) = 0;
+    virtual void Train(const std::vector< DynamicVector<Real> >& samples, unsigned int iterations) = 0;
     
     virtual void Adapt(const std::shared_ptr<Model>& other, const std::vector< DynamicVector<Real> >& samples,
                        unsigned int iterations = 2, Real relevanceFactor = 16.0f) = 0;

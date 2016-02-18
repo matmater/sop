@@ -25,6 +25,9 @@
 #define DEBUG_LEVEL 5
 #include "Debug.h"
 
+#define INDEXFIX
+//#undef INDEXFIX
+
 #define PI_F 3.14159265f
 
 typedef double Real;
@@ -221,6 +224,21 @@ inline Real Variance(const std::vector<Real>& values, Real mean)
 inline Real Deviation(const std::vector<Real>& values, Real mean)
 {
     return std::sqrt(Variance(values, mean));
+}
+
+inline bool FileExists(const std::string& path)
+{
+    std::ifstream file(path);
+
+    return file.good();
+}
+
+template <typename T> 
+std::string toString(const T& n)
+{
+    std::ostringstream s;
+    s << n;
+    return s.str();
 }
 
 #endif

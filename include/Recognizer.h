@@ -22,17 +22,11 @@ public:
      */
     virtual void Train() = 0;
 
-    /*! \brief Loads trained data.
-     */
-    virtual void LoadTrainedData(const std::string& path) = 0;
-
-    /*! \brief Saves trained data.
-     */
-    virtual void SaveTrainedData(const std::string& path) = 0;
-
     /*! \brief Tests samples on the trained recognizer.
+     *
+     *  \todo Remove?
      */
-    virtual void Test(const std::shared_ptr<SpeechData>& data, std::map<SpeakerKey, RecognitionResult>& results) = 0;
+    virtual void Test(const std::shared_ptr<SpeechData>& data, std::map<SpeakerKey, RecognitionResult>& results) {}
 
     /*! \brief Verifies samples on the trained recognizer.
      */

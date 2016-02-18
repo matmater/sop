@@ -5,16 +5,16 @@
 
 #include "Common.h"
 
+#include "ModelRecognizer.h"
 #include "DynamicVector.h"
 #include "LBG.h"
-#include "ModelRecognizer.h"
 #include "VQModel.h"
 
 /*! \brief A speaker recognizer based on Vector Quantization.
  *
  *  \todo Add/fix comments.
  */
-class VQRecognizer : public ModelRecognizer<VQModel>
+class VQRecognizer : public ModelRecognizer
 {
 public:
     /*! \brief Default constructor.
@@ -35,17 +35,12 @@ public:
 
     virtual void PrepareModels();
 
-    /*! \copydoc Recognizer::SaveTrainedData()
-     */
-    virtual void SaveTrainedData(const std::string& path) override;
-
-    /*! \copydoc Recognizer::LoadTrainedData()
-     */
-    virtual void LoadTrainedData(const std::string& path) override;
-
     /*! \copydoc Recognizer::Test()
      */
     virtual void Test(const std::shared_ptr<SpeechData>& data, std::map<SpeakerKey, RecognitionResult>& results) override;
+
+protected:
+    virtual std::shared_ptr<Model> CreateModel();
 
 private:
     bool mWeightingEnabled;

@@ -36,7 +36,7 @@ void VQModel::Init()
     }
 }
 
-void VQModel::Train(const std::vector< DynamicVector<Real> >& samples)
+void VQModel::Train(const std::vector< DynamicVector<Real> >& samples, unsigned int iterations)
 {
     LBG lbg(GetOrder());
 
@@ -130,7 +130,7 @@ void VQModel::Adapt(const std::shared_ptr<Model>& other, const std::vector< Dyna
     }
 }
 
-void VQModel::Weight(const std::map< SpeakerKey, std::shared_ptr<VQModel> >& models)
+void VQModel::Weight(const std::map< SpeakerKey, std::shared_ptr<Model> >& models)
 {
     // Following Speaker Discriminative Weighting Method for VQ-based Speaker identification
     // http://www.cs.joensuu.fi/pages/tkinnu/webpage/pdf/DiscriminativeWeightingMethod.pdf
@@ -155,14 +155,16 @@ void VQModel::Weight(const std::map< SpeakerKey, std::shared_ptr<VQModel> >& mod
 
             Real dmin = std::numeric_limits<Real>::max();
 
-            for (unsigned int j = 0; j < b.second->mClusterCentroids.size(); j++)
+            const VQModel* other = dynamic_cast<VQModel*>(b.second.get());
+
+            for (unsigned int j = 0; j < other->mClusterCentroids.size(); j++)
             {
-                if (b.second->mClusterSizes[j] == 0)
+                if (other->mClusterSizes[j] == 0)
                 {
                     continue;
                 }
 
-                Real dist = b.second->mClusterCentroids[j].Distance(mClusterCentroids[i]);
+                Real dist = other->mClusterCentroids[j].Distance(mClusterCentroids[i]);
 
                 if (dist < dmin)
                 {

@@ -88,6 +88,8 @@ void SpeechData::Load(const std::string& path)
 
 void SpeechData::Load(const std::string& path, unsigned int sl, unsigned int gl, bool train, const std::string& alias)
 {
+    // \todo CHECK BUGS!
+
     //Clear();
 
     std::ifstream file(path);
@@ -110,12 +112,13 @@ void SpeechData::Load(const std::string& path, unsigned int sl, unsigned int gl,
     */
 
     unsigned int lineCounter = 1;
-
+    
     while(std::getline(file, line))
     {
         if (lineCounter >= sl)
         {
-            std::stringstream ssFeatures(line);
+            SpeechDataBuffer buffer(const_cast<char*>(line.c_str()), line.size());
+            std::istream ssFeatures(&buffer);
 
             std::string label;
             SpeakerKey key;
@@ -132,9 +135,10 @@ void SpeechData::Load(const std::string& path, unsigned int sl, unsigned int gl,
                 if (train)
                 {
                     label.erase(3);
-                }        
+                }
+                
                 std::cout << "Loading samples: " << label
-                    << " (" << 100 * (lineCounter-sl) / (totalLines-sl) << "%)" << std::endl;
+                    << " (" << 100 * (lineCounter - sl + 1) / (totalLines - sl + 1) << "%)" << std::endl;
 
                 std::string features;
 
@@ -146,14 +150,16 @@ void SpeechData::Load(const std::string& path, unsigned int sl, unsigned int gl,
                 {
                     userSamples.emplace_back();
 
-                    std::stringstream ssFeature(features);
+                    SpeechDataBuffer buffer2(const_cast<char*>(features.c_str()), features.size());
+                    std::istream ssFeature(&buffer2);
                     std::string feature;
 
                     while (std::getline(ssFeature, feature, ' '))
                     {
                         if (feature.size() > 0 && feature[0] != ' ')
                         {
-                            userSamples.back().Push(ConvertString<Real>(feature));
+                            // \todo CHECK
+                            userSamples.back().Push(std::stof(feature));
                         }
                     }
 
@@ -171,6 +177,7 @@ void SpeechData::Load(const std::string& path, unsigned int sl, unsigned int gl,
                 }
             }
         }
+
         if (lineCounter == totalLines)
         {
             break;
@@ -331,4 +338,42 @@ unsigned int SpeechData::GetTotalSampleCount() const
 const std::map<SpeakerKey, std::vector<DynamicVector<Real> > >& SpeechData::GetSamples() const
 {
     return mSamples;
+}
+
+void LoadTextSamples(const std::string& folder, const std::shared_ptr<SpeechData>& data, unsigned int sf, unsigned int gf, unsigned int sl, unsigned int gl, bool train)
+{
+    // \todo CHECK BUGS!
+
+    data->Clear();
+    for (unsigned int i = 0; i < gf; i++)
+    {
+#ifdef INDEXFIX
+        static std::vector<std::string> speakerFiles;
+        static bool speakerFilesScanned = false;
+
+        if (!speakerFilesScanned)
+        {
+            for (unsigned int i = 225; i <= 376; ++i)
+            {
+                std::string fname = folder + "/samples_" + toString(i) + ".txt";
+
+                if (FileExists(fname))
+                {
+                    speakerFiles.push_back(fname);
+                }
+            }
+
+            speakerFilesScanned = true;
+        }
+
+        std::cout << speakerFiles[i+sf-225] << std::endl;
+        data->Load(speakerFiles[i+sf-225], sl, gl, train, toString(sf+i));
+#else
+        std::string file = folder + "/samples_" + toString(sf+i) + ".txt";
+        std::cout << file << std::endl;
+        data->Load(file, sl, gl, train);
+#endif
+    }
+    data->Validate();
+    data->Normalize();
 }

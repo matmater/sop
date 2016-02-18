@@ -1,144 +1,140 @@
-template<typename T>
-ModelRecognizer<T>::ModelRecognizer()
+#include "ModelRecognizer.h"
+
+ModelRecognizer::ModelRecognizer()
 :   mOrder(128),
     mAdaptationIterations(2),
     mRelevanceFactor(16.0f),
     mScoreNormalizationType(ScoreNormalizationType::NONE),
     mBackgroundModelEnabled(false),
     mBackgroundModelTrainingEnabled(true),
-    mPrepared(false)
+    mDirty(true),
+    mPrepared(false),
+    mTrainingIterations(10),
+    mEta(0.001f)
 {
 
 }
 
-template<typename T>
-ModelRecognizer<T>::~ModelRecognizer()
+ModelRecognizer::~ModelRecognizer()
 {
 
 }
 
-template<typename T>
-void ModelRecognizer<T>::ClearTrainedData()
+void ModelRecognizer::ClearTrainedData()
 {
     mPrepared = false;
     mModelCache.clear();
     mSpeakerModels.clear();
     mImpostorDistributions.clear();
     mImpostorModels.clear();
+    mDirty = true;
     //mBackgroundModel = nullptr;
 }
 
-template<typename T>
-void ModelRecognizer<T>::SetOrder(unsigned int order)
+void ModelRecognizer::SetOrder(unsigned int order)
 {
     mOrder = order;
+    mDirty = true;
 }
 
-template<typename T>
-unsigned int ModelRecognizer<T>::GetOrder() const
+unsigned int ModelRecognizer::GetOrder() const
 {
     return mOrder;
 }
 
-template<typename T>
-void ModelRecognizer<T>::SetAdaptationIterations(unsigned int iterations)
+void ModelRecognizer::SetAdaptationIterations(unsigned int iterations)
 {
     mAdaptationIterations = iterations;
+    mDirty = true;
 }
 
-template<typename T>
-unsigned int ModelRecognizer<T>::GetAdaptationIterations() const
+unsigned int ModelRecognizer::GetAdaptationIterations() const
 {
     return mAdaptationIterations;
 }
 
-template<typename T>
-void ModelRecognizer<T>::SetRelevanceFactor(Real factor)
+void ModelRecognizer::SetRelevanceFactor(Real factor)
 {
     mRelevanceFactor = factor;
+    mDirty = true;
 }
 
-template<typename T>
-Real ModelRecognizer<T>::GetRelevanceFactor() const
+Real ModelRecognizer::GetRelevanceFactor() const
 {
     return mRelevanceFactor;
 }
 
-template<typename T>
-void ModelRecognizer<T>::SetScoreNormalizationType(ScoreNormalizationType type)
+void ModelRecognizer::SetScoreNormalizationType(ScoreNormalizationType type)
 {
     mScoreNormalizationType = type;
 }
 
-template<typename T>
-ScoreNormalizationType ModelRecognizer<T>::GetScoreNormalizationType() const
+ScoreNormalizationType ModelRecognizer::GetScoreNormalizationType() const
 {
     return mScoreNormalizationType;
 }
 
-template<typename T>
-void ModelRecognizer<T>::SetBackgroundModelEnabled(bool enabled)
+void ModelRecognizer::SetBackgroundModelEnabled(bool enabled)
 {
     mBackgroundModelEnabled = enabled;
+    mPrepared = false;
 }
 
-template<typename T>
-bool ModelRecognizer<T>::IsBackgroundModelEnabled() const
+bool ModelRecognizer::IsBackgroundModelEnabled() const
 {
     return mBackgroundModelEnabled;
 }
 
-template<typename T>
-void ModelRecognizer<T>::SetBackgroundModelTrainingEnabled(bool enabled)
+void ModelRecognizer::SetBackgroundModelTrainingEnabled(bool enabled)
 {
     mBackgroundModelTrainingEnabled = enabled;
 }
 
-template<typename T>
-bool ModelRecognizer<T>::IsBackgroundModelTrainingEnabled() const
+bool ModelRecognizer::IsBackgroundModelTrainingEnabled() const
 {
     return mBackgroundModelTrainingEnabled;
 }
 
-template<typename T>
-void ModelRecognizer<T>::SetSpeakerData(std::shared_ptr<SpeechData> data)
+void ModelRecognizer::SetSpeakerData(std::shared_ptr<SpeechData> data)
 {
     mSpeakerData = data;
+    mDirty = true;
 }
 
-template<typename T>
-std::shared_ptr<SpeechData> ModelRecognizer<T>::GetSpeakerData()
+std::shared_ptr<SpeechData> ModelRecognizer::GetSpeakerData()
 {
     return mSpeakerData;
 }
 
-template<typename T>
-void ModelRecognizer<T>::Unprepare()
+void ModelRecognizer::Unprepare()
 {
     mPrepared = false;
 }
 
-template<typename T>
-void ModelRecognizer<T>::PrepareModels()
+void ModelRecognizer::PrepareModels()
 {
     // Virtual
 }
 
-template<typename T>
-void ModelRecognizer<T>::SetBackgroundModelData(std::shared_ptr<SpeechData> data)
+void ModelRecognizer::SetBackgroundModelData(std::shared_ptr<SpeechData> data)
 {
     mBackgroundModelData = data;
+    mDirty = true;
 }
 
-template<typename T>
-std::shared_ptr<SpeechData> ModelRecognizer<T>::GetBackgroundModelData()
+std::shared_ptr<SpeechData> ModelRecognizer::GetBackgroundModelData()
 {
     return mBackgroundModelData;
 }
 
-template<typename T>
-void ModelRecognizer<T>::Train()
+void ModelRecognizer::Train()
 {
+    // Already trained?
+    if (!mDirty)
+    {
+        return;
+    }
+
     if (mSpeakerData == nullptr)
     {
         std::cout << "Missing speaker data." << std::endl;
@@ -158,9 +154,9 @@ void ModelRecognizer<T>::Train()
     unsigned int progress = 0;
 
     // Check if the background model can actually be created.
-    if (IsBackgroundModelTrainingEnabled() && IsBackgroundModelEnabled() && mBackgroundModelData != nullptr)
+    if (IsBackgroundModelTrainingEnabled() && mBackgroundModelData != nullptr)
     {
-        mBackgroundModel = std::make_shared<T>();
+        mBackgroundModel = CreateModel();
 
         // UBM was found, train it first using normal training.
         std::cout << "Training background model." << std::endl;
@@ -176,7 +172,7 @@ void ModelRecognizer<T>::Train()
         }
 
         mBackgroundModel->SetOrder(GetOrder());
-        mBackgroundModel->Train(samples);
+        mBackgroundModel->Train(samples, GetTrainingIterations());
     }
 
     progress = 0;
@@ -187,7 +183,7 @@ void ModelRecognizer<T>::Train()
     {
         ++progress;
 
-        auto model = std::make_shared<T>();
+        auto model = CreateModel();
         mModelCache[sequence.first] = model;
 
         std::cout << "Training model: " << sequence.first
@@ -204,13 +200,14 @@ void ModelRecognizer<T>::Train()
         {
             model->SetOrder(GetOrder());
 
-            model->Train(sequence.second);
+            model->Train(sequence.second, GetTrainingIterations());
         }
     }
+
+    mDirty = false;
 }
 
-template<typename T>
-void ModelRecognizer<T>::Prepare()
+void ModelRecognizer::Prepare()
 {
     // Is everything already OK?
     if (mPrepared)
@@ -281,9 +278,10 @@ void ModelRecognizer<T>::Prepare()
     mPrepared = true;
 }
 
-template<typename T>
-void ModelRecognizer<T>::SelectSpeakerModels(const std::vector<SpeakerKey>& models)
+void ModelRecognizer::SelectSpeakerModels(const std::vector<SpeakerKey>& models)
 {
+    Train();
+
     mPrepared = false;
 
     mSpeakerModels.clear();
@@ -302,9 +300,10 @@ void ModelRecognizer<T>::SelectSpeakerModels(const std::vector<SpeakerKey>& mode
     }
 }
 
-template<typename T>
-void ModelRecognizer<T>::SelectImpostorModels(const std::vector<SpeakerKey>& models)
+void ModelRecognizer::SelectImpostorModels(const std::vector<SpeakerKey>& models)
 {
+    Train();
+
     mPrepared = false;
 
     mImpostorModels.clear();
@@ -324,9 +323,9 @@ void ModelRecognizer<T>::SelectImpostorModels(const std::vector<SpeakerKey>& mod
     }
 }
 
-template<typename T>
-void ModelRecognizer<T>::Test(const std::shared_ptr<SpeechData>& data, std::map<SpeakerKey, RecognitionResult>& results)
+void ModelRecognizer::Test(const std::shared_ptr<SpeechData>& data, std::map<SpeakerKey, RecognitionResult>& results)
 {
+    Train();
     Prepare();
 
     if (!data->IsConsistent())
@@ -356,7 +355,7 @@ void ModelRecognizer<T>::Test(const std::shared_ptr<SpeechData>& data, std::map<
     for (auto& entry : data->GetSamples())
     {
         SpeakerKey bestModelName;
-        std::shared_ptr<T> bestModel = nullptr;
+        std::shared_ptr<Model> bestModel = nullptr;
 
         bool knownSpeaker = false;
         Real bestModelScore = std::numeric_limits<Real>::min();
@@ -441,9 +440,10 @@ void ModelRecognizer<T>::Test(const std::shared_ptr<SpeechData>& data, std::map<
     }
 }
 
-template<typename T>
-Real ModelRecognizer<T>::GetRatio(const std::shared_ptr<T>& model, const std::vector< DynamicVector<Real> >& samples)
+Real ModelRecognizer::GetRatio(const std::shared_ptr<Model>& model, const std::vector< DynamicVector<Real> >& samples)
 {
+    Train();
+
     if (IsBackgroundModelEnabled() && (mBackgroundModel != nullptr))
     {
         return model->GetLogScore(samples) - mBackgroundModel->GetLogScore(samples);
@@ -452,9 +452,10 @@ Real ModelRecognizer<T>::GetRatio(const std::shared_ptr<T>& model, const std::ve
     return model->GetScore(samples);
 }
 
-template<typename T>
-bool ModelRecognizer<T>::IsRecognized(const SpeakerKey& speaker, const std::vector< DynamicVector<Real> >& samples)
+bool ModelRecognizer::IsRecognized(const SpeakerKey& speaker, const std::vector< DynamicVector<Real> >& samples)
 {
+    Train();
+
     Prepare();
 
     if (mSpeakerModels.empty())
@@ -481,9 +482,10 @@ bool ModelRecognizer<T>::IsRecognized(const SpeakerKey& speaker, const std::vect
     return bestSpeaker == speaker;
 }
 
-template<typename T>
-Real ModelRecognizer<T>::GetVerificationScore(const SpeakerKey& speaker, const std::vector< DynamicVector<Real> >& samples)
+Real ModelRecognizer::GetVerificationScore(const SpeakerKey& speaker, const std::vector< DynamicVector<Real> >& samples)
 {
+    Train();
+
     Prepare();
 
     auto it = mSpeakerModels.find(speaker);
@@ -568,9 +570,10 @@ Real ModelRecognizer<T>::GetVerificationScore(const SpeakerKey& speaker, const s
     }
 }
 
-template<typename T>
-std::vector<Real> ModelRecognizer<T>::GetMultipleVerificationScore(const SpeakerKey& speaker, const std::shared_ptr<SpeechData>& data)
+std::vector<Real> ModelRecognizer::GetMultipleVerificationScore(const SpeakerKey& speaker, const std::shared_ptr<SpeechData>& data)
 {
+    Train();
+
     Prepare();
 
     std::vector<Real> results;
@@ -613,16 +616,16 @@ std::vector<Real> ModelRecognizer<T>::GetMultipleVerificationScore(const Speaker
     return results;
 }
 
-template<typename T>
-std::vector<Real> ModelRecognizer<T>::Verify(const SpeakerKey& speaker, const std::shared_ptr<SpeechData>& data)
+std::vector<Real> ModelRecognizer::Verify(const SpeakerKey& speaker, const std::shared_ptr<SpeechData>& data)
 {
+    Train();
+
     Prepare();
 
     return GetMultipleVerificationScore(speaker, data);
 }
 
-template<typename T>
-unsigned int ModelRecognizer<T>::GetDimensionCount()
+unsigned int ModelRecognizer::GetDimensionCount()
 {
     Prepare();
 
@@ -642,38 +645,52 @@ unsigned int ModelRecognizer<T>::GetDimensionCount()
     return speakerModelDimensions;
 }
 
-template<typename T>
-void ModelRecognizer<T>::SetBackgroundModel(std::shared_ptr<T> model)
+void ModelRecognizer::SetBackgroundModel(std::shared_ptr<Model> model)
 {
     mBackgroundModel = model;
 }
 
-template<typename T>
-std::shared_ptr<T> ModelRecognizer<T>::GetBackgroundModel()
+std::shared_ptr<Model> ModelRecognizer::GetBackgroundModel()
 {
     return mBackgroundModel;
 }
 
-template<typename T>
-std::map<SpeakerKey, std::shared_ptr<T> >& ModelRecognizer<T>::GetImpostorModels()
+std::map<SpeakerKey, std::shared_ptr<Model> >& ModelRecognizer::GetImpostorModels()
 {
     return mImpostorModels;
 }
 
-template<typename T>
-const std::map<SpeakerKey, std::shared_ptr<T> >& ModelRecognizer<T>::GetImpostorModels() const
+const std::map<SpeakerKey, std::shared_ptr<Model> >& ModelRecognizer::GetImpostorModels() const
 {
     return mImpostorModels;
 }
 
-template<typename T>
-const std::map<SpeakerKey, std::shared_ptr<T> >& ModelRecognizer<T>::GetSpeakerModels() const
+const std::map<SpeakerKey, std::shared_ptr<Model> >& ModelRecognizer::GetSpeakerModels() const
 {
     return mSpeakerModels;
 }
 
-template<typename T>
-std::map<SpeakerKey, std::shared_ptr<T> >& ModelRecognizer<T>::GetSpeakerModels()
+std::map<SpeakerKey, std::shared_ptr<Model> >& ModelRecognizer::GetSpeakerModels()
 {
     return mSpeakerModels;
+}
+
+void ModelRecognizer::SetTrainingIterations(unsigned int iterations)
+{
+    mTrainingIterations = iterations;
+}
+
+unsigned int ModelRecognizer::GetTrainingIterations() const
+{
+    return mTrainingIterations;
+}
+
+void ModelRecognizer::SetTrainingThreshold(Real threshold)
+{
+    mEta = threshold;
+}
+
+Real ModelRecognizer::GetTrainingThreshold() const
+{
+    return mEta;
 }

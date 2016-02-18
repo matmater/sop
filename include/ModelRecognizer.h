@@ -3,9 +3,9 @@
 
 #include "Common.h"
 
-#include "RecognitionResult.h"
-
 #include "SpeechData.h"
+
+#include "RecognitionResult.h"
 
 #include "Recognizer.h"
 #include "Model.h"
@@ -26,7 +26,6 @@ enum class ScoreNormalizationType
  *  \todo Check normalization.
  *  \todo Check correctness.
  */
-template<typename T>
 class ModelRecognizer : public Recognizer
 {
 public:
@@ -119,6 +118,22 @@ public:
      */
     void SetRelevanceFactor(Real factor);
     
+    /*! \brief Sets the (maximum) number of iterations used in training.
+     */
+    void SetTrainingIterations(unsigned int iterations);
+    
+    /*! \brief Sets the (maximum) number of iterations used in training.
+     */
+    unsigned int GetTrainingIterations() const;
+
+    /*! \brief Sets the training threshold used in training as a stopping condition.
+     */
+    void SetTrainingThreshold(Real threshold);
+    
+    /*! \brief Sets the training threshold used in training as a stopping condition.
+     */
+    Real GetTrainingThreshold() const;
+
     /*! \brief Gets the relevance factor used for model adaptation.
      */
     Real GetRelevanceFactor() const;
@@ -171,6 +186,8 @@ public:
     virtual std::vector<Real> Verify(const SpeakerKey& speaker, const std::shared_ptr<SpeechData>& data) override;
 
 protected:
+    virtual std::shared_ptr<Model> CreateModel() = 0;
+    
     /*! \brief Post-process models after training.
      */
     virtual void PrepareModels();
@@ -179,19 +196,19 @@ protected:
 
     /*! \brief Unnormalized version of GetMultipleVerificationScore().
      */
-    virtual Real GetRatio(const std::shared_ptr<T>& model, const std::vector< DynamicVector<Real> >& samples);
+    virtual Real GetRatio(const std::shared_ptr<Model>& model, const std::vector< DynamicVector<Real> >& samples);
 
-    virtual std::shared_ptr<T> GetBackgroundModel();
+    virtual std::shared_ptr<Model> GetBackgroundModel();
 
-    virtual void SetBackgroundModel(std::shared_ptr<T> model);
+    virtual void SetBackgroundModel(std::shared_ptr<Model> model);
     
-    std::map<SpeakerKey, std::shared_ptr<T> >& GetImpostorModels();
+    std::map<SpeakerKey, std::shared_ptr<Model> >& GetImpostorModels();
     
-    const std::map<SpeakerKey, std::shared_ptr<T> >& GetImpostorModels() const;
+    const std::map<SpeakerKey, std::shared_ptr<Model> >& GetImpostorModels() const;
 
-    std::map<SpeakerKey, std::shared_ptr<T> >& GetSpeakerModels();
+    std::map<SpeakerKey, std::shared_ptr<Model> >& GetSpeakerModels();
     
-    const std::map<SpeakerKey, std::shared_ptr<T> >& GetSpeakerModels() const;
+    const std::map<SpeakerKey, std::shared_ptr<Model> >& GetSpeakerModels() const;
 
     virtual unsigned int GetDimensionCount();
 
@@ -208,22 +225,26 @@ private:
 
     bool mBackgroundModelTrainingEnabled;
 
-    bool mPrepared;
+    bool mDirty;
 
-    std::shared_ptr<T> mBackgroundModel;
+    bool mPrepared;
     
-    std::map<SpeakerKey, std::shared_ptr<T> > mModelCache;
+    unsigned int mTrainingIterations;
+    
+    Real mEta;
+
+    std::shared_ptr<Model> mBackgroundModel;
+    
+    std::map<SpeakerKey, std::shared_ptr<Model> > mModelCache;
 
     std::shared_ptr<SpeechData> mSpeakerData;
 
     std::shared_ptr<SpeechData> mBackgroundModelData;
 
-    std::map<SpeakerKey, std::shared_ptr<T> > mSpeakerModels;
-    std::map<SpeakerKey, std::shared_ptr<T> > mImpostorModels;
+    std::map<SpeakerKey, std::shared_ptr<Model> > mSpeakerModels;
+    std::map<SpeakerKey, std::shared_ptr<Model> > mImpostorModels;
 
     std::map<SpeakerKey, Distribution> mImpostorDistributions;
 };
-
-#include "ModelRecognizer.inl"
 
 #endif

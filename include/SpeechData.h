@@ -5,53 +5,27 @@
 
 #include "DynamicVector.h"
 
+#include "SpeakerKey.h"
+
+#include <streambuf>
+
+class SpeechData;
+
+// \todo MOVE
+void LoadTextSamples(const std::string& folder, const std::shared_ptr<SpeechData>& data, unsigned int sf, unsigned int gf, unsigned int sl, unsigned int gl, bool train);
+
+struct SpeechDataBuffer : public std::streambuf
+{
+    SpeechDataBuffer(char* b, std::size_t s)
+    {
+        setg(b, b, b + s);
+    }
+};
+
 enum class FeatureNormalizationType
 {
     NONE = 0,
     CEPSTRAL_MEAN
-};
-
-/*! A speaker-specific key.
- */
-struct SpeakerKey
-{
-    explicit SpeakerKey(const std::string& id = "")
-    : mId(id) { }
-
-    std::string GetId() const
-    {
-        return mId;
-    }
-
-    bool operator< (const SpeakerKey& rhs) const
-    {
-        return mId < rhs.mId;
-    }
-
-    bool operator== (const SpeakerKey& rhs) const
-    {
-        return mId == rhs.mId;
-    }
-
-    bool operator!= (const SpeakerKey& rhs) const
-    {
-        return mId != rhs.mId;
-    }
-
-    bool IsSameSpeaker(const SpeakerKey& rhs) const
-    {
-        return (mId.compare(0, 3, rhs.mId) == 0);
-    }
-
-    friend std::ostream& operator<< (std::ostream& stream, const SpeakerKey& key)
-    {
-        stream << key.mId;
-
-        return stream;
-    }
-
-private:
-    std::string mId;
 };
 
 /*! \brief A container for speech data of multiple speakers.

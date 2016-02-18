@@ -69,7 +69,7 @@ public:
 
     /*! \brief Trains the model.
      */
-    virtual void Train(const std::vector< DynamicVector<Real> >& samples) override;
+    virtual void Train(const std::vector< DynamicVector<Real> >& samples, unsigned int iterations) override;
     
     /*! \brief Maximum a Posteriori adaptation.
      */

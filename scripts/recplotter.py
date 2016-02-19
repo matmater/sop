@@ -1,10 +1,11 @@
 from matplotlib import pyplot as plt
 from matplotlib.ticker import ScalarFormatter
 import sys
+import os
 
 """
 Plots results of recognition tests.
-Currently plots reliability on y-axis and amount of trained speakers on x-axis
+Currently plots reliability on y-axis and amount of trained speakers on x-axis.
 """
 
 def GetResults(files):
@@ -27,11 +28,10 @@ def DrawCurve(results):
     fig,ax = plt.subplots()
     for entry in results:
         plt.plot(entry[0], entry[1], linewidth = 2)
-    ticks_to_use = [10,20,30,40,50,60,70,80,90,100]
     ax.xaxis.set_major_formatter(ScalarFormatter())
     ax.yaxis.set_major_formatter(ScalarFormatter())
-    ax.set_xticks(ticks_to_use)
-    ax.set_yticks(ticks_to_use)
+    ax.set_xticks([10*x for x in range(11)])
+    ax.set_yticks([10*x for x in range(21)])
     plt.axis([max(0,min(entry[0])-10), min(100,max(entry[0])+10), max(0,min(entry[1])-10), min(100,max(entry[1])+10)])
     #plt.axis('tight')
     plt.ylabel('Recognition rate (%)')
@@ -42,12 +42,13 @@ def DrawCurve(results):
     plt.show()    
 
 if __name__ == '__main__':
-    files = []
     if len(sys.argv) > 1:
-        for j in range(len(sys.argv) - 1):
-            files.append(sys.argv[j+1])                
+        folder = sys.argv[1]            
     else:
-        files.append("recognitionresults.txt")
+        folder = "recognitionresults"
+    files = []
+    for file in os.listdir(folder):
+        files.append("{}/{}".format(folder, file))
     results = GetResults(files)
     print results
     DrawCurve(results)

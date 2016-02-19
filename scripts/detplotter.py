@@ -2,6 +2,7 @@
 from matplotlib import pyplot as plt
 from matplotlib.ticker import ScalarFormatter
 import sys
+import os
 
 def DETCurve(results, eerDfc):
     """
@@ -103,12 +104,13 @@ def EERandDCF(results):
     return eerDcf
  
 if __name__ == '__main__':
-    files = []
     if len(sys.argv) > 1:
-        for j in range(len(sys.argv) - 1):
-            files.append(sys.argv[j+1])                
+        folder = sys.argv[1]            
     else:
-        files.append("verificationresults.txt")
+        folder = "verificationresults"
+    files = []
+    for file in os.listdir(folder):
+        files.append("{}/{}".format(folder, file))
     results = GetResults(files)
     
     eerDcf = EERandDCF(results)

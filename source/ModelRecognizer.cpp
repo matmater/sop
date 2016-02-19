@@ -97,8 +97,12 @@ bool ModelRecognizer::IsBackgroundModelTrainingEnabled() const
 
 void ModelRecognizer::SetSpeakerData(std::shared_ptr<SpeechData> data)
 {
+    if (data != mSpeakerData)
+    {
+        mDirty = true;
+    }
+
     mSpeakerData = data;
-    mDirty = true;
 }
 
 std::shared_ptr<SpeechData> ModelRecognizer::GetSpeakerData()
@@ -118,8 +122,12 @@ void ModelRecognizer::PrepareModels()
 
 void ModelRecognizer::SetBackgroundModelData(std::shared_ptr<SpeechData> data)
 {
+    if (data != mBackgroundModelData)
+    {
+        mDirty = true;
+    }
+
     mBackgroundModelData = data;
-    mDirty = true;
 }
 
 std::shared_ptr<SpeechData> ModelRecognizer::GetBackgroundModelData()

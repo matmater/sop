@@ -401,18 +401,16 @@ void TestEngine::Recognize(
 
     // Test utterances
     LoadTextSamples(features, testData, sf, cycles * gf, sl, gl, false);
+    
+    unsigned int correct = 0;
+    unsigned int incorrect = 0;
 
     for (unsigned int i = 1; i <= cycles ; i++)
     {
-        std::cout << i << "/" << cycles << std::endl;
-        
-        unsigned int population = i * 10;
-        unsigned int correct = 0;
-        unsigned int incorrect = 0;
-        
         // Select trained speakers.
         std::vector<SpeakerKey> speakers;
-        for (unsigned int k = 0; k < population; ++k)
+
+        for (unsigned int k = 0; k < gf; ++k)
         {
             SpeakerKey key(toString(sf + k));
 
@@ -452,15 +450,10 @@ void TestEngine::Recognize(
             }
         }
 
-        if (correct > 0 || incorrect > 0)
-        {
-            std::cout << "Speakers " << population
-                      << ", accuracy "
-                      << 100.0f * static_cast<float>(correct) / static_cast<float>(correct + incorrect) << "%" << std::endl;
-        }
-
-        results << population << " " << 100.0f * static_cast<float>(correct) / static_cast<float>(correct + incorrect) << std::endl;
+        sf += gf;
     }
+
+    results << 100.0f * static_cast<float>(correct) / static_cast<float>(correct + incorrect) << std::endl;
     
     std::ofstream testFile(id + ".test", std::ios_base::app);
     testFile << resultsFileName << "|" << GetLabel(recognizer, features) << std::endl;

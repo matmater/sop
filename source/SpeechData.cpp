@@ -1,7 +1,7 @@
 #include "SpeechData.h"
 
 SpeechData::SpeechData()
-    : mNormalizationType(FeatureNormalizationType::CEPSTRAL_MEAN),
+    : mNormalizationType(FeatureNormalizationType::CEPSTRAL_MEAN_VARIANCE),
     mConsistent(true),
     mDimensionCount(0)
 {
@@ -86,7 +86,7 @@ void SpeechData::Load(const std::string& path)
     Validate();
 }
 
-void SpeechData::Load(const std::string& path, unsigned int sl, unsigned int gl, bool train, const std::string& alias)
+void SpeechData::Load(const std::string& path, unsigned int sl, unsigned int gl, bool train, bool normalize, const std::string& alias)
 {
     // \todo CHECK BUGS!
 
@@ -146,6 +146,9 @@ void SpeechData::Load(const std::string& path, unsigned int sl, unsigned int gl,
 
                 auto& userSamples = mSamples[key];
 
+                unsigned int totalVectors = 0;
+                
+                // Feature vectors separated by commas.
                 while (std::getline(ssFeatures, features, ','))
                 {
                     userSamples.emplace_back();
@@ -154,16 +157,22 @@ void SpeechData::Load(const std::string& path, unsigned int sl, unsigned int gl,
                     std::istream ssFeature(&buffer2);
                     std::string feature;
 
+                    // Features separated by spaces.
                     while (std::getline(ssFeature, feature, ' '))
                     {
                         if (feature.size() > 0 && feature[0] != ' ')
                         {
-                            // \todo CHECK
+                            // \todo CHECK stod?
                             userSamples.back().Push(std::stof(feature));
                         }
                     }
 
-                    if (userSamples.back().GetSize() == 0)
+                    if (userSamples.back().GetSize() > 0)
+                    {
+                        ++totalVectors;
+                    }
+
+                    else
                     {
                         userSamples.pop_back();
                     }
@@ -174,6 +183,16 @@ void SpeechData::Load(const std::string& path, unsigned int sl, unsigned int gl,
                     mSamples.erase(key);
 
                     std::cout << "Error: missing sample data." << std::endl;
+                }
+
+                else
+                {
+                    // Per-utterance normalization.
+                    if (normalize)
+                    {
+                        std::cout << "Normalizing utterance of size: " << totalVectors << "." << std::endl;
+                        Normalize(userSamples.end() - totalVectors, userSamples.end());
+                    }
                 }
             }
         }
@@ -266,62 +285,66 @@ FeatureNormalizationType SpeechData::GetNormalizationType() const
     return mNormalizationType;
 }
 
-void SpeechData::Normalize()
+void SpeechData::CMVN(
+    std::vector < DynamicVector<Real> >::iterator beginIt,
+    std::vector < DynamicVector<Real> >::iterator endIt)
 {
-    //for (auto& seq : mSamples)
-    //{
-    //    for (auto& s : seq.second)
-    //    {
-    //        s.Multiply(1.0f / 39.0f);
-    //    }
-    //}
+    DynamicVector<Real> means;
+    DynamicVector<Real> deviations;
 
+    means.Resize(GetDimensionCount());
+    deviations.Resize(GetDimensionCount());
+
+    // Normalize dimensions separately.
+    for (unsigned int d = 0; d < GetDimensionCount(); d++)
+    {
+        std::vector<Real> values;
+
+        for (auto it = beginIt; it != endIt; it++)
+        {
+            values.push_back((*it)[d]);
+        }
+
+        // Get mean & deviation over all samples.
+        Real mean = Mean(values);
+        Real deviation = Deviation(values, mean);
+
+        means[d] = mean;
+        deviations[d] = deviation;
+    }
+    
+    for (auto it = beginIt; it != endIt; it++)
+    {
+        it->Subtract(means);
+        it->Divide(deviations);
+    }
+}
+
+void SpeechData::Normalize(
+    std::vector < DynamicVector<Real> >::iterator beginIt,
+    std::vector < DynamicVector<Real> >::iterator endIt)
+{
     switch (mNormalizationType)
     {
     case FeatureNormalizationType::NONE:
         break;
 
-    case FeatureNormalizationType::CEPSTRAL_MEAN:
-        {
-            DynamicVector<Real> means;
-            DynamicVector<Real> deviations;
-
-            means.Resize(GetDimensionCount());
-            deviations.Resize(GetDimensionCount());
-
-            // Normalize entry by entry.
-            for (auto& sample : mSamples)
-            {
-                // Normalize dimensions separately.
-                for (unsigned int d = 0; d < GetDimensionCount(); d++)
-                {
-                    std::vector<Real> values;
-
-                    for (const auto& value : sample.second)
-                    {
-                        values.push_back(value[d]);
-                    }
-
-                    // Get mean & deviation over all samples.
-                    Real mean = Mean(values);
-                    Real deviation = Deviation(values, mean);
-
-                    means[d] = mean;
-                    deviations[d] = deviation;
-                }
-
-                for (auto& value : sample.second)
-                {
-                    value.Subtract(means);
-                    value.Divide(deviations);
-                }
-            }
-        }
+    case FeatureNormalizationType::CEPSTRAL_MEAN_VARIANCE:
+        CMVN(beginIt, endIt);
 
         break;
 
     default:
         std::cout << "Unknown feature normalization type." << std::endl;
+    }
+}
+
+void SpeechData::Normalize()
+{
+    // Normalize entry by entry.
+    for (auto& sample : mSamples)
+    {
+        Normalize(sample.second.begin(), sample.second.end());
     }
 }
 
@@ -342,6 +365,21 @@ const std::map<SpeakerKey, std::vector<DynamicVector<Real> > >& SpeechData::GetS
 
 void LoadTextSamples(const std::string& folder, const std::shared_ptr<SpeechData>& data, unsigned int sf, unsigned int gf, unsigned int sl, unsigned int gl, bool train)
 {
+    if (folder.size() == 0)
+    {
+        std::cout << "Could not load samples: Missing folder name." << std::endl;
+        return;
+    }
+
+    auto finalFolder = folder;
+
+    bool normalize = false;
+
+    if (folder.size() > 2 && folder[0] == 'n' && folder[1] == '_')
+    {
+        finalFolder.erase(0, 2);
+    }
+
     // \todo CHECK BUGS!
 
     data->Clear();
@@ -355,7 +393,7 @@ void LoadTextSamples(const std::string& folder, const std::shared_ptr<SpeechData
         {
             for (unsigned int i = 225; i <= 376; ++i)
             {
-                std::string fname = folder + "/samples_" + toString(i) + ".txt";
+                std::string fname = finalFolder + "/samples_" + toString(i) + ".txt";
 
                 if (FileExists(fname))
                 {
@@ -367,13 +405,13 @@ void LoadTextSamples(const std::string& folder, const std::shared_ptr<SpeechData
         }
 
         std::cout << speakerFiles[i+sf-225] << std::endl;
-        data->Load(speakerFiles[i+sf-225], sl, gl, train, toString(sf+i));
+        data->Load(speakerFiles[i+sf-225], sl, gl, train, normalize, toString(sf+i));
 #else
-        std::string file = folder + "/samples_" + toString(sf+i) + ".txt";
+        std::string file = finalFolder + "/samples_" + toString(sf+i) + ".txt";
         std::cout << file << std::endl;
-        data->Load(file, sl, gl, train);
+        data->Load(file, sl, gl, train, normalize);
 #endif
     }
     data->Validate();
-    data->Normalize();
+    //data->Normalize();
 }

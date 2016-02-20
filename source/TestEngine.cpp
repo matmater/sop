@@ -248,7 +248,7 @@ void TestEngine::Run(const std::string& file)
     });
 
     std::string previousFeatures;
-
+    
     std::shared_ptr<SpeechData> ubmData;
     std::shared_ptr<SpeechData> trainData;
     
@@ -261,11 +261,11 @@ void TestEngine::Run(const std::string& file)
     
     std::shared_ptr<VQRecognizer> vq = std::make_shared<VQRecognizer>();
     std::shared_ptr<GMMRecognizer> gmm = std::make_shared<GMMRecognizer>();
-
+    
     auto previousIt = tests.end();
     for (auto it = tests.begin(); it != tests.end(); it++)
     {
-        if (it->features != previousIt->features ||
+        if (previousIt == tests.end() || it->features != previousIt->features ||
             it->trainSf != previousIt->trainSf ||
             it->trainGf != previousIt->trainGf ||
             it->trainSl != previousIt->trainSl ||
@@ -284,7 +284,7 @@ void TestEngine::Run(const std::string& file)
             );
         }
 
-        if (it->features != previousIt->features)
+        if (previousIt == tests.end() || it->features != previousIt->features)
         {
             // Load ubm data from a different set of speakers.
             ubmData = std::make_shared<SpeechData>();
@@ -314,9 +314,12 @@ void TestEngine::Run(const std::string& file)
         
         recognizer->SetSpeakerData(trainData);
         recognizer->SetBackgroundModelData(ubmData);
-
+        
         if (it->type == TestType::RECOGNITION)
         {
+            recognizer->SetBackgroundModelEnabled(it->ubm);
+            recognizer->SetAdaptationEnabled(it->ubm);
+
             Recognize(
                 it->id, it->features, recognizer,
                 it->testSf,            // sf
@@ -327,8 +330,11 @@ void TestEngine::Run(const std::string& file)
             );
         }
 
-        else if (it->type == TestType::RECOGNITION)
+        else if (it->type == TestType::VERIFICATION)
         {
+            recognizer->SetBackgroundModelEnabled(it->ubm);
+            recognizer->SetAdaptationEnabled(it->ubm);
+
             Verify(
                 it->id, it->features, recognizer,
                 it->testSf,            // sf
@@ -363,8 +369,10 @@ void TestEngine::Recognize(
     unsigned int cycles)
 {
     // \todo CHECK BUGS!
+    
+    std::string resultsFileName = id + "_" + features + "_rec_" + GetIdentifier(recognizer) + ".txt";
 
-    std::ofstream results(id + "_" + features + "_rec_" + GetIdentifier(recognizer) + ".txt");
+    std::ofstream results(resultsFileName);
 
     auto testData = std::make_shared<SpeechData>();
 
@@ -430,6 +438,10 @@ void TestEngine::Recognize(
 
         results << population << " " << correct << " " << incorrect << std::endl;
     }
+    
+    std::ofstream testFile(id + ".txt");
+    testFile << resultsFileName << std::endl;
+
 }
 
 void TestEngine::Verify(
@@ -447,8 +459,8 @@ void TestEngine::Verify(
     unsigned int gi)
 {
     // \todo CHECK BUGS!
-
-    std::ofstream results(id + "_" + features + "_ver_" + GetIdentifier(recognizer) + ".txt");
+    std::string resultsFileName = id + "_" + features + "_ver_" + GetIdentifier(recognizer) + ".txt";
+    std::ofstream results(resultsFileName);
 
     // Select trained impostors.
     std::vector<SpeakerKey> impostors;
@@ -517,6 +529,9 @@ void TestEngine::Verify(
         }
         sf += gf;
     }
+    
+    std::ofstream testFile(id + ".txt");
+    testFile << resultsFileName << std::endl;
 }
 
 std::string TestEngine::GetIdentifier(std::shared_ptr<ModelRecognizer> recognizer)

@@ -15,12 +15,13 @@ int main(int argc, char** argv)
     %ubm 295 30 1 5
 
     %test0 rec
-        samples        vq       225 50 1 5   225 10 6 11   2         -o 128
-        samples        gmm      225 50 1 5   225 10 6 11   2         -o 128
+          samples      vq       225 50 1 5   225 10 6 11   2         -o 128
+          samples      gmm      225 50 1 5   225 10 6 11   2         -o 128
 
     %test1 ver
-        samples        vq       225 100 1 5   240 5 10 3   5  5 1  275 20   -w -o 128 -ubm
-        samples        gmm      225 100 1 5   240 5 10 3   5  5 1  275 20   -o 128 -ubm
+          samples      vq       225 100 1 5   240 5 10 3   5  5 1  275 20   -w -o 128 -ubm -zt
+        n_samples      vq       225 100 1 5   240 5 10 3   5  5 1  275 20   -w -o 128 -ubm -zt
+          samples      gmm      225 100 1 5   240 5 10 3   5  5 1  275 20   -o 128 -ubm -zt
     */
     TestEngine engine;
 

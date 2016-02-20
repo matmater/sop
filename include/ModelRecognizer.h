@@ -102,6 +102,10 @@ public:
      */
     unsigned int GetOrder() const;
     
+    void SetAdaptationEnabled(bool enabled);
+
+    bool IsAdaptationEnabled() const;
+
     /*! \brief Sets the number of iterations used for model adaptation.
      *
      *  Default number of iterations is 2.
@@ -186,6 +190,10 @@ public:
     virtual std::vector<Real> Verify(const SpeakerKey& speaker, const std::shared_ptr<SpeechData>& data) override;
 
 protected:
+    void TrainBackgroundModel();
+
+    void TrainSpeakerModels();
+
     virtual std::shared_ptr<Model> CreateModel() = 0;
     
     /*! \brief Post-process models after training.
@@ -229,9 +237,15 @@ private:
 
     bool mPrepared;
     
+    bool mAdaptationEnabled;
+    
     unsigned int mTrainingIterations;
     
     Real mEta;
+    
+    unsigned int mBackgroundModelDirty;
+
+    unsigned int mSpeakerModelsDirty;
 
     std::shared_ptr<Model> mBackgroundModel;
     

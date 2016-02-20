@@ -10,7 +10,10 @@ ModelRecognizer::ModelRecognizer()
     mDirty(true),
     mPrepared(false),
     mTrainingIterations(10),
-    mEta(0.001f)
+    mEta(0.001f),
+    mBackgroundModelDirty(true),
+    mAdaptationEnabled(false),
+    mSpeakerModelsDirty(true)
 {
 
 }
@@ -28,7 +31,7 @@ void ModelRecognizer::ClearTrainedData()
     mImpostorDistributions.clear();
     mImpostorModels.clear();
     mDirty = true;
-    //mBackgroundModel = nullptr;
+    mBackgroundModel = nullptr;
 }
 
 void ModelRecognizer::SetOrder(unsigned int order)
@@ -40,6 +43,21 @@ void ModelRecognizer::SetOrder(unsigned int order)
 unsigned int ModelRecognizer::GetOrder() const
 {
     return mOrder;
+}
+
+void ModelRecognizer::SetAdaptationEnabled(bool enabled)
+{
+    if (enabled != mAdaptationEnabled)
+    {
+        mSpeakerModelsDirty = true;
+    }
+
+    mAdaptationEnabled = enabled;
+}
+
+bool ModelRecognizer::IsAdaptationEnabled() const
+{
+    return mAdaptationEnabled;
 }
 
 void ModelRecognizer::SetAdaptationIterations(unsigned int iterations)
@@ -125,6 +143,7 @@ void ModelRecognizer::SetBackgroundModelData(std::shared_ptr<SpeechData> data)
     if (data != mBackgroundModelData)
     {
         mDirty = true;
+        mBackgroundModelDirty = true;
     }
 
     mBackgroundModelData = data;
@@ -135,57 +154,39 @@ std::shared_ptr<SpeechData> ModelRecognizer::GetBackgroundModelData()
     return mBackgroundModelData;
 }
 
-void ModelRecognizer::Train()
+void ModelRecognizer::TrainBackgroundModel()
 {
-    // Already trained?
-    if (!mDirty)
-    {
-        return;
-    }
+    mBackgroundModel = CreateModel();
 
-    if (mSpeakerData == nullptr)
-    {
-        std::cout << "Missing speaker data." << std::endl;
-
-        return;
-    }
-
-    if (!mSpeakerData->IsConsistent())
-    {
-        std::cout << "Inconsistent training data." << std::endl;
-
-        return;
-    }
-
-    ClearTrainedData();
-    
-    unsigned int progress = 0;
-
-    // Check if the background model can actually be created.
-    if (IsBackgroundModelTrainingEnabled() && mBackgroundModelData != nullptr)
-    {
-        mBackgroundModel = CreateModel();
-
-        // UBM was found, train it first using normal training.
-        std::cout << "Training background model." << std::endl;
-
-        std::vector< DynamicVector<Real> > samples;
+    std::vector< DynamicVector<Real> > samples;
         
-        for (const auto& speaker : mBackgroundModelData->GetSamples())
+    for (const auto& speaker : mBackgroundModelData->GetSamples())
+    {
+        for (const auto& sample : speaker.second)
         {
-            for (const auto& sample : speaker.second)
-            {
-                samples.push_back(sample);
-            }
+            samples.push_back(sample);
         }
-
-        mBackgroundModel->SetOrder(GetOrder());
-        mBackgroundModel->Train(samples, GetTrainingIterations());
     }
 
-    progress = 0;
+    mBackgroundModel->SetOrder(GetOrder());
+    mBackgroundModel->Train(samples, GetTrainingIterations());
+}
 
-    std::cout << "Training speaker models." << std::endl;
+void ModelRecognizer::TrainSpeakerModels()
+{
+    unsigned int progress = 0;
+    
+    bool adapt = false;
+
+    if (IsBackgroundModelEnabled() && mBackgroundModel != nullptr && mAdaptationEnabled)
+    {
+        adapt = true;
+    }
+
+    else if (IsBackgroundModelEnabled() && mBackgroundModel == nullptr)
+    {
+        std::cout << "Warning: enabled background model not found." << std::endl;
+    }
 
     for (const auto& sequence : mSpeakerData->GetSamples())
     {
@@ -194,11 +195,20 @@ void ModelRecognizer::Train()
         auto model = CreateModel();
         mModelCache[sequence.first] = model;
 
-        std::cout << "Training model: " << sequence.first
-                    << " (" << 100 * progress / mSpeakerData->GetSamples().size() << "%)" << std::endl;
+        if (adapt)
+        {
+            std::cout << "Training model (MAP): " << sequence.first
+                << " (" << 100 * progress / mSpeakerData->GetSamples().size() << "%)" << std::endl;
+        }
+
+        else
+        {
+            std::cout << "Training model: " << sequence.first
+                << " (" << 100 * progress / mSpeakerData->GetSamples().size() << "%)" << std::endl;
+        }
 
         // UBM exists, train everything else with adaptation.
-        if (IsBackgroundModelEnabled() && mBackgroundModel != nullptr)
+        if (adapt)
         {
             model->Adapt(mBackgroundModel, sequence.second, mAdaptationIterations, mRelevanceFactor);
         }
@@ -211,8 +221,67 @@ void ModelRecognizer::Train()
             model->Train(sequence.second, GetTrainingIterations());
         }
     }
+}
 
-    mDirty = false;
+void ModelRecognizer::Train()
+{
+    if (mSpeakerData == nullptr || !mSpeakerData->IsConsistent())
+    {
+        std::cout << "Missing or inconsistent speaker model training data." << std::endl;
+        return;
+    }
+
+    if (mBackgroundModelData != nullptr && !mSpeakerData->IsConsistent())
+    {
+        std::cout << "Inconsistent background model training data." << std::endl;
+        return;
+    }
+
+    // Dirty means that something fundamental changes were made so that all models
+    // need to be re-trained (i.e. the order).
+    if (mDirty)
+    {
+        ClearTrainedData();
+        
+        std::cout << "Training background model." << std::endl;
+
+        TrainBackgroundModel();
+
+        std::cout << "Training speaker models." << std::endl;
+        
+        TrainSpeakerModels();
+        
+        mDirty = false;
+        mBackgroundModelDirty = false;
+        mSpeakerModelsDirty = false;
+        mPrepared = false;
+    }
+
+    // Otherwise,
+    else
+    {
+        // i.e., background model data changed.
+        if (mBackgroundModelDirty)
+        {
+            std::cout << "Training background model." << std::endl;
+
+            TrainBackgroundModel();
+
+            mBackgroundModelDirty = false;
+            mPrepared = false;
+        }
+        
+        // i.e., if adaptation parameters changed.
+        if (mSpeakerModelsDirty)
+        {
+            std::cout << "Training speaker models." << std::endl;
+
+            TrainSpeakerModels();
+
+            mSpeakerModelsDirty = false;
+            mPrepared = false;
+        }
+    }
 }
 
 void ModelRecognizer::Prepare()

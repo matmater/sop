@@ -25,7 +25,7 @@ struct SpeechDataBuffer : public std::streambuf
 enum class FeatureNormalizationType
 {
     NONE = 0,
-    CEPSTRAL_MEAN
+    CEPSTRAL_MEAN_VARIANCE
 };
 
 /*! \brief A container for speech data of multiple speakers.
@@ -55,7 +55,7 @@ public:
      *
      *  \note Line indexing starts from 1.
      */
-    void Load(const std::string& path, unsigned int sl, unsigned int gl, bool train, const std::string& alias = "");
+    void Load(const std::string& path, unsigned int sl, unsigned int gl, bool train, bool normalize = false, const std::string& alias = "");
 
     /*! \brief Validates loaded data.
      *
@@ -85,6 +85,14 @@ public:
      *  If data is inconsistent the returned value is undefined.
      */
     unsigned int GetDimensionCount() const;
+    
+    void CMVN(
+        std::vector < DynamicVector<Real> >::iterator beginIt,
+        std::vector < DynamicVector<Real> >::iterator endIt);
+
+    void Normalize(
+        std::vector < DynamicVector<Real> >::iterator beginIt,
+        std::vector < DynamicVector<Real> >::iterator endIt);
 
     /*! \brief Normalizes all sample values to range x.
      *

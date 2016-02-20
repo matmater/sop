@@ -6,7 +6,6 @@ ModelRecognizer::ModelRecognizer()
     mRelevanceFactor(16.0f),
     mScoreNormalizationType(ScoreNormalizationType::NONE),
     mBackgroundModelEnabled(false),
-    mBackgroundModelTrainingEnabled(true),
     mDirty(true),
     mPrepared(false),
     mTrainingIterations(10),
@@ -36,8 +35,12 @@ void ModelRecognizer::ClearTrainedData()
 
 void ModelRecognizer::SetOrder(unsigned int order)
 {
+    if (order != mOrder)
+    {
+        mDirty = true;
+    }
+
     mOrder = order;
-    mDirty = true;
 }
 
 unsigned int ModelRecognizer::GetOrder() const
@@ -62,8 +65,12 @@ bool ModelRecognizer::IsAdaptationEnabled() const
 
 void ModelRecognizer::SetAdaptationIterations(unsigned int iterations)
 {
+    if (iterations != mAdaptationIterations)
+    {
+        mSpeakerModelsDirty = true;
+    }
+
     mAdaptationIterations = iterations;
-    mDirty = true;
 }
 
 unsigned int ModelRecognizer::GetAdaptationIterations() const
@@ -73,8 +80,12 @@ unsigned int ModelRecognizer::GetAdaptationIterations() const
 
 void ModelRecognizer::SetRelevanceFactor(Real factor)
 {
+    if (std::abs(factor - mRelevanceFactor) > 0.0005f)
+    {
+        mSpeakerModelsDirty = true;
+    }
+
     mRelevanceFactor = factor;
-    mDirty = true;
 }
 
 Real ModelRecognizer::GetRelevanceFactor() const
@@ -84,6 +95,11 @@ Real ModelRecognizer::GetRelevanceFactor() const
 
 void ModelRecognizer::SetScoreNormalizationType(ScoreNormalizationType type)
 {
+    if (type != mScoreNormalizationType)
+    {
+        mPrepared = false;
+    }
+
     mScoreNormalizationType = type;
 }
 
@@ -94,23 +110,17 @@ ScoreNormalizationType ModelRecognizer::GetScoreNormalizationType() const
 
 void ModelRecognizer::SetBackgroundModelEnabled(bool enabled)
 {
+    if (enabled != mBackgroundModelEnabled)
+    {
+        mPrepared = false;
+    }
+
     mBackgroundModelEnabled = enabled;
-    mPrepared = false;
 }
 
 bool ModelRecognizer::IsBackgroundModelEnabled() const
 {
     return mBackgroundModelEnabled;
-}
-
-void ModelRecognizer::SetBackgroundModelTrainingEnabled(bool enabled)
-{
-    mBackgroundModelTrainingEnabled = enabled;
-}
-
-bool ModelRecognizer::IsBackgroundModelTrainingEnabled() const
-{
-    return mBackgroundModelTrainingEnabled;
 }
 
 void ModelRecognizer::SetSpeakerData(std::shared_ptr<SpeechData> data)
@@ -142,7 +152,6 @@ void ModelRecognizer::SetBackgroundModelData(std::shared_ptr<SpeechData> data)
 {
     if (data != mBackgroundModelData)
     {
-        mDirty = true;
         mBackgroundModelDirty = true;
     }
 
@@ -260,6 +269,8 @@ void ModelRecognizer::Train()
     // Otherwise,
     else
     {
+        bool backgroundTrained = false;
+
         // i.e., background model data changed.
         if (mBackgroundModelDirty)
         {
@@ -269,10 +280,11 @@ void ModelRecognizer::Train()
 
             mBackgroundModelDirty = false;
             mPrepared = false;
+            backgroundTrained = true;
         }
         
         // i.e., if adaptation parameters changed.
-        if (mSpeakerModelsDirty)
+        if (mSpeakerModelsDirty || backgroundTrained && mAdaptationEnabled)
         {
             std::cout << "Training speaker models." << std::endl;
 

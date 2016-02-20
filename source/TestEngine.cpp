@@ -185,7 +185,7 @@ void TestEngine::Run(const std::string& file)
                     test.scoreNormalizationType = ScoreNormalizationType::ZERO_TEST;
                 } else if (feature == "-tz") {
                     test.scoreNormalizationType = ScoreNormalizationType::TEST_ZERO;
-                } else if (feature == "-w") {
+                } else if (feature == "-wt") {
                     test.weighting = true;
                 } else if (feature == "-ubm") {
                     test.ubm = true;
@@ -263,13 +263,35 @@ void TestEngine::Run(const std::string& file)
     std::shared_ptr<GMMRecognizer> gmm = std::make_shared<GMMRecognizer>();
     
     auto previousIt = tests.end();
+    
+    std::map<std::string, TestType> testIds;
+
+    for (const auto& test : tests)
+    {
+        testIds.emplace(test.id, test.type);
+    }
+
+    for (const auto& test : testIds)
+    {
+        // Just init (and clear) the file.
+        std::ofstream testFile(test.first + ".test");
+
+        if (test.second == TestType::RECOGNITION)
+            testFile << test.first << "|" << "rec" << std::endl;
+        else if (test.second == TestType::VERIFICATION)
+            testFile << test.first << "|" << "ver" << std::endl;
+        else
+            testFile << test.first << "|" << "n/a" << std::endl;
+    }
+
     for (auto it = tests.begin(); it != tests.end(); it++)
     {
-        if (previousIt == tests.end() || it->features != previousIt->features ||
-            it->trainSf != previousIt->trainSf ||
-            it->trainGf != previousIt->trainGf ||
-            it->trainSl != previousIt->trainSl ||
-            it->trainGl != previousIt->trainGl)
+        if (previousIt   == tests.end()          ||
+            it->features != previousIt->features ||
+            it->trainSf  != previousIt->trainSf  ||
+            it->trainGf  != previousIt->trainGf  ||
+            it->trainSl  != previousIt->trainSl  ||
+            it->trainGl  != previousIt->trainGl)
         {
             // Load speaker data.
             trainData = std::make_shared<SpeechData>();
@@ -284,7 +306,8 @@ void TestEngine::Run(const std::string& file)
             );
         }
 
-        if (previousIt == tests.end() || it->features != previousIt->features)
+        if (previousIt   == tests.end() ||
+            it->features != previousIt->features)
         {
             // Load ubm data from a different set of speakers.
             ubmData = std::make_shared<SpeechData>();
@@ -439,9 +462,8 @@ void TestEngine::Recognize(
         results << population << " " << correct << " " << incorrect << std::endl;
     }
     
-    std::ofstream testFile(id + ".txt");
-    testFile << resultsFileName << std::endl;
-
+    std::ofstream testFile(id + ".test", std::ios_base::app);
+    testFile << resultsFileName << "|" << GetLabel(recognizer, features) << std::endl;
 }
 
 void TestEngine::Verify(
@@ -530,8 +552,8 @@ void TestEngine::Verify(
         sf += gf;
     }
     
-    std::ofstream testFile(id + ".txt");
-    testFile << resultsFileName << std::endl;
+    std::ofstream testFile(id + ".test", std::ios_base::app);
+    testFile << resultsFileName << "|" << GetLabel(recognizer, features) << std::endl;
 }
 
 std::string TestEngine::GetIdentifier(std::shared_ptr<ModelRecognizer> recognizer)
@@ -568,6 +590,46 @@ std::string TestEngine::GetIdentifier(std::shared_ptr<ModelRecognizer> recognize
     if (recognizer->IsBackgroundModelEnabled())
     {
         ss << "_ubm";
+    }
+
+    return ss.str();
+}
+
+std::string TestEngine::GetLabel(std::shared_ptr<ModelRecognizer> recognizer,
+                     const std::string& features)
+{
+    // \todo Add more identifiers.
+
+    std::stringstream ss;
+
+    if (dynamic_cast<VQRecognizer*>(recognizer.get()) != nullptr)
+    {
+        ss << "VQ";
+    }
+
+    else if (dynamic_cast<GMMRecognizer*>(recognizer.get()) != nullptr)
+    {
+        ss << "GMM";
+    }
+
+    else
+    {
+        ss << "N/A";
+    }
+    
+    ss << "-" << recognizer->GetOrder();
+
+    if (dynamic_cast<VQRecognizer*>(recognizer.get()) != nullptr)
+    {
+        if (static_cast<VQRecognizer*>(recognizer.get())->IsWeightingEnabled())
+        {
+            ss << "-WT";
+        }
+    }
+
+    if (recognizer->IsBackgroundModelEnabled())
+    {
+        ss << "-UBM";
     }
 
     return ss.str();

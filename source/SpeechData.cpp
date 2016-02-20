@@ -86,7 +86,7 @@ void SpeechData::Load(const std::string& path)
     Validate();
 }
 
-void SpeechData::Load(const std::string& path, unsigned int sl, unsigned int gl, bool train, bool normalize, const std::string& alias)
+void SpeechData::Load(const std::string& path, unsigned int sl, unsigned int gl, bool train, unsigned int maxFeatures, bool normalize, const std::string& alias)
 {
     // \todo CHECK BUGS!
 
@@ -157,11 +157,15 @@ void SpeechData::Load(const std::string& path, unsigned int sl, unsigned int gl,
                     std::istream ssFeature(&buffer2);
                     std::string feature;
 
+                    unsigned int featureCount = 0;
+
                     // Features separated by spaces.
                     while (std::getline(ssFeature, feature, ' '))
                     {
                         if (feature.size() > 0 && feature[0] != ' ')
                         {
+                            if (featureCount++ == maxFeatures) break;
+
                             // \todo CHECK stod?
                             userSamples.back().Push(std::stof(feature));
                         }
@@ -370,15 +374,43 @@ void LoadTextSamples(const std::string& folder, const std::shared_ptr<SpeechData
         std::cout << "Could not load samples: Missing folder name." << std::endl;
         return;
     }
+    
+    bool cmvn = false;
+    unsigned int maxFeatures = 39;
 
-    auto finalFolder = folder;
+    std::stringstream ss(folder);
 
-    bool normalize = false;
+    std::string finalFolder;
 
-    if (folder.size() > 2 && folder[0] == 'n' && folder[1] == '_')
+    if (!std::getline(ss, finalFolder, '_'))
     {
-        finalFolder.erase(0, 2);
-        normalize = true;
+        std::cout << "Invalid folder name." << std::endl;
+        return;
+    }
+
+    std::string str;
+
+    while (std::getline(ss, str, '_'))
+    {
+        if (str == "cmvn")
+        {
+            cmvn = true;
+        }
+
+        else if (str.size() > 0 && str[0] == 'f')
+        {
+            str.erase(0, 1);
+
+            try
+            {
+                maxFeatures = std::stoi(str);
+            }
+
+            catch (...)
+            {
+                std::cout << "Invalid feature count format." << std::endl;
+            }
+        }
     }
 
     // \todo CHECK BUGS!
@@ -406,13 +438,16 @@ void LoadTextSamples(const std::string& folder, const std::shared_ptr<SpeechData
         }
 
         std::cout << speakerFiles[i+sf-225] << std::endl;
-        data->Load(speakerFiles[i+sf-225], sl, gl, train, normalize, toString(sf+i));
+        data->Load(speakerFiles[i+sf-225], sl, gl, train, maxFeatures, cmvn, toString(sf+i));
 #else
         std::string file = finalFolder + "/samples_" + toString(sf+i) + ".txt";
         std::cout << file << std::endl;
-        data->Load(file, sl, gl, train, normalize);
+        data->Load(file, sl, gl, train, maxFeatures, cmvn);
 #endif
     }
     data->Validate();
+
+    std::cout << "Dimensions: " << data->GetDimensionCount() << std::endl;
+
     //data->Normalize();
 }

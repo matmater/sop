@@ -231,8 +231,6 @@ private:
     
     bool mBackgroundModelEnabled;
 
-    bool mBackgroundModelTrainingEnabled;
-
     bool mDirty;
 
     bool mPrepared;

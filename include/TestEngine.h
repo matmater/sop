@@ -89,6 +89,9 @@ public:
 
 private:
     std::string GetIdentifier(std::shared_ptr<ModelRecognizer> recognizer);
+
+    std::string GetLabel(std::shared_ptr<ModelRecognizer> recognizer,
+                         const std::string& features);
 };
 
 #endif

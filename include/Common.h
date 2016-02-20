@@ -7,6 +7,7 @@
 #include <random>
 #include <cassert>
 #include <algorithm>
+#include <set>
 #include <string>
 #include <sstream>
 #include <fstream>

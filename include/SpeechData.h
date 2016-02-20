@@ -55,7 +55,7 @@ public:
      *
      *  \note Line indexing starts from 1.
      */
-    void Load(const std::string& path, unsigned int sl, unsigned int gl, bool train, bool normalize = false, const std::string& alias = "");
+    void Load(const std::string& path, unsigned int sl, unsigned int gl, bool train, unsigned int maxFeatures, bool normalize = false, const std::string& alias = "");
 
     /*! \brief Validates loaded data.
      *

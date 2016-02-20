@@ -17,7 +17,7 @@ def GetResults(files):
             for line in file:
                 result = line.split()
                 result = [int(i) for i in result]
-                results.append([result[0], 100 * result[1] / float((result[1] + result[2]))])
+                results.append(result)
         results.sort()
         allresults.append([[i[0] for i in results], [i[1] for i in results], f[1]])
     

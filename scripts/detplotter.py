@@ -84,7 +84,7 @@ def GetResults(files):
             fpr.append(100*entry/inc)
         for entry in fns:
             fnr.append(100*entry/cor)
-        results.append([fpr,fnr, f[0]])
+        results.append([fpr,fnr, f[1]])
         
     return results
     

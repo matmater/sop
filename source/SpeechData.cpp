@@ -292,11 +292,11 @@ void SpeechData::CMVN(
     DynamicVector<Real> means;
     DynamicVector<Real> deviations;
 
-    means.Resize(GetDimensionCount());
-    deviations.Resize(GetDimensionCount());
+    means.Resize(beginIt->GetSize());
+    deviations.Resize(beginIt->GetSize());
 
     // Normalize dimensions separately.
-    for (unsigned int d = 0; d < GetDimensionCount(); d++)
+    for (unsigned int d = 0; d < beginIt->GetSize(); d++)
     {
         std::vector<Real> values;
 
@@ -378,6 +378,7 @@ void LoadTextSamples(const std::string& folder, const std::shared_ptr<SpeechData
     if (folder.size() > 2 && folder[0] == 'n' && folder[1] == '_')
     {
         finalFolder.erase(0, 2);
+        normalize = true;
     }
 
     // \todo CHECK BUGS!

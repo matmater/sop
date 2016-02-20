@@ -459,7 +459,7 @@ void TestEngine::Recognize(
                       << 100.0f * static_cast<float>(correct) / static_cast<float>(correct + incorrect) << "%" << std::endl;
         }
 
-        results << population << " " << correct << " " << incorrect << std::endl;
+        results << population << " " << 100.0f * static_cast<float>(correct) / static_cast<float>(correct + incorrect) << std::endl;
     }
     
     std::ofstream testFile(id + ".test", std::ios_base::app);

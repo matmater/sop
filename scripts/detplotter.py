@@ -4,7 +4,7 @@ from matplotlib.ticker import ScalarFormatter
 import sys
 import os
 
-def DETCurve(results, eerDfc):
+def DETCurve(results, eerDcf, title):
     """
     Given false positive and false negative rates, produce a DET Curve.
     The false positive rate is assumed to be increasing while the false
@@ -14,11 +14,11 @@ def DETCurve(results, eerDfc):
     axis_min = min(min(results))
     fig,ax = plt.subplots()
     for r in range(len(results)):
-        plt.plot(results[r][0], results[r][1], linewidth = 2, label = results[r][2][:-4])
+        plt.plot(results[r][0], results[r][1], linewidth = 2, label = results[r][2])
         if r == len(results)-1:
-            plt.plot(eerDfc[r][2][0], eerDfc[r][2][1], 'kD', markersize=6, label = "DFC minimipisteet")
+            plt.plot(eerDcf[r][2][0], eerDcf[r][2][1], 'kD', markersize=6, label = "DCF minimipisteet")
         else:
-            plt.plot(eerDfc[r][2][0], eerDfc[r][2][1], 'kD', markersize=6)
+            plt.plot(eerDcf[r][2][0], eerDcf[r][2][1], 'kD', markersize=6)
     plt.yscale('log')
     plt.xscale('log')
     ticks_to_use = [0.01,0.02,0.05,0.1,0.2,0.5,1,2,5,10,20,50,100]
@@ -29,11 +29,13 @@ def DETCurve(results, eerDfc):
     ax.set_yticks(ticks_to_use)
     #plt.axis([0.001,100,0.001,100])
     plt.axis('tight')
+    plt.title(title)
     plt.xlabel('false positive rate (%)')
     plt.ylabel('false negative rate (%)')
-    #plt.legend(loc = 0)
-    plt.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc=3,ncol=2, borderaxespad=0.) # legend above the plot
+    plt.legend(loc = 0)
+    #plt.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc=3,ncol=2, borderaxespad=0.) # legend above the plot
     ax.grid(True)
+    #plt.savefig("{}.png".format(title))
     plt.show()
     
 def GetResults(files):
@@ -42,7 +44,7 @@ def GetResults(files):
     for f in files:
         resultsCor = []
         resultsInc = []
-        with open(f, 'r') as file:
+        with open(f[0], 'r') as file:
             i = 0
             for line in file:
                 if i == 0:
@@ -82,7 +84,7 @@ def GetResults(files):
             fpr.append(100*entry/inc)
         for entry in fns:
             fnr.append(100*entry/cor)
-        results.append([fpr,fnr,f])
+        results.append([fpr,fnr, f[0]])
         
     return results
     

@@ -26,6 +26,8 @@ private:
     {
         std::string id = "";
 
+        std::string label = "";
+
         std::string features = "";
         
         bool weighting = false;
@@ -66,6 +68,7 @@ public:
     void Recognize(
         const std::string& id,
         const std::string& features,
+        const std::string& label,
         std::shared_ptr<ModelRecognizer> recognizer,
         unsigned int sf,
         unsigned int gf,
@@ -76,6 +79,7 @@ public:
     void Verify(
         const std::string& id,
         const std::string& features,
+        const std::string& label,
         std::shared_ptr<ModelRecognizer> recognizer,
         unsigned int sf,
         unsigned int gf,

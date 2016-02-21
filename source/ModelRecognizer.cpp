@@ -252,16 +252,19 @@ void ModelRecognizer::Train()
     {
         ClearTrainedData();
         
-        std::cout << "Training background model." << std::endl;
+        if (mAdaptationEnabled)
+        {
+            std::cout << "Training background model." << std::endl;
 
-        TrainBackgroundModel();
+            TrainBackgroundModel();
+            mBackgroundModelDirty = false;
+        }
 
         std::cout << "Training speaker models." << std::endl;
         
         TrainSpeakerModels();
         
         mDirty = false;
-        mBackgroundModelDirty = false;
         mSpeakerModelsDirty = false;
         mPrepared = false;
     }
@@ -272,7 +275,7 @@ void ModelRecognizer::Train()
         bool backgroundTrained = false;
 
         // i.e., background model data changed.
-        if (mBackgroundModelDirty)
+        if (mBackgroundModelDirty && mAdaptationEnabled)
         {
             std::cout << "Training background model." << std::endl;
 

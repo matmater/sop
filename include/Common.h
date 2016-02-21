@@ -242,4 +242,31 @@ std::string toString(const T& n)
     return s.str();
 }
 
+inline bool GetStringLiteral(std::istream& stream, std::string& str)
+{
+    char c;
+
+    std::streampos oldPos = stream.tellg();
+
+    std::string result;
+    
+    if (!((stream >> c) && c == '"'))
+    {
+        stream.clear();
+        stream.seekg(oldPos);
+        return false;
+    }
+
+    if (!std::getline(stream, result, '"'))
+    {
+        stream.clear();
+        stream.seekg(oldPos);
+        return false;
+    }
+
+    str = result;
+
+    return true;
+}
+
 #endif

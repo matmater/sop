@@ -59,8 +59,12 @@ void VQRecognizer::PrepareModels()
     else
     {
         VQModel* m = dynamic_cast<VQModel*>(GetBackgroundModel().get());
-        m->ResetWeights();
-        
+
+        if (m != nullptr)
+        {
+            m->ResetWeights();
+        }
+
         for (auto& model : GetSpeakerModels())
         {
             m = dynamic_cast<VQModel*>(model.second.get());

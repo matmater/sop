@@ -8,24 +8,23 @@ By uncommenting the lines with i, number skipping will be avoided in resulting f
 but the file names will not match the correct speaker. 
 """
 	
-if __name__ == '__main__':
+if __name__ == '__main__':   
     i = 1
-    for x in range(152):
+    for x in range(155):
         print "Speaker {} in progress.".format(x + 225) 
         pathname = str(x + 225)
         #outfile = "samples_{}".format(pathname)
-        outfile = "samples_{}".format(i)        
-        for y in range(505):
-            if y < 10:
-                z = "00"
-            elif y < 100:
-                z = "0"
-            else:
-                z = ""
-            name = pathname + "_" + str(y)
-            filename = "VCTK-Corpus\wav48\p"+pathname+"\p"+pathname+"_"+z+str(y)+".wav"
-            if os.path.exists(filename):
-                fe.extract_and_save(filename, name, outfile, "mfcc", 2)
-                i += 1                
-    
-    
+        outfile = "samples_{}".format(i)   
+        if os.path.exists("VCTK-Corpus\wav48\p"+pathname):        
+            for y in range(510):
+                if y < 10:
+                    z = "00"
+                elif y < 100:
+                    z = "0"
+                else:
+                    z = ""
+                name = pathname + "_" + str(y)
+                filename = "VCTK-Corpus\wav48\p"+pathname+"\p"+pathname+"_"+z+str(y)+".wav"
+                if os.path.exists(filename):
+                    fe.extract_and_save(filename, name, outfile, "mfcc", 2)
+            i += 1

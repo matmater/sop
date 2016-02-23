@@ -9,7 +9,7 @@ but the file names will not match the correct speaker.
 """
 	
 if __name__ == '__main__':
-    #i = 225
+    i = 1
     for x in range(152):
         print "Speaker {} in progress.".format(x + 225) 
         pathname = str(x + 225)
@@ -26,6 +26,6 @@ if __name__ == '__main__':
             filename = "VCTK-Corpus\wav48\p"+pathname+"\p"+pathname+"_"+z+str(y)+".wav"
             if os.path.exists(filename):
                 fe.extract_and_save(filename, name, outfile, "mfcc", 2)
-                #i += 1                
+                i += 1                
     
     

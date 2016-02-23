@@ -14,6 +14,8 @@ class SpeechData;
 // \todo MOVE
 void LoadTextSamples(const std::string& folder, const std::shared_ptr<SpeechData>& data, unsigned int sf, unsigned int gf, unsigned int sl, unsigned int gl, bool train);
 
+std::string GetSpeakerString(unsigned int index, const std::string& folder);
+
 struct SpeechDataBuffer : public std::streambuf
 {
     SpeechDataBuffer(char* b, std::size_t s)

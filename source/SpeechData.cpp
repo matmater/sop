@@ -418,36 +418,76 @@ void LoadTextSamples(const std::string& folder, const std::shared_ptr<SpeechData
     data->Clear();
     for (unsigned int i = 0; i < gf; i++)
     {
-#ifdef INDEXFIX
-        static std::vector<std::string> speakerFiles;
-        static bool speakerFilesScanned = false;
-
-        if (!speakerFilesScanned)
-        {
-            for (unsigned int i = 225; i <= 376; ++i)
-            {
-                std::string fname = finalFolder + "/samples_" + toString(i) + ".txt";
-
-                if (FileExists(fname))
-                {
-                    speakerFiles.push_back(fname);
-                }
-            }
-
-            speakerFilesScanned = true;
-        }
-
-        std::cout << speakerFiles[i+sf-225] << std::endl;
-        data->Load(speakerFiles[i+sf-225], sl, gl, train, maxFeatures, cmvn, toString(sf+i));
-#else
         std::string file = finalFolder + "/samples_" + toString(sf+i) + ".txt";
         std::cout << file << std::endl;
-        data->Load(file, sl, gl, train, maxFeatures, cmvn);
-#endif
+        data->Load(file, sl, gl, train, maxFeatures, cmvn, GetSpeakerString(sf + i, folder));
     }
     data->Validate();
 
     std::cout << "Dimensions: " << data->GetDimensionCount() << std::endl;
 
     //data->Normalize();
+}
+
+std::string GetSpeakerString(unsigned int index, const std::string& folder)
+{
+#ifdef INDEXFIX
+    if (folder.size() == 0)
+    {
+        std::cout << "Could not load samples: Missing folder name." << std::endl;
+        return "";
+    }
+    
+    std::stringstream ss(folder);
+
+    std::string finalFolder;
+
+    if (!std::getline(ss, finalFolder, '_'))
+    {
+        std::cout << "Invalid folder name." << std::endl;
+        return "";
+    }
+
+    static std::vector<std::string> speakerFiles;
+    static bool speakerFilesScanned = false;
+
+    if (!speakerFilesScanned)
+    {
+        for (unsigned int i = 1; i <= 109; ++i)
+        {
+            std::string fname = finalFolder + "/samples_" + toString(i) + ".txt";
+                
+            std::ifstream infile(fname);
+                
+            if (infile.good())
+            {
+                std::string line;
+                getline(infile, line);
+
+                if (line.size() >= 3)
+                {
+                    std::string id;
+                    id += line[0];
+                    id += line[1];
+                    id += line[2];
+
+                    speakerFiles.push_back(id);
+
+                    std::cout << "Scanned: " << i << ":" << id << std::endl;
+                }
+                else
+                {
+                    std::cout << "Scanning failed: insufficient data." << std::endl;
+                }
+            }
+        }
+
+        speakerFilesScanned = true;
+    }
+
+    return speakerFiles[index - 1];
+
+#else
+    return toString(index);
+#endif
 }

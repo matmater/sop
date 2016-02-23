@@ -32,18 +32,35 @@
 // [correct scores]
 // [incorrect scores]
 
-%ubm 295 30 1 5
+%ubm 70 30 1 5
 
-// Test 50 speakers using one utterance / cycle.
-%vqordertest0_50spk rec "VQ Order Recognition Test"
-      samples_f13           vq       225 50 1 5    225 50 6 1   10                 -o 32                  -label "32"
-      samples_f13           vq       225 50 1 5    225 50 6 1   10                 -o 64                  -label "64"
-      samples_f13           vq       225 50 1 5    225 50 6 1   10                 -o 128                 -label "128"
-      samples_f13           vq       225 50 1 5    225 50 6 1   10                 -o 256                 -label "256"
+//
+// Recognition test example.
+// 2 Curves in one graph.
+//
 
+// Just a placeholder id.
+%rectest_0 rec "VQ-128 & VQ-256 Recognition Test 50 Spk"
+
+// Add curve to rectest_0.
+%rectest_1 rec "VQ-128 Recognition Test 50 Spk" rectest_0
+      samples_f13           vq       1 10 1 5    1 10 6 2   1                 -o 128                  -label "10"
+      samples_f13           vq       1 20 1 5    1 20 6 2   1                 -o 128                  -label "20"
+      samples_f13           vq       1 30 1 5    1 30 6 2   1                 -o 128                  -label "30"
+
+// Add curve to rectest_0.
+%rectest_2 rec "VQ-256 Recognition Test 50 Spk" rectest_0
+      samples_f13           vq       1 10 1 5    1 10 6 2   1                 -o 256                  -label "10"
+      samples_f13           vq       1 20 1 5    1 20 6 2   1                 -o 256                  -label "20"
+      samples_f13           vq       1 30 1 5    1 30 6 2   1                 -o 256                  -label "30"
+
+//
+// Verification test example.
 // VQ, GMM (order 128) verification test using MFCCs with and without CMVN.
-%vertest ver "CMVN Test"
-      samples_f13           vq       225 100 1 5   240 5 10 3   5   5 1   275 20   -o 128 -ubm -zt -wt    -label "MFCC-CMVN-VQ-128"
-      samples_f13_cmvn      vq       225 100 1 5   240 5 10 3   5   5 1   275 20   -o 128 -ubm -zt -wt    -label "MFCC-CMVN-VQ-128"
-      samples_f13           gmm      225 100 1 5   240 5 10 3   5   5 1   275 20   -o 128 -ubm -zt        -label "MFCC-CMVN-GMM-128"
-      samples_f13_cmvn      gmm      225 100 1 5   240 5 10 3   5   5 1   275 20   -o 128 -ubm -zt        -label "MFCC-CMVN-GMM-128"
+//
+
+%vertest_0 ver "CMVN Test"
+      samples_f13           vq       1 100 1 5   1 5 10 3   5   5 1   50 20   -o 128 -ubm -zt -wt    -label "MFCC-CMVN-VQ-128"
+      samples_f13_cmvn      vq       1 100 1 5   1 5 10 3   5   5 1   50 20   -o 128 -ubm -zt -wt    -label "MFCC-CMVN-VQ-128"
+      samples_f13           gmm      1 100 1 5   1 5 10 3   5   5 1   50 20   -o 128 -ubm -zt        -label "MFCC-CMVN-GMM-128"
+      samples_f13_cmvn      gmm      1 100 1 5   1 5 10 3   5   5 1   50 20   -o 128 -ubm -zt        -label "MFCC-CMVN-GMM-128"

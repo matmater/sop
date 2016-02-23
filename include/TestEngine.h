@@ -22,8 +22,17 @@ private:
         VERIFICATION
     };
 
+    struct TestHeader
+    {
+        TestType type = TestType::UNKNOWN;;
+        std::string label = "";
+        std::string targetId = "";
+    };
+
     struct Test
     {
+        unsigned int index = 0;
+        
         std::string id = "";
 
         std::string label = "";
@@ -46,18 +55,16 @@ private:
         unsigned int testGf = 0;
         unsigned int testSl = 0;
         unsigned int testGl = 0;
+
         unsigned int cycles = 0;
+
         unsigned int incorrectClaimed = 0;
         unsigned int correctClaimed = 0;
+
         unsigned int si = 0;
         unsigned int gi = 0;
 
         RecognizerType recognizerType = RecognizerType::UNKNOWN;
-    };
-
-    struct Bundle
-    {
-        std::map < std::string, std::vector< std::shared_ptr<ModelRecognizer> > > tests;
     };
 
 public:
@@ -66,36 +73,15 @@ public:
     void Run(const std::string& file);
 
     void Recognize(
-        const std::string& id,
-        const std::string& features,
-        const std::string& label,
-        std::shared_ptr<ModelRecognizer> recognizer,
-        unsigned int sf,
-        unsigned int gf,
-        unsigned int sl,
-        unsigned int gl,
-        unsigned int cycles);
+        const Test& test,
+        std::shared_ptr<ModelRecognizer> recognizer);
 
     void Verify(
-        const std::string& id,
-        const std::string& features,
-        const std::string& label,
-        std::shared_ptr<ModelRecognizer> recognizer,
-        unsigned int sf,
-        unsigned int gf,
-        unsigned int sl,
-        unsigned int gl,
-        unsigned int cycles,
-        unsigned int incorrectClaimed,
-        unsigned int correctClaimed,
-        unsigned int si,
-        unsigned int gi);
+        const Test& test,
+        std::shared_ptr<ModelRecognizer> recognizer);
 
 private:
-    std::string GetIdentifier(std::shared_ptr<ModelRecognizer> recognizer);
-
-    std::string GetLabel(std::shared_ptr<ModelRecognizer> recognizer,
-                         const std::string& features);
+    std::string GetLabel(const Test& test);
 };
 
 #endif

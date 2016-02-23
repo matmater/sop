@@ -27,8 +27,10 @@ void TestEngine::Run(const std::string& file)
     unsigned int ubmSl = 0;
     unsigned int ubmGl = 0;
     
-    std::map<std::string, std::pair<TestType, std::string> > testIds;
+    std::map<std::string, TestHeader> testIds;
     
+    unsigned int indexCounter = 0;
+
     while(std::getline(fs, line))
     {
         std::string item;
@@ -99,7 +101,23 @@ void TestEngine::Run(const std::string& file)
 
             std::cout << "Current test id: '" << currentTestId << "', type: '" << ttype << "', label: '" << testLabel << "'." << std::endl;
             
-            testIds[currentTestId] = std::make_pair(testType, testLabel);
+            if (testIds.find(currentTestId) != testIds.end())
+            {
+                std::cout << "Duplicate test identifiers." << std::endl;
+                return;
+            }
+
+            std::string target = "";
+
+            ssLine >> target;
+
+            TestHeader testHeader;
+            testHeader.type = testType;
+            testHeader.label = testLabel;
+            testHeader.targetId = target;
+            testIds[currentTestId] = testHeader;
+
+            indexCounter = 0;
 
             continue;
         }
@@ -236,8 +254,11 @@ void TestEngine::Run(const std::string& file)
             test.id = currentTestId;
             test.features = features;
             test.type = testType;
+            test.index = indexCounter;
 
             tests.push_back(test);
+
+            ++indexCounter;
         }
     }
 
@@ -293,14 +314,11 @@ void TestEngine::Run(const std::string& file)
 
     for (const auto& test : testIds)
     {
-        // Just init (and clear) the file.
-        std::ofstream testFile(test.first + ".test");
-
         std::string label;
 
-        if (!test.second.second.empty())
+        if (!test.second.label.empty())
         {
-            label = test.second.second;
+            label = test.second.label;
         }
 
         else
@@ -308,14 +326,49 @@ void TestEngine::Run(const std::string& file)
             label = test.first;
         }
 
-        if (test.second.first == TestType::RECOGNITION)
-            testFile << label << "|" << "rec" << std::endl;
-        else if (test.second.first == TestType::VERIFICATION)
-            testFile << label << "|" << "ver" << std::endl;
-        else
-            testFile << label << "|" << "n/a" << std::endl;
-    }
+        if (test.second.type == TestType::RECOGNITION)
+        {
+            // Initialize recognition results file.
+            std::ofstream resultsFile(test.first + "_rec.txt");
 
+            if (test.second.targetId.empty())
+            {
+                // Just init (and clear) the test file.
+                std::ofstream testFile(test.first + ".test");
+                testFile << label << "|" << "rec" << std::endl;
+            }
+
+        } else if (test.second.type == TestType::VERIFICATION) {
+            if (!test.second.targetId.empty())
+            {
+                std::cout << "Targets are only supported in recognition." << std::endl;
+                return;
+            }
+            else
+            {
+                // Just init (and clear) the test file.
+                std::ofstream testFile(test.first + ".test");
+                testFile << label << "|" << "ver" << std::endl;
+            }
+        }
+        else {
+            std::cout << "Invalid test id." << std::endl;
+            return;
+        }
+    }
+    
+    for (const auto& test : testIds)
+    {
+        if (test.second.type == TestType::RECOGNITION)
+        {
+            if (!test.second.targetId.empty())
+            {
+                std::ofstream testFile(test.second.targetId + ".test", std::ios_base::app);
+                testFile << test.first + "_rec.txt" << "|" << test.second.label << std::endl;
+            }
+        }
+    }
+    
     for (auto it = tests.begin(); it != tests.end(); it++)
     {
         if (previousIt   == tests.end()          ||
@@ -363,49 +416,31 @@ void TestEngine::Run(const std::string& file)
             return;
         }
 
-        vq->SetOrder(it->order);
-        vq->SetBackgroundModelEnabled(it->ubm);
-        vq->SetScoreNormalizationType(it->scoreNormalizationType);
+        recognizer->SetOrder(it->order);
+        recognizer->SetBackgroundModelEnabled(it->ubm);
+        recognizer->SetScoreNormalizationType(it->scoreNormalizationType);
         
         recognizer->SetSpeakerData(trainData);
         recognizer->SetBackgroundModelData(ubmData);
         
         if (it->type == TestType::RECOGNITION)
         {
-            std::cout << "Recognition test: " << GetIdentifier(recognizer) << std::endl;
+            std::cout << "Recognition test: " << GetLabel(*it) << std::endl;
 
             recognizer->SetBackgroundModelEnabled(it->ubm);
             recognizer->SetAdaptationEnabled(it->ubm);
 
-            Recognize(
-                it->id, it->features, it->label, recognizer,
-                it->testSf,            // sf
-                it->testGf,            // gf
-                it->testSl,            // sl
-                it->testGl,            // gl
-                it->cycles             // cycles
-            );
+            Recognize(*it, recognizer);
         }
 
         else if (it->type == TestType::VERIFICATION)
         {
-            std::cout << "Verification test: " << GetIdentifier(recognizer) << std::endl;
+            std::cout << "Verification test: " << GetLabel(*it) << std::endl;
 
             recognizer->SetBackgroundModelEnabled(it->ubm);
             recognizer->SetAdaptationEnabled(it->ubm);
             
-            Verify(
-                it->id, it->features, it->label, recognizer,
-                it->testSf,            // sf
-                it->testGf,            // gf
-                it->testSl,            // sl
-                it->testGl,            // gl
-                it->cycles,            // cycles
-                it->incorrectClaimed,  // incorrectClaimed
-                it->correctClaimed,    // correctClaimed
-                it->si,                // si (start-impostor)
-                it->gi                 // gi (get-impostor)
-            );
+            Verify(*it, recognizer);
         }
 
         else
@@ -418,26 +453,19 @@ void TestEngine::Run(const std::string& file)
 }
 
 void TestEngine::Recognize(
-    const std::string& id,
-    const std::string& features,
-    const std::string& label,
-    std::shared_ptr<ModelRecognizer> recognizer,
-    unsigned int sf,
-    unsigned int gf,
-    unsigned int sl,
-    unsigned int gl,
-    unsigned int cycles)
+    const Test& test,
+    std::shared_ptr<ModelRecognizer> recognizer)
 {
     // \todo CHECK BUGS!
     
-    std::string resultsFileName = id + "_" + features + "_rec_" + GetIdentifier(recognizer) + ".txt";
+    std::string resultsFileName = test.id + "_rec" + ".txt";
 
-    std::ofstream results(resultsFileName);
+    std::ofstream results(resultsFileName, std::ios_base::app);
 
     auto testData = std::make_shared<SpeechData>();
 
     // Test utterances
-    LoadTextSamples(features, testData, sf, gf, sl, gl, false);
+    LoadTextSamples(test.features, testData, test.testSf, test.testGf, test.testSl, test.testGl, false);
     
     unsigned int correct = 0;
     unsigned int incorrect = 0;
@@ -445,9 +473,9 @@ void TestEngine::Recognize(
     // Select trained speakers.
     std::vector<SpeakerKey> speakers;
 
-    for (unsigned int k = 0; k < gf; ++k)
+    for (unsigned int k = 0; k < test.testGf; ++k)
     {
-        SpeakerKey key(toString(sf + k));
+        SpeakerKey key(GetSpeakerString(test.testSf + k, test.features));
 
         // Debug check.
         if (recognizer->GetSpeakerData()->GetSamples().find(key)
@@ -461,78 +489,57 @@ void TestEngine::Recognize(
     }
 
     recognizer->SelectSpeakerModels(speakers);
+    
+    unsigned int sf = test.testSf;
 
-    for (unsigned int i = 1; i <= cycles ; i++)
+    for (unsigned int i = 0; i < test.cycles ; i++)
     {
-        for (unsigned int k = 0; k < gf; ++k)
+        std::cout << i + 1 << "/" << test.cycles << std::endl;
+        
+        // Test utterances
+        LoadTextSamples(test.features, testData, sf, test.testGf, test.testSl, test.testGl, false);
+
+        // Check test data against selected speakers.
+        // Slow but works.
+        for (const auto& samples : testData->GetSamples())
         {
-            // Test utterances
-            LoadTextSamples(features, testData, sf + k, 1, sl + i * gl, gl, false);
+            std::string speakerString;
+            speakerString += samples.first.GetId()[0];
+            speakerString += samples.first.GetId()[1];
+            speakerString += samples.first.GetId()[2];
 
-            // Check test data against selected speakers.
-            // Slow but works.
-            for (const auto& samples : testData->GetSamples())
+            bool recognized = recognizer->IsRecognized(SpeakerKey(speakerString), samples.second);
+
+            if (recognized)
             {
-                for (const auto& speaker : speakers)
-                {
-                    if (samples.first.IsSameSpeaker(speaker))
-                    {
-                        if (recognizer->IsRecognized(speaker, samples.second))
-                        {
-                            ++correct;
-                        }
+                ++correct;
+            }
 
-                        else
-                        {
-                            ++incorrect;
-                        }
-
-                        break;
-                    }
-                }
+            else
+            {
+                ++incorrect;
             }
         }
+
+        sf += test.testGf;
     }
 
-    results << 100.0f * static_cast<float>(correct) / static_cast<float>(correct + incorrect) << std::endl;
-    
-    std::ofstream testFile(id + ".test", std::ios_base::app);
-
-    if (label.empty())
-    {
-        testFile << resultsFileName << "|" << GetLabel(recognizer, features) << std::endl;
-    }
-
-    else
-    {
-        testFile << resultsFileName << "|" << label << std::endl;
-    }
+    results << test.label << " " << correct << " " << incorrect << std::endl;
 }
 
 void TestEngine::Verify(
-    const std::string& id,
-    const std::string& features,
-    const std::string& label,
-    std::shared_ptr<ModelRecognizer> recognizer,
-    unsigned int sf,
-    unsigned int gf,
-    unsigned int sl,
-    unsigned int gl,
-    unsigned int cycles,
-    unsigned int incorrectClaimed,
-    unsigned int correctClaimed,
-    unsigned int si,
-    unsigned int gi)
+    const Test& test,
+    std::shared_ptr<ModelRecognizer> recognizer)
 {
     // \todo CHECK BUGS!
-    std::string resultsFileName = id + "_" + features + "_ver_" + GetIdentifier(recognizer) + ".txt";
+    std::string resultsFileName = test.id + "_" + toString(test.index) + "_ver.txt";
     std::ofstream results(resultsFileName);
 
     // Select trained impostors.
     std::vector<SpeakerKey> impostors;
-    for (unsigned int i = 0; i < gi; ++i)
+    for (unsigned int i = 0; i < test.gi; ++i)
     {
-        SpeakerKey key(toString(si + i));
+        SpeakerKey key(GetSpeakerString(test.si + i, test.features));
 
         // Debug check.
         if (recognizer->GetSpeakerData()->GetSamples().find(key)
@@ -549,15 +556,17 @@ void TestEngine::Verify(
     auto testData = std::make_shared<SpeechData>();
     auto testData2 = std::make_shared<SpeechData>();
     
-    for (unsigned int i = 0; i < cycles ; i++)
+    unsigned int sf = test.testSf;
+
+    for (unsigned int i = 0; i < test.cycles ; i++)
     {
-        std::cout << i+1 << "/" << cycles << std::endl;
+        std::cout << i + 1 << "/" << test.cycles << std::endl;
         
         // Select trained speakers.
         std::vector<SpeakerKey> speakers;
-        for (unsigned int k = 0; k < gf; ++k)
+        for (unsigned int k = 0; k < test.testGf; ++k)
         {
-            SpeakerKey key(toString(sf + k));
+            SpeakerKey key(GetSpeakerString(sf + k, test.features));
 
             // Debug check.
             if (recognizer->GetSpeakerData()->GetSamples().find(key)
@@ -573,13 +582,13 @@ void TestEngine::Verify(
 
         // Test
 
-        LoadTextSamples(features, testData2, sf+gf, incorrectClaimed, sl, gl, false);          
-        for (unsigned int j = 0; j < gf; j++)
+        LoadTextSamples(test.features, testData2, sf + test.testGf, test.incorrectClaimed, test.testSl, test.testGl, false);
+        for (unsigned int j = 0; j < test.testGf; j++)
         {
-            std::cout << "Verification check " << j+1 << "/" << gf << std::endl;
+            std::cout << "Verification check " << j+1 << "/" << test.testGf << std::endl;
         
-            LoadTextSamples(features, testData, sf+j, 1, sl+gl, correctClaimed, false);          
-            std::string claimedSpeaker = toString(sf+j);
+            LoadTextSamples(test.features, testData, sf + j, 1, test.testSl + test.testGl, test.correctClaimed, false);          
+            std::string claimedSpeaker = GetSpeakerString(sf + j, test.features);
             auto verificationResults = recognizer->Verify(SpeakerKey(claimedSpeaker), testData);
             for (auto& entry : verificationResults)
             {
@@ -593,97 +602,24 @@ void TestEngine::Verify(
             }
             results << std::endl;
         }
-        sf += gf;
-    }
-    
-    std::ofstream testFile(id + ".test", std::ios_base::app);
 
-    if (label.empty()) 
-    {
-        testFile << resultsFileName << "|" << GetLabel(recognizer, features) << std::endl;
+        sf += test.testGf;
     }
 
-    else
-    {
-        testFile << resultsFileName << "|" << label << std::endl;
-    }
+    std::ofstream testFile(test.id + ".test", std::ios_base::app);
+
+    testFile << resultsFileName << "|" << GetLabel(test) << std::endl;
 }
 
-std::string TestEngine::GetIdentifier(std::shared_ptr<ModelRecognizer> recognizer)
+std::string TestEngine::GetLabel(const Test& test)
 {
-    // \todo Add more identifiers.
-
-    std::stringstream ss;
-
-    if (dynamic_cast<VQRecognizer*>(recognizer.get()) != nullptr)
+    if (test.label.empty())
     {
-        ss << "vq";
-    }
-
-    else if (dynamic_cast<GMMRecognizer*>(recognizer.get()) != nullptr)
-    {
-        ss << "gmm";
+        return test.id + "_" + toString(test.index);
     }
 
     else
     {
-        ss << "unknown";
+        return test.label;
     }
-    
-    ss << "_o" << recognizer->GetOrder();
-
-    if (dynamic_cast<VQRecognizer*>(recognizer.get()) != nullptr)
-    {
-        if (static_cast<VQRecognizer*>(recognizer.get())->IsWeightingEnabled())
-        {
-            ss << "_weighted";
-        }
-    }
-
-    if (recognizer->IsBackgroundModelEnabled())
-    {
-        ss << "_ubm";
-    }
-
-    return ss.str();
-}
-
-std::string TestEngine::GetLabel(std::shared_ptr<ModelRecognizer> recognizer,
-                     const std::string& features)
-{
-    // \todo Add more identifiers.
-
-    std::stringstream ss;
-
-    if (dynamic_cast<VQRecognizer*>(recognizer.get()) != nullptr)
-    {
-        ss << "VQ";
-    }
-
-    else if (dynamic_cast<GMMRecognizer*>(recognizer.get()) != nullptr)
-    {
-        ss << "GMM";
-    }
-
-    else
-    {
-        ss << "N/A";
-    }
-    
-    ss << "-" << recognizer->GetOrder();
-
-    if (dynamic_cast<VQRecognizer*>(recognizer.get()) != nullptr)
-    {
-        if (static_cast<VQRecognizer*>(recognizer.get())->IsWeightingEnabled())
-        {
-            ss << "-WT";
-        }
-    }
-
-    if (recognizer->IsBackgroundModelEnabled())
-    {
-        ss << "-UBM";
-    }
-
-    return ss.str();
 }

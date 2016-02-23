@@ -552,7 +552,14 @@ bool ModelRecognizer::IsRecognized(const SpeakerKey& speaker, const std::vector<
 
     if (mSpeakerModels.empty())
     {
-        std::cout << "Speaker not recognized: no speaker models found." << std::endl;
+        std::cout << "WARNING: Speaker not recognized, no speaker models found." << std::endl;
+
+        return false;
+    }
+
+    if (mSpeakerModels.find(speaker) == mSpeakerModels.end())
+    {
+        std::cout << "WARNING: Speaker not recognized, no speaker model found." << std::endl;
 
         return false;
     }

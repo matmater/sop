@@ -499,8 +499,6 @@ void TestEngine::Recognize(
         // Test utterances
         LoadTextSamples(test.features, testData, sf, test.testGf, test.testSl, test.testGl, false);
 
-        // Check test data against selected speakers.
-        // Slow but works.
         for (const auto& samples : testData->GetSamples())
         {
             std::string speakerString;
@@ -558,6 +556,9 @@ void TestEngine::Verify(
     
     unsigned int sf = test.testSf;
 
+    unsigned int correctTrials = 0;
+    unsigned int incorrectTrials = 0;
+
     for (unsigned int i = 0; i < test.cycles ; i++)
     {
         std::cout << i + 1 << "/" << test.cycles << std::endl;
@@ -582,6 +583,50 @@ void TestEngine::Verify(
 
         // Test
 
+        std::vector<Real> correctScores;
+        std::vector<Real> incorrectScores;
+        
+        LoadTextSamples(test.features, testData, sf, test.testGf, test.testSl, test.testGl, false);
+
+        for (const auto& samples : testData->GetSamples())
+        {
+            std::string speakerString;
+            speakerString += samples.first.GetId()[0];
+            speakerString += samples.first.GetId()[1];
+            speakerString += samples.first.GetId()[2];
+
+            Real verificationResults = recognizer->GetVerificationScore(SpeakerKey(speakerString), samples.second);
+            correctScores.push_back(verificationResults);
+            ++correctTrials;
+
+            for (const auto& imp : speakers)
+            {
+                if (imp != SpeakerKey(speakerString))
+                {
+                    Real verificationResults = recognizer->GetVerificationScore(SpeakerKey(imp), samples.second);
+                    incorrectScores.push_back(verificationResults);
+                    ++incorrectTrials;
+                }
+            }
+        }
+
+        for (auto& entry : correctScores)
+        {
+            results << entry << " ";
+        }
+
+        results << std::endl;
+
+        for (auto& entry : incorrectScores)
+        {
+            results << entry << " ";
+        }
+
+        results << std::endl;
+
+        sf += test.testGf;
+
+        /*
         LoadTextSamples(test.features, testData2, sf + test.testGf, test.incorrectClaimed, test.testSl, test.testGl, false);
         for (unsigned int j = 0; j < test.testGf; j++)
         {
@@ -604,11 +649,12 @@ void TestEngine::Verify(
         }
 
         sf += test.testGf;
+        */
     }
 
     std::ofstream testFile(test.id + ".test", std::ios_base::app);
 
-    testFile << resultsFileName << "|" << GetLabel(test) << std::endl;
+    testFile << resultsFileName << "|" << GetLabel(test) << "|" << correctTrials << "|" << incorrectTrials << std::endl;
 }
 
 std::string TestEngine::GetLabel(const Test& test)

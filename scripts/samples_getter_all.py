@@ -13,8 +13,8 @@ if __name__ == '__main__':
     for x in range(152):
         print "Speaker {} in progress.".format(x + 225) 
         pathname = str(x + 225)
-        outfile = "samples_{}".format(pathname)
-        #outfile = "samples_{}".format(i)        
+        #outfile = "samples_{}".format(pathname)
+        outfile = "samples_{}".format(i)        
         for y in range(505):
             if y < 10:
                 z = "00"

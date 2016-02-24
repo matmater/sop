@@ -19,7 +19,8 @@ private:
     {
         UNKNOWN = 0,
         RECOGNITION,
-        VERIFICATION
+        VERIFICATION,
+        RECOGNITION_POPULATION
     };
 
     struct TestHeader
@@ -71,6 +72,10 @@ public:
     TestEngine();
 
     void Run(const std::string& file);
+    
+    void RecognizePop(
+        const Test& test,
+        std::shared_ptr<ModelRecognizer> recogniner);
 
     void Recognize(
         const Test& test,

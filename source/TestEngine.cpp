@@ -80,6 +80,11 @@ void TestEngine::Run(const std::string& file)
                 {
                     testType = TestType::RECOGNITION;
                 }
+                
+                else if (ttype == "recpop")
+                {
+                    testType = TestType::RECOGNITION_POPULATION;
+                }
 
                 else if (ttype == "ver")
                 {
@@ -326,7 +331,7 @@ void TestEngine::Run(const std::string& file)
             label = test.first;
         }
 
-        if (test.second.type == TestType::RECOGNITION)
+        if (test.second.type == TestType::RECOGNITION || test.second.type == TestType::RECOGNITION_POPULATION)
         {
             // Initialize recognition results file.
             std::ofstream resultsFile(test.first + "_rec.txt");
@@ -359,7 +364,7 @@ void TestEngine::Run(const std::string& file)
     
     for (const auto& test : testIds)
     {
-        if (test.second.type == TestType::RECOGNITION)
+        if (test.second.type == TestType::RECOGNITION || test.second.type == TestType::RECOGNITION_POPULATION)
         {
             if (!test.second.targetId.empty())
             {
@@ -433,6 +438,16 @@ void TestEngine::Run(const std::string& file)
             Recognize(*it, recognizer);
         }
 
+        else if (it->type == TestType::RECOGNITION_POPULATION)
+        {
+            std::cout << "Recognition (population) test: " << GetLabel(*it) << std::endl;
+            
+            recognizer->SetBackgroundModelEnabled(it->ubm);
+            recognizer->SetAdaptationEnabled(it->ubm);
+
+            RecognizePop(*it, recognizer);
+        }
+
         else if (it->type == TestType::VERIFICATION)
         {
             std::cout << "Verification test: " << GetLabel(*it) << std::endl;
@@ -449,6 +464,80 @@ void TestEngine::Run(const std::string& file)
         }
 
         previousIt = it;
+    }
+}
+
+void TestEngine::RecognizePop(
+    const Test& test,
+    std::shared_ptr<ModelRecognizer> recognizer)
+{
+    std::string resultsFileName = test.id + "_rec" + ".txt";
+
+    std::ofstream results(resultsFileName);
+
+    auto testData = std::make_shared<SpeechData>();
+
+    // Test utterances
+    LoadTextSamples(test.features, testData, test.testSf, test.cycles * test.testGf, test.testSl, test.testGl, false);
+
+    for (unsigned int i = 1; i <= test.cycles ; i++)
+    {
+        std::cout << i << "/" << test.cycles << std::endl;
+        
+        unsigned int population = i * 10;
+        unsigned int correct = 0;
+        unsigned int incorrect = 0;
+        
+        // Select trained speakers.
+        std::vector<SpeakerKey> speakers;
+        for (unsigned int k = 0; k < test.testGf; ++k)
+        {
+            SpeakerKey key(GetSpeakerString(test.testSf + k, test.features));
+
+            // Debug check.
+            if (recognizer->GetSpeakerData()->GetSamples().find(key)
+                == recognizer->GetSpeakerData()->GetSamples().end())
+            {
+                std::cout << "Speaker '" << key << "' not loaded." << std::endl;
+                continue;
+            }
+
+            speakers.push_back(key);
+        }
+
+        recognizer->SelectSpeakerModels(speakers);
+        
+        // Check test data against selected speakers.
+        // Slow but works.
+        for (const auto& samples : testData->GetSamples())
+        {
+            for (const auto& speaker : speakers)
+            {
+                if (samples.first.IsSameSpeaker(speaker))
+                {
+                    if (recognizer->IsRecognized(speaker, samples.second))
+                    {
+                        ++correct;
+                    }
+
+                    else
+                    {
+                        ++incorrect;
+                    }
+
+                    break;
+                }
+            }
+        }
+
+        if (correct > 0 || incorrect > 0)
+        {
+            std::cout << "Speakers " << population
+                      << ", accuracy "
+                      << 100.0f * static_cast<float>(correct) / static_cast<float>(correct + incorrect) << "%" << std::endl;
+        }
+
+        results << test.label << " " << correct << " " << incorrect << std::endl;
     }
 }
 

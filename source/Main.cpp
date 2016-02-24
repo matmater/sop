@@ -10,12 +10,19 @@ int main(int argc, char** argv)
     // !!!!!!!!
     // INDEXFIX macro in Common.h !
     // !!!!!!!!
-
     /* See tests folder for examples. */
 
     TestEngine engine;
+    
+    if (argc >= 2)
+    {
+        engine.Run(argv[1]);
+    }
 
-    engine.Run("tests.txt");
+    else
+    {
+        engine.Run("tests.txt");
+    }
 
     system("pause");
 

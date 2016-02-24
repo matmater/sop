@@ -42,8 +42,8 @@ def DrawCurve(results, title):
     plt.axis([max(0,xmin),xmax,max(0,ymin),min(100,ymax)])
     #plt.axis('tight')
     plt.title(title)
-    plt.ylabel('Recognition rate (%)')
-    plt.xlabel('Trained Speakers')
+    plt.ylabel('Tunnistuksen tarkkuus (%)')
+    plt.xlabel('Opetetut puhujat')
     plt.legend(loc = 0)
     #plt.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc=3,ncol=2, borderaxespad=0.) # legend above the plot
     ax.grid(True)

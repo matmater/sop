@@ -1,4 +1,7 @@
+ # -*- coding: utf-8 -*-
+
 # some code from https://jeremykarnowski.wordpress.com/2015/08/07/detection-error-tradeoff-det-curves/
+
 from matplotlib import pyplot as plt
 from matplotlib.ticker import ScalarFormatter
 import sys
@@ -10,7 +13,6 @@ def DETCurve(results, eerDcf, title):
     The false positive rate is assumed to be increasing while the false
     negative rate is assumed to be decreasing.
     """
-
     axis_min = min(min(results))
     fig,ax = plt.subplots()
     for r in range(len(results)):
@@ -30,9 +32,11 @@ def DETCurve(results, eerDcf, title):
     #plt.axis([0.001,100,0.001,100])
     plt.axis('tight')
     plt.title(title)
-    plt.xlabel('false positive rate (%)')
-    plt.ylabel('false negative rate (%)')
+    plt.xlabel(u"Väärät hyväksymiset (%)")
+    plt.ylabel(u"Väärät hylkäämiset (%)")
     plt.legend(loc = 0)
+    for l in ax.get_xticklabels()[::2]:
+        l.set_visible(False)
     #plt.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc=3,ncol=2, borderaxespad=0.) # legend above the plot
     ax.grid(True)
     #plt.savefig("{}.png".format(title))

@@ -473,7 +473,7 @@ void TestEngine::RecognizePop(
 {
     std::string resultsFileName = test.id + "_rec" + ".txt";
 
-    std::ofstream results(resultsFileName);
+    std::ofstream results(resultsFileName, std::ios_base::app);
 
     auto testData = std::make_shared<SpeechData>();
 

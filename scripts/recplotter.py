@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+ 
 from matplotlib import pyplot as plt
 from matplotlib.ticker import ScalarFormatter
 import sys

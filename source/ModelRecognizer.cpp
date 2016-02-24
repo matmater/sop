@@ -8,7 +8,7 @@ ModelRecognizer::ModelRecognizer()
     mBackgroundModelEnabled(false),
     mDirty(true),
     mPrepared(false),
-    mTrainingIterations(10),
+    mTrainingIterations(15),
     mEta(0.001f),
     mBackgroundModelDirty(true),
     mAdaptationEnabled(false),

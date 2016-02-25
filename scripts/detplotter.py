@@ -32,8 +32,8 @@ def DETCurve(results, eerDcf, title):
     #plt.axis([0.001,100,0.001,100])
     plt.axis('tight')
     plt.title(title)
-    plt.xlabel(u"Väärän hyväksymisen todennäköisyys (%)")
-    plt.ylabel(u"Väärän hylkäyksen todennäköisyys (%)")
+    plt.xlabel(u"Väärät hyväksymiset (%)")
+    plt.ylabel(u"Väärät hylkäykset (%)")
     plt.legend(loc = 0)
     for l in ax.get_xticklabels()[::2]:
         l.set_visible(False)

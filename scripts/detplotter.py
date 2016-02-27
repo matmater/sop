@@ -97,7 +97,7 @@ def EERandDCF(results):
         minDcf = 109.0
         minDiff = 10.0
         for i in range(len(entry[0])):          
-            dcf = 0.001*entry[1][i] + 0.0099*entry[0][i]    # 0.1 * P(false negative) + 0.99 * P(false positive)
+            dcf = 0.1*entry[1][i] + 0.99*entry[0][i]    # 0.1 * P(false negative) + 0.99 * P(false positive)
             if dcf < minDcf:
                 minDcf = dcf
                 dcfPoint = [entry[0][i],entry[1][i]]

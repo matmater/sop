@@ -28,20 +28,21 @@ def GetResults(files):
 def DrawCurve(results, title):
 
     fig,ax = plt.subplots()
-
-    xmin = min([result[0][0] for result in results]) - 10
-    xmax = max([result[0][-1] for result in results]) + 10
-    ymin = min([min(result[1]) for result in results]) - 10
-    ymax = max([max(result[1]) for result in results]) + 10
+    xpadding = 10
+    ypadding = 0.5
+    xmin = min([result[0][0] for result in results]) - xpadding
+    xmax = max([result[0][-1] for result in results]) + xpadding
+    ymin = min([min(result[1]) for result in results]) - ypadding
+    ymax = max([max(result[1]) for result in results]) + ypadding
     
     for entry in results:
         plt.plot(entry[0], entry[1], linewidth = 2, label = entry[2])
     ax.xaxis.set_major_formatter(ScalarFormatter())
     ax.yaxis.set_major_formatter(ScalarFormatter())
-    ax.set_xticks([10*x for x in range(11)])
-    ax.set_yticks([10*x for x in range(21)])
+    ax.set_xticks([10*x for x in range(1,11)])
+    ax.set_yticks([x for x in range(101)])
     #plt.axis([0,100,0,100])
-    plt.axis([max(0,xmin),xmax,max(0,ymin),min(100,ymax)])
+    plt.axis([max(0,xmin),xmax,max(0,ymin),min(100.2,ymax)])
     #plt.axis('tight')
     plt.title(title)
     plt.ylabel('Tunnistuksen tarkkuus (%)')

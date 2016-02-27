@@ -21,16 +21,15 @@ def DETCurve(results, eerDcf, title):
             plt.plot(eerDcf[r][2][0], eerDcf[r][2][1], 'kD', markersize=6, label = "DCF minimipisteet")
         else:
             plt.plot(eerDcf[r][2][0], eerDcf[r][2][1], 'kD', markersize=6)
-    plt.yscale('log')
-    plt.xscale('log')
-    ticks_to_use = [0.01,0.02,0.05,0.1,0.2,0.5,1,2,5,10,20,50,100]
-    #ticks_to_use = [10,20,30,40,50,60,70,80,90,100]
+    plt.yscale('logit')
+    plt.xscale('logit')
+    ticks_to_use = [0.01,0.02,0.05,0.1,0.2,0.4,0.6,0.8,0.9]
     ax.xaxis.set_major_formatter(ScalarFormatter())
     ax.yaxis.set_major_formatter(ScalarFormatter())
     ax.set_xticks(ticks_to_use)
     ax.set_yticks(ticks_to_use)
-    #plt.axis([0.001,100,0.001,100])
-    plt.axis('tight')
+    plt.axis([0.005,0.9,0.005,0.9])
+    #plt.axis('tight')
     plt.title(title)
     plt.xlabel(u"Väärät hyväksymiset (%)")
     plt.ylabel(u"Väärät hylkäykset (%)")
@@ -85,9 +84,9 @@ def GetResults(files):
         fpr = []
         fnr = []
         for entry in fps:
-            fpr.append(100*entry/inc)
+            fpr.append(entry/inc)
         for entry in fns:
-            fnr.append(100*entry/cor)
+            fnr.append(entry/cor)
         results.append([fpr,fnr, f[1]])
         
     return results

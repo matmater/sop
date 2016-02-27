@@ -53,15 +53,15 @@
 
 // .perftrain format (rec):
 // test label|rec
-// test data filename|label|speaker models training time|background model training time (-1 means background model was not trained)
-// test data filename|label|speaker models training time|background model training time
-// test data filename|label|speaker models training time|background model training time
+// test data filename|label|speaker models training time|speaker model count|background model training time|background model size
+// test data filename|label|speaker models training time|speaker model count|background model training time|background model size
+// test data filename|label|speaker models training time|speaker model count|background model training time|background model size
 
 // .perftrain format (ver):
 // test label|ver
-// test data filename|label|speaker models training time|background model training time
-// test data filename|label|speaker models training time|background model training time
-// test data filename|label|speaker models training time|background model training time
+// test data filename|label|speaker models training time|speaker model count|background model training time|background model size
+// test data filename|label|speaker models training time|speaker model count|background model training time|background model size
+// test data filename|label|speaker models training time|speaker model count|background model training time|background model size
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 

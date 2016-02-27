@@ -202,7 +202,8 @@ void ModelRecognizer::TrainSpeakerModels()
     {
         std::cout << "Warning: enabled background model not found." << std::endl;
     }
-
+    
+    Timer timer;
     for (const auto& sequence : mSpeakerData->GetSamples())
     {
         ++progress;
@@ -225,9 +226,7 @@ void ModelRecognizer::TrainSpeakerModels()
         // UBM exists, train everything else with adaptation.
         if (adapt)
         {
-            Timer timer;
             model->Adapt(mBackgroundModel, sequence.second, mAdaptationIterations, mRelevanceFactor);
-            mTrainTimeSpeakerModels = timer.GetTimeElapsed();
         }
 
         // No UBM, train normally.
@@ -235,11 +234,10 @@ void ModelRecognizer::TrainSpeakerModels()
         {
             model->SetOrder(GetOrder());
 
-            Timer timer;
             model->Train(sequence.second, GetTrainingIterations());
-            mTrainTimeSpeakerModels = timer.GetTimeElapsed();
         }
     }
+    mTrainTimeSpeakerModels = timer.GetTimeElapsed();
 }
 
 void ModelRecognizer::Train()

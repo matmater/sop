@@ -459,7 +459,9 @@ void TestEngine::Run(const std::string& file)
             perfTrainFile << it->id + "_rec" + ".txt" << "|"
                 << GetLabel(*it) << "|"
                 << recognizer->GetTrainTimeSpeakerModels() << "|"
-                << recognizer->GetTrainTimeBackgroundModel() << std::endl;
+                << recognizer->GetSpeakerData()->GetSamples().size() << "|"
+                << recognizer->GetTrainTimeBackgroundModel() << "|"
+                << recognizer->GetBackgroundModelData()->GetSamples().size() << std::endl;
 
             Recognize(*it, recognizer);
         }
@@ -476,7 +478,9 @@ void TestEngine::Run(const std::string& file)
             perfTrainFile << it->id + "_rec" + ".txt" << "|"
                 << GetLabel(*it) << "|"
                 << recognizer->GetTrainTimeSpeakerModels() << "|"
-                << recognizer->GetTrainTimeBackgroundModel() << std::endl;
+                << recognizer->GetSpeakerData()->GetSamples().size() << "|"
+                << recognizer->GetTrainTimeBackgroundModel() << "|"
+                << recognizer->GetBackgroundModelData()->GetSamples().size() << std::endl;
 
             RecognizePop(*it, recognizer);
         }
@@ -493,7 +497,9 @@ void TestEngine::Run(const std::string& file)
             perfTrainFile << it->id + "_" + toString(it->index) + "_ver.txt" << "|"
                 << GetLabel(*it) << "|"
                 << recognizer->GetTrainTimeSpeakerModels() << "|"
-                << recognizer->GetTrainTimeBackgroundModel() << std::endl;
+                << recognizer->GetSpeakerData()->GetSamples().size() << "|"
+                << recognizer->GetTrainTimeBackgroundModel() << "|"
+                << recognizer->GetBackgroundModelData()->GetSamples().size() << std::endl;
 
             Verify(*it, recognizer);
         }

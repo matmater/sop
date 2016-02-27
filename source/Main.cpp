@@ -1,3 +1,7 @@
+#define _CRT_SECURE_NO_WARNINGS
+
+#include <cstdio>
+
 #include "Common.h"
 
 #include "VQRecognizer.h"
@@ -11,6 +15,8 @@ int main(int argc, char** argv)
     // INDEXFIX macro in Common.h !
     // !!!!!!!!
     /* See tests folder for examples. */
+
+    //std::freopen("output.txt", "w", stdout);
 
     TestEngine engine;
     

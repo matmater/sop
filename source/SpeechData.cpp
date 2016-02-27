@@ -86,7 +86,7 @@ void SpeechData::Load(const std::string& path)
     Validate();
 }
 
-void SpeechData::Load(const std::string& path, unsigned int sl, unsigned int gl, bool train, unsigned int maxFeatures, bool normalize, const std::string& alias)
+void SpeechData::Load(const std::string& path, unsigned int sl, unsigned int gl, unsigned int multiplier, bool train, unsigned int maxFeatures, bool normalize, const std::string& alias)
 {
     // \todo CHECK BUGS!
 
@@ -96,7 +96,6 @@ void SpeechData::Load(const std::string& path, unsigned int sl, unsigned int gl,
 
     std::string line;
 
-    unsigned int totalLines = sl+gl-1;
     /*
     while (std::getline(file, line))
     {
@@ -113,6 +112,26 @@ void SpeechData::Load(const std::string& path, unsigned int sl, unsigned int gl,
 
     unsigned int lineCounter = 1;
     
+    if (train)
+    {
+        std::cout << "Loading train samples." << std::endl;
+    }
+
+    else
+    {
+        std::cout << "Loading samples, multiplier: " << multiplier
+                  << ", total lines: " << multiplier << "*" << gl << "=" << multiplier * gl << std::endl;
+    }
+
+    if (!train && multiplier > 1)
+    {
+        gl = multiplier * gl;
+    }
+    
+    unsigned int totalLines = sl+gl-1;
+
+    unsigned int lc = 0;
+
     while(std::getline(file, line))
     {
         if (lineCounter >= sl)
@@ -125,6 +144,8 @@ void SpeechData::Load(const std::string& path, unsigned int sl, unsigned int gl,
 
             if (ssFeatures >> label)
             {
+                std::string oldLabel = label;
+
                 if (alias.size() >= 3)
                 {
                     label[0] = alias[0];
@@ -132,14 +153,27 @@ void SpeechData::Load(const std::string& path, unsigned int sl, unsigned int gl,
                     label[2] = alias[2];
                 }
 
-                if (train)
+                if (train || multiplier > 1)
                 {
                     label.erase(3);
                 }
-                
-                std::cout << "Loading samples: " << label
-                    << " (" << 100 * (lineCounter - sl + 1) / (totalLines - sl + 1) << "%)" << std::endl;
 
+                if (!train && multiplier > 1)
+                {
+                    std::stringstream ss;
+                    ss << label << "_" << (lc / multiplier) + 1;
+                    label = ss.str();
+
+                    std::cout << "Loading samples from '" << oldLabel << "' to '" << label << "'" << " mul " << multiplier
+                        << " (" << 100 * (lineCounter - sl + 1) / (totalLines - sl + 1) << "%)" << std::endl;
+                }
+
+                else
+                {
+                    std::cout << "Loading samples from '" << oldLabel << "' to '" << label << "'"
+                        << " (" << 100 * (lineCounter - sl + 1) / (totalLines - sl + 1) << "%)" << std::endl;
+                }
+                
                 std::string features;
 
                 key = SpeakerKey(label);
@@ -199,6 +233,8 @@ void SpeechData::Load(const std::string& path, unsigned int sl, unsigned int gl,
                     }
                 }
             }
+
+            ++lc;
         }
 
         if (lineCounter == totalLines)
@@ -367,7 +403,7 @@ const std::map<SpeakerKey, std::vector<DynamicVector<Real> > >& SpeechData::GetS
     return mSamples;
 }
 
-void LoadTextSamples(const std::string& folder, const std::shared_ptr<SpeechData>& data, unsigned int sf, unsigned int gf, unsigned int sl, unsigned int gl, bool train)
+void LoadTextSamples(const std::string& folder, const std::shared_ptr<SpeechData>& data, unsigned int sf, unsigned int gf, unsigned int sl, unsigned int gl, unsigned int multiplier, bool train)
 {
     if (folder.size() == 0)
     {
@@ -420,13 +456,17 @@ void LoadTextSamples(const std::string& folder, const std::shared_ptr<SpeechData
     {
         std::string file = finalFolder + "/samples_" + toString(sf+i) + ".txt";
         std::cout << file << std::endl;
-        data->Load(file, sl, gl, train, maxFeatures, cmvn, GetSpeakerString(sf + i, folder));
+        data->Load(file, sl, gl, multiplier, train, maxFeatures, false, GetSpeakerString(sf + i, folder));
     }
     data->Validate();
 
     std::cout << "Dimensions: " << data->GetDimensionCount() << std::endl;
 
-    //data->Normalize();
+    if (cmvn)
+    {
+        std::cout << "Normalizing (CMVN)..." << std::endl;
+        data->Normalize();
+    }
 }
 
 std::string GetSpeakerString(unsigned int index, const std::string& folder)

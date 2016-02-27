@@ -12,7 +12,9 @@ ModelRecognizer::ModelRecognizer()
     mEta(0.001f),
     mBackgroundModelDirty(true),
     mAdaptationEnabled(false),
-    mSpeakerModelsDirty(true)
+    mSpeakerModelsDirty(true),
+    mTrainTimeBackgroundModel(-1.0f),
+    mTrainTimeSpeakerModels(-1.0f)
 {
 
 }
@@ -30,6 +32,7 @@ void ModelRecognizer::ClearTrainedData()
     mImpostorDistributions.clear();
     mImpostorModels.clear();
     mDirty = true;
+    mSpeakerModelsDirty = true;
     mBackgroundModel = nullptr;
 }
 
@@ -178,7 +181,10 @@ void ModelRecognizer::TrainBackgroundModel()
     }
 
     mBackgroundModel->SetOrder(GetOrder());
+
+    Timer timer;
     mBackgroundModel->Train(samples, GetTrainingIterations());
+    mTrainTimeBackgroundModel = timer.GetTimeElapsed();
 }
 
 void ModelRecognizer::TrainSpeakerModels()
@@ -219,7 +225,9 @@ void ModelRecognizer::TrainSpeakerModels()
         // UBM exists, train everything else with adaptation.
         if (adapt)
         {
+            Timer timer;
             model->Adapt(mBackgroundModel, sequence.second, mAdaptationIterations, mRelevanceFactor);
+            mTrainTimeSpeakerModels = timer.GetTimeElapsed();
         }
 
         // No UBM, train normally.
@@ -227,7 +235,9 @@ void ModelRecognizer::TrainSpeakerModels()
         {
             model->SetOrder(GetOrder());
 
+            Timer timer;
             model->Train(sequence.second, GetTrainingIterations());
+            mTrainTimeSpeakerModels = timer.GetTimeElapsed();
         }
     }
 }
@@ -368,6 +378,20 @@ void ModelRecognizer::Prepare()
     }
 
     mPrepared = true;
+}
+
+Real ModelRecognizer::GetTrainTimeBackgroundModel()
+{
+    Train();
+
+    return mTrainTimeBackgroundModel;
+}
+
+Real ModelRecognizer::GetTrainTimeSpeakerModels()
+{
+    Train();
+
+    return mTrainTimeSpeakerModels;
 }
 
 void ModelRecognizer::SelectSpeakerModels(const std::vector<SpeakerKey>& models)
@@ -776,6 +800,11 @@ std::map<SpeakerKey, std::shared_ptr<Model> >& ModelRecognizer::GetSpeakerModels
 
 void ModelRecognizer::SetTrainingIterations(unsigned int iterations)
 {
+    if (iterations != mTrainingIterations)
+    {
+        mDirty = true;
+    }
+
     mTrainingIterations = iterations;
 }
 
@@ -786,6 +815,11 @@ unsigned int ModelRecognizer::GetTrainingIterations() const
 
 void ModelRecognizer::SetTrainingThreshold(Real threshold)
 {
+    if (std::abs(threshold - mEta) > 0.0005f)
+    {
+        mDirty = true;
+    }
+
     mEta = threshold;
 }
 

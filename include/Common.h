@@ -1,6 +1,8 @@
 #ifndef _COMMON_H_
 #define _COMMON_H_
 
+#define NDEBUG
+
 #include <math.h>
 #include <iostream>
 #include <math.h>

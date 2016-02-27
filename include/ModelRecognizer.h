@@ -9,6 +9,7 @@
 
 #include "Recognizer.h"
 #include "Model.h"
+#include "Timer.h"
 
 enum class ScoreNormalizationType
 {
@@ -155,6 +156,10 @@ public:
     virtual void Test(const std::shared_ptr<SpeechData>& data, std::map<SpeakerKey, RecognitionResult>& results) override;
     
     virtual void Prepare();
+    
+    Real GetTrainTimeBackgroundModel();
+
+    Real GetTrainTimeSpeakerModels();
 
     /*! \brief Checks if a given speaker is recognized.
      *
@@ -244,6 +249,10 @@ private:
     unsigned int mBackgroundModelDirty;
 
     unsigned int mSpeakerModelsDirty;
+    
+    Real mTrainTimeBackgroundModel;
+
+    Real mTrainTimeSpeakerModels;
 
     std::shared_ptr<Model> mBackgroundModel;
     

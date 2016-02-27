@@ -4,6 +4,7 @@
 #include "SpeechData.h"
 #include "VQRecognizer.h"
 #include "GMMRecognizer.h"
+#include "Timer.h"
 
 TestEngine::TestEngine()
 {
@@ -239,6 +240,11 @@ void TestEngine::Run(const std::string& file)
                         std::cout << "Error: invalid order." << std::endl;
                         return;
                     }
+                } else if (feature == "-mul") {
+                    if (!(ssLine >> test.multiplier) || test.multiplier == 0) {
+                        std::cout << "Error: invalid multiplier." << std::endl;
+                        return;
+                    }
                 } else if (feature == "-label") {
                     if (!(GetStringLiteral(ssLine, test.label))) {
                         std::cout << "Error: invalid test label." << std::endl;
@@ -343,6 +349,12 @@ void TestEngine::Run(const std::string& file)
                 testFile << label << "|" << "rec" << std::endl;
             }
 
+            std::ofstream perfTrainFile(test.first + ".perftrain");
+            perfTrainFile << label << "|" << "rec" << std::endl;
+
+            std::ofstream perfTestFile(test.first + ".perftest");
+            perfTestFile << label << "|" << "rec" << std::endl;
+
         } else if (test.second.type == TestType::VERIFICATION) {
             if (!test.second.targetId.empty())
             {
@@ -354,6 +366,12 @@ void TestEngine::Run(const std::string& file)
                 // Just init (and clear) the test file.
                 std::ofstream testFile(test.first + ".test");
                 testFile << label << "|" << "ver" << std::endl;
+
+                std::ofstream perfTrainFile(test.first + ".perftrain");
+                perfTrainFile << label << "|" << "ver" << std::endl;
+
+                std::ofstream perfTestFile(test.first + ".perftest");
+                perfTestFile << label << "|" << "ver" << std::endl;
             }
         }
         else {
@@ -392,6 +410,7 @@ void TestEngine::Run(const std::string& file)
                 it->trainGf,
                 it->trainSl,
                 it->trainGl,
+                it->multiplier,
                 true
             );
         }
@@ -401,7 +420,7 @@ void TestEngine::Run(const std::string& file)
         {
             // Load ubm data from a different set of speakers.
             ubmData = std::make_shared<SpeechData>();
-            LoadTextSamples(it->features, ubmData, ubmSf, ubmGf, ubmSl, ubmGl, true);
+            LoadTextSamples(it->features, ubmData, ubmSf, ubmGf, ubmSl, ubmGl, 1, true);
         }
 
         if (it->recognizerType == RecognizerType::VQ)
@@ -434,6 +453,13 @@ void TestEngine::Run(const std::string& file)
 
             recognizer->SetBackgroundModelEnabled(it->ubm);
             recognizer->SetAdaptationEnabled(it->ubm);
+            
+            std::ofstream perfTrainFile(it->id + ".perftrain", std::ios_base::app);
+
+            perfTrainFile << it->id + "_rec" + ".txt" << "|"
+                << GetLabel(*it) << "|"
+                << recognizer->GetTrainTimeSpeakerModels() << "|"
+                << recognizer->GetTrainTimeBackgroundModel() << std::endl;
 
             Recognize(*it, recognizer);
         }
@@ -444,6 +470,13 @@ void TestEngine::Run(const std::string& file)
             
             recognizer->SetBackgroundModelEnabled(it->ubm);
             recognizer->SetAdaptationEnabled(it->ubm);
+            
+            std::ofstream perfTrainFile(it->id + ".perftrain", std::ios_base::app);
+
+            perfTrainFile << it->id + "_rec" + ".txt" << "|"
+                << GetLabel(*it) << "|"
+                << recognizer->GetTrainTimeSpeakerModels() << "|"
+                << recognizer->GetTrainTimeBackgroundModel() << std::endl;
 
             RecognizePop(*it, recognizer);
         }
@@ -455,6 +488,13 @@ void TestEngine::Run(const std::string& file)
             recognizer->SetBackgroundModelEnabled(it->ubm);
             recognizer->SetAdaptationEnabled(it->ubm);
             
+            std::ofstream perfTrainFile(it->id + ".perftrain", std::ios_base::app);
+
+            perfTrainFile << it->id + "_" + toString(it->index) + "_ver.txt" << "|"
+                << GetLabel(*it) << "|"
+                << recognizer->GetTrainTimeSpeakerModels() << "|"
+                << recognizer->GetTrainTimeBackgroundModel() << std::endl;
+
             Verify(*it, recognizer);
         }
 
@@ -478,13 +518,14 @@ void TestEngine::RecognizePop(
     auto testData = std::make_shared<SpeechData>();
 
     // Test utterances
-    LoadTextSamples(test.features, testData, test.testSf, test.cycles * test.testGf, test.testSl, test.testGl, false);
+    LoadTextSamples(test.features, testData, test.testSf, test.cycles * test.testGf, test.testSl, test.testGl, test.multiplier, false);
 
     for (unsigned int i = 1; i <= test.cycles ; i++)
     {
+        Real realTestTime = 0.0f;
+
         std::cout << i << "/" << test.cycles << std::endl;
         
-        unsigned int population = i * 10;
         unsigned int correct = 0;
         unsigned int incorrect = 0;
         
@@ -507,37 +548,40 @@ void TestEngine::RecognizePop(
 
         recognizer->SelectSpeakerModels(speakers);
         
-        // Check test data against selected speakers.
-        // Slow but works.
+        Timer timer;
         for (const auto& samples : testData->GetSamples())
         {
-            for (const auto& speaker : speakers)
+            std::string speakerString;
+            speakerString += samples.first.GetId()[0];
+            speakerString += samples.first.GetId()[1];
+            speakerString += samples.first.GetId()[2];
+
+            if (recognizer->IsRecognized(SpeakerKey(speakerString), samples.second))
             {
-                if (samples.first.IsSameSpeaker(speaker))
-                {
-                    if (recognizer->IsRecognized(speaker, samples.second))
-                    {
-                        ++correct;
-                    }
+                ++correct;
+            }
 
-                    else
-                    {
-                        ++incorrect;
-                    }
-
-                    break;
-                }
+            else
+            {
+                ++incorrect;
             }
         }
+        realTestTime += timer.GetTimeElapsed();
 
         if (correct > 0 || incorrect > 0)
         {
-            std::cout << "Speakers " << population
+            std::cout << "Speakers " << test.testGf
                       << ", accuracy "
                       << 100.0f * static_cast<float>(correct) / static_cast<float>(correct + incorrect) << "%" << std::endl;
         }
 
-        results << test.label << " " << correct << " " << incorrect << std::endl;
+        results << GetLabel(test) << " " << correct << " " << incorrect << std::endl;
+
+        std::ofstream perfTestFile(test.id + ".perftest", std::ios_base::app);
+        perfTestFile << test.id + "_rec" + ".txt" << "|"
+                     << GetLabel(test) << "|"
+                     << realTestTime << "|"
+                     << testData->GetSamples().size() << std::endl;
     }
 }
 
@@ -554,7 +598,7 @@ void TestEngine::Recognize(
     auto testData = std::make_shared<SpeechData>();
 
     // Test utterances
-    LoadTextSamples(test.features, testData, test.testSf, test.testGf, test.testSl, test.testGl, false);
+    LoadTextSamples(test.features, testData, test.testSf, test.testGf, test.testSl, test.testGl, test.multiplier, false);
     
     unsigned int correct = 0;
     unsigned int incorrect = 0;
@@ -581,13 +625,17 @@ void TestEngine::Recognize(
     
     unsigned int sf = test.testSf;
 
+    Real realTestTime = 0.0f;
+    unsigned int realTestsTotal = 0;
+
     for (unsigned int i = 0; i < test.cycles ; i++)
     {
         std::cout << i + 1 << "/" << test.cycles << std::endl;
         
         // Test utterances
-        LoadTextSamples(test.features, testData, sf, test.testGf, test.testSl, test.testGl, false);
+        LoadTextSamples(test.features, testData, sf, test.testGf, test.testSl, test.testGl, test.multiplier, false);
 
+        Timer timer;
         for (const auto& samples : testData->GetSamples())
         {
             std::string speakerString;
@@ -595,9 +643,7 @@ void TestEngine::Recognize(
             speakerString += samples.first.GetId()[1];
             speakerString += samples.first.GetId()[2];
 
-            bool recognized = recognizer->IsRecognized(SpeakerKey(speakerString), samples.second);
-
-            if (recognized)
+            if (recognizer->IsRecognized(SpeakerKey(speakerString), samples.second))
             {
                 ++correct;
             }
@@ -607,11 +653,19 @@ void TestEngine::Recognize(
                 ++incorrect;
             }
         }
+        realTestTime += timer.GetTimeElapsed();
+        realTestsTotal += testData->GetSamples().size();
 
         sf += test.testGf;
     }
 
-    results << test.label << " " << correct << " " << incorrect << std::endl;
+    results << GetLabel(test) << " " << correct << " " << incorrect << std::endl;
+    
+    std::ofstream perfTestFile(test.id + ".perftest", std::ios_base::app);
+    perfTestFile << test.id + "_rec" + ".txt" << "|"
+                 << GetLabel(test) << "|"
+                 << realTestTime << "|"
+                 << realTestsTotal << std::endl;
 }
 
 void TestEngine::Verify(
@@ -648,6 +702,8 @@ void TestEngine::Verify(
     unsigned int correctTrials = 0;
     unsigned int incorrectTrials = 0;
 
+    Real realTestTime = 0.0f;
+
     for (unsigned int i = 0; i < test.cycles ; i++)
     {
         std::cout << i + 1 << "/" << test.cycles << std::endl;
@@ -675,8 +731,9 @@ void TestEngine::Verify(
         std::vector<Real> correctScores;
         std::vector<Real> incorrectScores;
         
-        LoadTextSamples(test.features, testData, sf, test.testGf, test.testSl, test.testGl, false);
+        LoadTextSamples(test.features, testData, sf, test.testGf, test.testSl, test.testGl, test.multiplier, false);
 
+        Timer timer;
         for (const auto& samples : testData->GetSamples())
         {
             std::string speakerString;
@@ -698,6 +755,7 @@ void TestEngine::Verify(
                 }
             }
         }
+        realTestTime += timer.GetTimeElapsed();
 
         for (auto& entry : correctScores)
         {
@@ -743,7 +801,14 @@ void TestEngine::Verify(
 
     std::ofstream testFile(test.id + ".test", std::ios_base::app);
 
-    testFile << resultsFileName << "|" << GetLabel(test) << "|" << correctTrials << "|" << incorrectTrials << std::endl;
+    testFile << resultsFileName << "|" << GetLabel(test) << std::endl;
+
+    std::ofstream perfTestFile(test.id + ".perftest", std::ios_base::app);
+    perfTestFile << test.id + "_" + toString(test.index) + "_ver.txt" << "|"
+                 << GetLabel(test) << "|"
+                 << realTestTime << "|"
+                 << correctTrials << "|"
+                 << incorrectTrials  << std::endl;
 }
 
 std::string TestEngine::GetLabel(const Test& test)

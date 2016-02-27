@@ -64,6 +64,8 @@ private:
 
         unsigned int si = 0;
         unsigned int gi = 0;
+        
+        unsigned int multiplier = 1;
 
         RecognizerType recognizerType = RecognizerType::UNKNOWN;
     };

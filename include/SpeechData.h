@@ -12,7 +12,7 @@
 class SpeechData;
 
 // \todo MOVE
-void LoadTextSamples(const std::string& folder, const std::shared_ptr<SpeechData>& data, unsigned int sf, unsigned int gf, unsigned int sl, unsigned int gl, bool train);
+void LoadTextSamples(const std::string& folder, const std::shared_ptr<SpeechData>& data, unsigned int sf, unsigned int gf, unsigned int sl, unsigned int gl, unsigned int multiplier, bool train);
 
 std::string GetSpeakerString(unsigned int index, const std::string& folder);
 
@@ -54,11 +54,11 @@ public:
      *  \param sl Start line.
      *  \param gl Number of lines to fetch.
      *  \param train If this flag is true, test specific labels will be removed.
-     *
+     *  \param multiplier Tells how many lines are considered as a single line (combine multiple utterances).
      *  \note Line indexing starts from 1.
      */
-    void Load(const std::string& path, unsigned int sl, unsigned int gl, bool train, unsigned int maxFeatures, bool normalize = false, const std::string& alias = "");
-
+    void Load(const std::string& path, unsigned int sl, unsigned int gl, unsigned multiplier, bool train, unsigned int maxFeatures, bool normalize = false, const std::string& alias = "");
+    
     /*! \brief Validates loaded data.
      *
      *  Checks that data dimensions match.

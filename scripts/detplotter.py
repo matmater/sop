@@ -62,24 +62,24 @@ def GetResults(files):
         cor = float(len(resultsCor))
         inc = float(len(resultsInc))
         
-        #print resultsCor
-        #print resultsInc 
-        
-        i = max(resultsCor)
+        start = max(resultsInc)
+        end = min(resultsCor)
+        step = (start - end) / 500
+        print "range: {} ... {}, step: {}".format(start, end, step)
         fns = []
         fps = []
-        while i >= min(resultsInc):
+        while start >= end:
             irej = 0
             irec = 0
             for entry in resultsCor:
-                if entry <= i:
+                if entry <= start:
                     irej += 1
             for entry in resultsInc:
-                if entry > i:
+                if entry > start:
                     irec += 1
             fns.append(irej)
             fps.append(irec)
-            i -= 0.01
+            start -= step
             
         fpr = []
         fnr = []

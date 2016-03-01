@@ -21,11 +21,6 @@ enum class ScoreNormalizationType
 };
 
 /*! \brief A generic model-based speaker recognizer.
- *
- *  \todo Add missing functionalities.
- *  \todo Add/fix comments.
- *  \todo Check normalization.
- *  \todo Check correctness.
  */
 class ModelRecognizer : public Recognizer
 {
@@ -37,24 +32,14 @@ public:
     };
 
 public:
-    /*! \brief Default constructor.
-     */
     ModelRecognizer();
     
-    /*! \brief Virtual destructor.
-     */
     virtual ~ModelRecognizer();
     
-    /*! \brief Clears all trained data.
-     */
     virtual void ClearTrainedData();
 
-    /*! \brief Sets score normalization type.
-     */
     void SetScoreNormalizationType(ScoreNormalizationType type);
     
-    /*! \brief Gets score normalization type.
-     */
     ScoreNormalizationType GetScoreNormalizationType() const;
 
     /*! \brief Sets background model enabled or disabled.
@@ -64,8 +49,6 @@ public:
      */
     void SetBackgroundModelEnabled(bool enabled);
     
-    /*! \brief Checks if the background model is enabled.
-     */
     bool IsBackgroundModelEnabled() const;
     
     void SetBackgroundModelTrainingEnabled(bool enabled);
@@ -79,16 +62,10 @@ public:
      */
     virtual void SetBackgroundModelData(std::shared_ptr<SpeechData> data);
     
-    /*! \brief Gets background model data.
-     */
     virtual std::shared_ptr<SpeechData> GetBackgroundModelData();
     
-    /*! \brief !!!!!!!!!!!!
-     */
     virtual void SetSpeakerData(std::shared_ptr<SpeechData> data);
 
-    /*! \brief !!!!!!!!!!!!
-     */
     virtual std::shared_ptr<SpeechData> GetSpeakerData();
 
     /*! \brief Sets the order of this model.
@@ -107,52 +84,28 @@ public:
 
     bool IsAdaptationEnabled() const;
 
-    /*! \brief Sets the number of iterations used for model adaptation.
-     *
-     *  Default number of iterations is 2.
-     */
     void SetAdaptationIterations(unsigned int iterations);
     
-    /*! \brief Gets the number of iterations used for model adaptation.
-     */
     unsigned int GetAdaptationIterations() const;
 
-    /*! \brief Sets the relevance factor used for model adaptation.
-     *
-     *  Default relevance factor is 16.
-     */
     void SetRelevanceFactor(Real factor);
     
-    /*! \brief Sets the (maximum) number of iterations used in training.
-     */
     void SetTrainingIterations(unsigned int iterations);
     
-    /*! \brief Sets the (maximum) number of iterations used in training.
-     */
     unsigned int GetTrainingIterations() const;
 
-    /*! \brief Sets the training threshold used in training as a stopping condition.
-     */
     void SetTrainingThreshold(Real threshold);
     
-    /*! \brief Sets the training threshold used in training as a stopping condition.
-     */
     Real GetTrainingThreshold() const;
 
-    /*! \brief Gets the relevance factor used for model adaptation.
-     */
     Real GetRelevanceFactor() const;
 
-    /*! \copydoc Recognizer::Train()
-     */
     virtual void Train() override;
 
     virtual void SelectSpeakerModels(const std::vector<SpeakerKey>& models);
 
     virtual void SelectImpostorModels(const std::vector<SpeakerKey>& models);
     
-    /*! \copydoc Recognizer::Test()
-     */
     virtual void Test(const std::shared_ptr<SpeechData>& data, std::map<SpeakerKey, RecognitionResult>& results) override;
     
     virtual void Prepare();
@@ -190,8 +143,6 @@ public:
      */
     virtual std::vector<Real> GetMultipleVerificationScore(const SpeakerKey& speaker, const std::shared_ptr<SpeechData>& data);
     
-    /*! \copydoc Recognizer::Verify()
-     */
     virtual std::vector<Real> Verify(const SpeakerKey& speaker, const std::shared_ptr<SpeechData>& data) override;
 
 protected:

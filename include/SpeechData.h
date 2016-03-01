@@ -11,7 +11,6 @@
 
 class SpeechData;
 
-// \todo MOVE
 void LoadTextSamples(const std::string& folder, const std::shared_ptr<SpeechData>& data, unsigned int sf, unsigned int gf, unsigned int sl, unsigned int gl, unsigned int multiplier, bool train);
 
 std::string GetSpeakerString(unsigned int index, const std::string& folder);
@@ -31,18 +30,12 @@ enum class FeatureNormalizationType
 };
 
 /*! \brief A container for speech data of multiple speakers.
- *
- *  \todo Add/fix comments.
  */
 class SpeechData
 {
 public:
-    /*! \brief Default constructor.
-     */
     SpeechData();
 
-    /*! \brief Virtual destructor.
-     */
     virtual ~SpeechData();
 
     /*! \brief Loads data from text file. (Old version).
@@ -96,10 +89,6 @@ public:
         std::vector < DynamicVector<Real> >::iterator beginIt,
         std::vector < DynamicVector<Real> >::iterator endIt);
 
-    /*! \brief Normalizes all sample values to range x.
-     *
-     *  \todo Check range ([0,1] or [-1,1]).
-     */
     void Normalize();
     
     /*! \brief Sets the feature normalization type.
@@ -118,7 +107,7 @@ public:
      */
     unsigned int GetTotalSampleCount() const;
 
-    /*! \brief Returns all samples identified by speaker strings.
+    /*! \brief Returns all samples identified by speaker keys.
      */
     const std::map<SpeakerKey, std::vector<DynamicVector<Real> > >& GetSamples() const;
 

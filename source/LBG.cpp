@@ -73,12 +73,8 @@ void LBG::Cluster(
 
     avgDist /= static_cast<Real>(samples.size() * centroids[0].GetSize());
 
-    //std::cout << avgDist << std::endl;
-
     do
     {
-        //std::cout << "n: " << n << std::endl;
-
         for (unsigned int c = 0; c < n; ++c)
         {
             Split(centroids[c], centroids[n + c]);
@@ -140,8 +136,6 @@ void LBG::Cluster(
             }
 
             newAvgDist /= static_cast<Real>(samples.size() * centroids[0].GetSize());
-
-            //std::cout << avgDist << "-" << newAvgDist<< "-" << ((avgDist - newAvgDist) / avgDist) << std::endl;
 
             if (((avgDist - newAvgDist) / avgDist) > mEta)
             {

@@ -5,10 +5,6 @@
 
 #include "SpeechData.h"
 
-/*! \brief The result of a speaker recognition task.
- *
- *  \todo Add/fix comments.
- */
 class RecognitionResult
 {
 public:
@@ -20,24 +16,14 @@ public:
     };
 
 public:
-    /*! \brief Constructor with parameters.
-     */
     RecognitionResult(const bool known = false, const SpeakerKey& speaker = SpeakerKey());
 
-    /*! \brief Virtual destructor.
-     */
     ~RecognitionResult();
 
-    /*! \brief Returns the type of the recognition.
-     */
     Type GetType() const;
 
-    /*! \brief Returns the string identifier of the speaker.
-     */
     const SpeakerKey& GetSpeaker() const;
 
-    /*! A flag that tells if the speaker existed in database.
-     */
     bool GetKnown() const;
 
 private:

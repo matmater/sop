@@ -148,8 +148,6 @@ void VQModel::Weight(const std::map< SpeakerKey, std::shared_ptr<Model> >& model
         {
             if (b.second.get() == this)
             {
-                //DEBUG_TRACE("Same model.");
-
                 continue;
             }
 

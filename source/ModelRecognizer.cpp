@@ -493,12 +493,12 @@ void ModelRecognizer::Test(const std::shared_ptr<SpeechData>& data, std::map<Spe
                 ubmLogScore = mBackgroundModel->GetLogScore(entry.second);
             }
 
-            DEBUG_TRACE(entry.first << "-" << model.first
+            std::cout << entry.first << "-" << model.first
                 << " m:" << modelScore
                 << ",l:" << modelLogScore
                 << ",u:" << ubmLogScore
                 << ",r:" << modelLogScore - ubmLogScore
-                << ",v:" << GetVerificationScore(model.first, entry.second));
+                << ",v:" << GetVerificationScore(model.first, entry.second) << std::endl;
 
             if (modelScore > bestModelScore)
             {
@@ -508,7 +508,7 @@ void ModelRecognizer::Test(const std::shared_ptr<SpeechData>& data, std::map<Spe
             }
         }
 
-        DEBUG_TRACE("The most probable speaker is " << bestModelName << ".");
+        std::cout << "The most probable speaker is " << bestModelName << "." << std::endl;
 
         if (bestModel != nullptr)
         {
@@ -620,7 +620,7 @@ Real ModelRecognizer::GetVerificationScore(const SpeakerKey& speaker, const std:
 
     Real score = GetRatio(it->second, samples);
 
-    // Return score immediately if normalization not enabled.
+    // Return score immediately if normalization is not enabled.
     if (mScoreNormalizationType == ScoreNormalizationType::NONE)
     {
         return score;

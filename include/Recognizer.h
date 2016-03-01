@@ -8,8 +8,6 @@
 #include "SpeechData.h"
 
 /*! \brief The main structure of a speaker recognizer.
- *
- *  \todo Add/fix comments.
  */
 class Recognizer
 {
@@ -23,8 +21,6 @@ public:
     virtual void Train() = 0;
 
     /*! \brief Tests samples on the trained recognizer.
-     *
-     *  \todo Remove?
      */
     virtual void Test(const std::shared_ptr<SpeechData>& data, std::map<SpeakerKey, RecognitionResult>& results) {}
 

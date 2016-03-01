@@ -7,41 +7,25 @@
 #include "SpeechData.h"
 #include "ANNTrainData.h"
 
-/*! \brief A speaker recognizer based on Artificial Neural Network.
- */
 class ANNRecognizer : public Recognizer
 {
 public:
-    /*! \brief Default constructor
-     */
     ANNRecognizer();
     
-    /*! \brief Virtual destructor.
-     */
     virtual ~ANNRecognizer();
 
-    /*! \copydoc Recognizer::Clear()
-     */
     virtual void Clear();
     
-    /*! \copydoc Recognizer::Train()
-     */
     void Train(const SpeechData& data);
     
-    /*! \copydoc Recognizer::SaveTrainedData()
-     */
     void SaveTrainedData(const std::string& path);
     
-    /*! \copydoc Recognizer::LoadTrainedData()
-     */
     void LoadTrainedData(const std::string& path);
     
-    /*! \copydoc Recognizer::Test()
-     */
     void Test(const SpeechData& data, std::map<SpeakerKey, RecognitionResult>& results);
 
 private:
-    std::map<unsigned int, SpeakerKey> mNeuronMapping; /*!< Speaker Id, Label */
+    std::map<unsigned int, SpeakerKey> mNeuronMapping;
 
     ANNTrainData mTrainData;
 

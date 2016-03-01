@@ -595,8 +595,6 @@ void TestEngine::Recognize(
     const Test& test,
     std::shared_ptr<ModelRecognizer> recognizer)
 {
-    // \todo CHECK BUGS!
-    
     std::string resultsFileName = test.id + "_rec" + ".txt";
 
     std::ofstream results(resultsFileName, std::ios_base::app);
@@ -678,7 +676,6 @@ void TestEngine::Verify(
     const Test& test,
     std::shared_ptr<ModelRecognizer> recognizer)
 {
-    // \todo CHECK BUGS!
     std::string resultsFileName = test.id + "_" + toString(test.index) + "_ver.txt";
     std::ofstream results(resultsFileName);
 
@@ -778,31 +775,6 @@ void TestEngine::Verify(
         results << std::endl;
 
         sf += test.testGf;
-
-        /*
-        LoadTextSamples(test.features, testData2, sf + test.testGf, test.incorrectClaimed, test.testSl, test.testGl, false);
-        for (unsigned int j = 0; j < test.testGf; j++)
-        {
-            std::cout << "Verification check " << j+1 << "/" << test.testGf << std::endl;
-        
-            LoadTextSamples(test.features, testData, sf + j, 1, test.testSl + test.testGl, test.correctClaimed, false);          
-            std::string claimedSpeaker = GetSpeakerString(sf + j, test.features);
-            auto verificationResults = recognizer->Verify(SpeakerKey(claimedSpeaker), testData);
-            for (auto& entry : verificationResults)
-            {
-                results << entry << " ";
-            }
-            results << std::endl;
-            verificationResults = recognizer->Verify(SpeakerKey(claimedSpeaker), testData2);
-            for (auto& entry : verificationResults)
-            {
-                results << entry << " ";
-            }
-            results << std::endl;
-        }
-
-        sf += test.testGf;
-        */
     }
 
     std::ofstream testFile(test.id + ".test", std::ios_base::app);

@@ -9,19 +9,13 @@
 #include "LBG.h"
 #include "Model.h"
 
-/*! \brief A speaker recognizer based on Vector Quantization.
- *
- *  \todo Add comments.
+/*! \brief A speaker recognizer based on Vector Quantization using LBG and MAP algorithms.
  */
 class VQModel : public Model
 {
 public:
-    /*! \brief Default constructor.
-     */
     VQModel();
 
-    /*! \brief Virtual destructor.
-     */
     virtual ~VQModel();
     
     void ResetWeights();
@@ -55,16 +49,10 @@ public:
      */
     Real GetWeightedSimilarity(const std::vector< DynamicVector<Real> >& samples) const;
     
-    /*! \copydoc Model::GetScore()
-     */
     virtual Real GetScore(const std::vector< DynamicVector<Real> >& samples) const override;
     
-    /*! \copydoc Model::GetLogScore()
-     */
     virtual Real GetLogScore(const std::vector< DynamicVector<Real> >& samples) const override;
     
-    /*! \copydoc Model::GetDimensionCount()
-     */
     virtual unsigned int GetDimensionCount() const override;
 
 private:

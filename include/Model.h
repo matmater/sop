@@ -7,8 +7,6 @@
 
 #include "SpeechData.h"
 
-/*! \todo Add/fix comments.
- */
 class Model
 {
 public:

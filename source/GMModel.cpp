@@ -62,15 +62,11 @@ void GMModel::Adapt(const std::shared_ptr<Model>& other, const std::vector< Dyna
         UpdatePDF(cluster);
     }
 
-    // TODO remove this garbage if necessary.
     Real logLikelihood = 0.0f;
     Real newLogLikelihood = 0.0f;
 
-    // Not sure about this iteration thing?
     for (unsigned int e = 0; e < iterations; ++e)
     {
-        //std::cout << "Iteration:" << e << std::endl;
-
         for (auto& cluster : mClusters)
         {
             cluster.membershipProbabilitySum = 0.0f;
@@ -107,7 +103,6 @@ void GMModel::Adapt(const std::shared_ptr<Model>& other, const std::vector< Dyna
                 // Calculate the final sum of membership probabilities.
                 cluster.membershipProbabilitySum += cluster.membershipProbability;
 
-                //std::cout << "mp:" << cluster.membershipProbability << std::endl;
                 for (unsigned int d = 0; d < cluster.means.GetSize(); ++d)
                 {
                     // Mean sum(p*x)
@@ -131,8 +126,6 @@ void GMModel::Adapt(const std::shared_ptr<Model>& other, const std::vector< Dyna
 
             UpdatePDF(cluster);
         }
-
-        DEBUG_TRACE(std::abs(logLikelihood - newLogLikelihood) / samples.size());
 
         if (std::abs(logLikelihood - newLogLikelihood) / samples.size() < mEta)
         {
@@ -302,8 +295,6 @@ void GMModel::EM(const std::vector< DynamicVector<Real> >& samples)
 
         M(samples);
         
-        DEBUG_TRACE(std::abs(logLikelihood - newLogLikelihood));
-
         if (std::abs(logLikelihood - newLogLikelihood) < mEta)
         {
             break;
@@ -349,7 +340,6 @@ Real GMModel::E(const std::vector< DynamicVector<Real> >& samples)
             // Calculate the final sum of membership probabilities.
             cluster.membershipProbabilitySum += cluster.membershipProbability;
 
-            //std::cout << "mp:" << cluster.membershipProbability << std::endl;
             for (unsigned int d = 0; d < cluster.means.GetSize(); ++d)
             {
                 // Mean sum(p*x)

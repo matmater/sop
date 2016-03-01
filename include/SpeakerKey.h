@@ -3,8 +3,6 @@
 
 #include "Common.h"
 
-/*! A speaker-specific key.
- */
 class SpeakerKey
 {
 public:

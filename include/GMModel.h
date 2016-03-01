@@ -7,12 +7,7 @@
 
 #include "Model.h"
 
-/*! \brief A Gaussian Mixture Model using EM-algorithm.
- *
- *  See PDF-file for detailed equations (variable naming may differ).
- *
- *  \todo Add/fix comments.
- *  \warning Can be unstable when data dimensions are too big.
+/*! \brief A Gaussian Mixture Model using EM-algorithm & MAP-adaptation.
  */
 class GMModel : public Model
 {
@@ -37,34 +32,20 @@ public:
     };
 
 public:
-    /*! \brief Constructor.
-     */
     GMModel();
 
-    /*! \brief Destructor.
-     */
     virtual ~GMModel();
     
-    /*! \brief Sets the (maximum) number of iterations used in training.
-     */
     void SetTrainingIterations(unsigned int iterations);
     
-    /*! \brief Sets the (maximum) number of iterations used in training.
-     */
     unsigned int GetTrainingIterations() const;
 
-    /*! \brief Sets the training threshold used in training as a stopping condition.
-     */
     void SetTrainingThreshold(Real threshold);
     
-    /*! \brief Sets the training threshold used in training as a stopping condition.
-     */
     Real GetTrainingThreshold() const;
 
     void Init();
 
-    /*! \brief Returns all clusters.
-     */
     const std::vector<Cluster>& GetClusters() const;
 
     /*! \brief Trains the model.
@@ -76,7 +57,7 @@ public:
     virtual void Adapt(const std::shared_ptr<Model>& other, const std::vector< DynamicVector<Real> >& samples,
                unsigned int iterations = 2, Real relevanceFactor = 16.0f) override;
 
-    /*! \brief Calculates a normalized log-likelihood value over given samples.
+    /*! \brief Calculates the normalized log-likelihood value over given samples.
      *
      *  The normalization is done by averaging log-likelihoods by dividing
      *  the sum of sample log-likelihoods by the number of samples.
@@ -88,20 +69,14 @@ public:
     
     /*! \brief Scores given samples.
      *
-     *  The value is same as in GetLogLikelihood().
-     *
      *  \param samples Samples of independent observations.
      *  \return Average score over samples.
      *  \sa GetLogLikelihood()
      */
     virtual Real GetScore(const std::vector< DynamicVector<Real> >& samples) const override;
     
-    /*! \copydoc Model::GetLogScore()
-     */
     virtual Real GetLogScore(const std::vector< DynamicVector<Real> >& samples) const override;
     
-    /*! \copydoc Model::GetDimensionCount()
-     */
     virtual unsigned int GetDimensionCount() const override;
 
 private:
@@ -140,7 +115,7 @@ private:
      */
     Real GetLogLikelihood(const DynamicVector<Real>& values, const Cluster& cluster) const;
 
-    /*! \brief Precalculates some pdf values for efficiency.
+    /*! \brief Precalculates constant pdf values for efficiency.
      *
      *  \param cluster A cluster to be modifed.
      */

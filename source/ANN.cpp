@@ -72,26 +72,26 @@ ANN::TrainingAlgorithm ANN::GetTrainingAlgorithm() const
     
 void ANN::Build()
 {
-    DEBUG_TRACE("Building network...");
+    std::cout << "Building network..." << std::endl;
 
     unsigned int neuronCount = 0;
     unsigned int synapseCount = 0;
         
-    DEBUG_TRACE("Traversing layers...");
+    std::cout << "Traversing layers..." << std::endl;
         
-    DEBUG_TRACE("Layer: " << 0);
+    std::cout << "Layer: " << 0 << std::endl;
         
-    DEBUG_TRACE("Neurons: " << mLayerSizes[0]);
+    std::cout << "Neurons: " << mLayerSizes[0] << std::endl;
         
     // Hidden & output neurons.
     for (unsigned int l = 1; l < mLayerSizes.size(); l++)
     {
-        DEBUG_TRACE("Layer: " << l)
+        std::cout << "Layer: " << l << std::endl;
 
-        DEBUG_TRACE("Neurons: " << mLayerSizes[l] << std::endl
+        std::cout << "Neurons: " << mLayerSizes[l] << std::endl
             << "Incoming bias synapses: " << mLayerSizes[l] << std::endl
             << "Incoming synapses: " << mLayerSizes[l - 1] * mLayerSizes[l] << std::endl
-            << "Previous layer bias neurons: " << 1);
+            << "Previous layer bias neurons: " << 1 << std::endl;
 
         synapseCount += mLayerSizes[l - 1] * mLayerSizes[l];
             
@@ -107,17 +107,17 @@ void ANN::Build()
 
     neuronCount += mLayerSizes[mLayerSizes.size() - 1];
     
-    DEBUG_TRACE("All layers traversed.");
-    DEBUG_TRACE("Total neurons: " << neuronCount << std::endl
+    std::cout << "All layers traversed." << std::endl;
+    std::cout << "Total neurons: " << neuronCount << std::endl
         << ">>> Bias neurons: " << mLayerSizes.size() - 1 << std::endl
-        << "Total synapses: " << synapseCount);
+        << "Total synapses: " << synapseCount << std::endl;
         
-    DEBUG_TRACE("Allocating memory...");
+    std::cout << "Allocating memory..." << std::endl;
 
     mNeurons.resize(neuronCount);
     mSynapses.resize(synapseCount);
     
-    DEBUG_TRACE("Initializing structures...");
+    std::cout << "Initializing structures..." << std::endl;
 
     Neuron* neuron = &mNeurons[0];
     Synapse* synapse = &mSynapses[0];
@@ -168,7 +168,7 @@ void ANN::Build()
         }
     }
 
-    DEBUG_TRACE("Building network done.");
+    std::cout << "Building network done." << std::endl;
 }
 
 void ANN::PrintStructure()

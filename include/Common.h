@@ -24,10 +24,6 @@
 #include <iomanip>
 #include <functional>
 
-#define DEBUG
-#define DEBUG_LEVEL 5
-#include "Debug.h"
-
 #define INDEXFIX
 //#undef INDEXFIX
 
@@ -86,7 +82,7 @@ const T& Max(const T& a, const T& b)
     return (a > b) ? a : b;
 }
 
-/*! \brief Generates a random value between 0.0 and 1.0.
+/*! \brief Generates a random value in range 0.0 and 1.0.
  *
  *  \return A random value [0.0, 1.0].
  */
@@ -151,7 +147,7 @@ inline Real SigmoidDelta(Real v)
     return 1.0f - v * v;
 }
 
-/*! \brief Generates a gaussian random value in the range [-1.0f, 1.0f].
+/*! \brief Generates a gaussian random value in range [-1.0f, 1.0f].
  *
  *  \algorithm Box-Muller transform (polar form). http://en.wikipedia.org/wiki/Box%E2%80%93Muller_transform.
  */
@@ -220,7 +216,7 @@ inline Real Variance(const std::vector<Real>& values, Real mean)
 }
 
 /*! \brief Returns the standard deviation of the
- *  values with a given mean value.
+ *  values with the given mean value.
  *  
  *  Equation: sqrt[sum(values)/(size(values) - 1)]
  */

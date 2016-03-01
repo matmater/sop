@@ -88,27 +88,9 @@ void SpeechData::Load(const std::string& path)
 
 void SpeechData::Load(const std::string& path, unsigned int sl, unsigned int gl, unsigned int multiplier, bool train, unsigned int maxFeatures, bool normalize, const std::string& alias)
 {
-    // \todo CHECK BUGS!
-
-    //Clear();
-
     std::ifstream file(path);
 
     std::string line;
-
-    /*
-    while (std::getline(file, line))
-    {
-        ++totalLines;
-    }
-    
-    totalLines = std::min(totalLines, sl+gl-1);
-    std::cout << "Lines: " << totalLines << std::endl;
-
-
-    file.clear();
-    file.seekg(0);
-    */
 
     unsigned int lineCounter = 1;
     
@@ -200,7 +182,6 @@ void SpeechData::Load(const std::string& path, unsigned int sl, unsigned int gl,
                         {
                             if (featureCount++ == maxFeatures) break;
 
-                            // \todo CHECK stod?
                             userSamples.back().Push(std::stof(feature));
                         }
                     }
@@ -244,8 +225,6 @@ void SpeechData::Load(const std::string& path, unsigned int sl, unsigned int gl,
 
         ++lineCounter;
     }
-
-    //Validate();
 }
 
 void SpeechData::Validate()
@@ -448,8 +427,6 @@ void LoadTextSamples(const std::string& folder, const std::shared_ptr<SpeechData
             }
         }
     }
-
-    // \todo CHECK BUGS!
 
     data->Clear();
     for (unsigned int i = 0; i < gf; i++)

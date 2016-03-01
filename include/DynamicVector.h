@@ -5,8 +5,6 @@
 
 /*! \brief A variable-size vector for aritmetic operations.
  *  \tparam T Main data type of the values.
- *
- *  \todo Add/fix comments.
  */
 template<typename T>
 class DynamicVector
@@ -29,10 +27,10 @@ public:
     DynamicVector& operator= (const DynamicVector& other);
 
     /*! \brief Resizes the vector and initializes new values to
-     *         a given default value.
+     *         a default value.
      *
      *  \param size The size of the vector (dimensions).
-     *  \param value Default value.
+     *  \param value The default value.
      */
     void Resize(unsigned int size, T value = T());
 
@@ -109,7 +107,7 @@ public:
      */
     void Subtract(const DynamicVector& other);
 
-    /*! \brief Calculates squared euclidean distance to another vector.
+    /*! \brief Calculates a squared euclidean distance to another vector.
      *
      *  \todo Change function name.
      *

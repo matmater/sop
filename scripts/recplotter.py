@@ -7,7 +7,7 @@ import os
 
 """
 Plots results of recognition tests.
-Currently plots reliability on y-axis and amount of trained speakers on x-axis.
+Plots reliability on y-axis and amount of trained speakers on x-axis.
 """
 
 def GetResults(files):
@@ -41,26 +41,11 @@ def DrawCurve(results, title):
     ax.yaxis.set_major_formatter(ScalarFormatter())
     ax.set_xticks([10*x for x in range(1,11)])
     ax.set_yticks([x for x in range(101)])
-    #plt.axis([0,100,0,100])
     plt.axis([max(0,xmin),xmax,max(0,ymin),min(100.2,ymax)])
-    #plt.axis('tight')
     plt.title(title)
     plt.ylabel('Tunnistuksen tarkkuus (%)')
     plt.xlabel('Opetetut puhujat')
     plt.legend(loc = 0)
-    #plt.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc=3,ncol=2, borderaxespad=0.) # legend above the plot
     ax.grid(True)
-    #plt.savefig("{}.png".format(title))
-    plt.show()    
-
-if __name__ == '__main__':
-    if len(sys.argv) > 1:
-        folder = sys.argv[1]            
-    else:
-        folder = "recognitionresults"
-    files = []
-    for file in os.listdir(folder):
-        files.append("{}/{}".format(folder, file))
-    results = GetResults(files)
-    print results
-    DrawCurve(results)
+    plt.show()
+    

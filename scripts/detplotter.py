@@ -1,17 +1,16 @@
  # -*- coding: utf-8 -*-
 
-# some code from https://jeremykarnowski.wordpress.com/2015/08/07/detection-error-tradeoff-det-curves/
-
 from matplotlib import pyplot as plt
 from matplotlib.ticker import ScalarFormatter
+from matplotlib.ticker import FuncFormatter
 import sys
 import os
 
-def DETCurve(results, eerDcf, title):
+def PlotDET(results, eerDcf, title):
     """
-    Given false positive and false negative rates, produce a DET Curve.
-    The false positive rate is assumed to be increasing while the false
-    negative rate is assumed to be decreasing.
+    Plots a DET curve with false positive and false negative rates (results).
+    marks minDCF value (from eerDcf) for each curve.
+    Some code based on https://jeremykarnowski.wordpress.com/2015/08/07/detection-error-tradeoff-det-curves/
     """
     axis_min = min(min(results))
     fig,ax = plt.subplots()
@@ -23,22 +22,25 @@ def DETCurve(results, eerDcf, title):
             plt.plot(eerDcf[r][2][0], eerDcf[r][2][1], 'kD', markersize=6)
     plt.yscale('logit')
     plt.xscale('logit')
-    ticks_to_use = [0.01,0.02,0.05,0.1,0.2,0.4,0.6,0.8,0.9]
+    majorTicks = [0.01,0.02,0.05,0.1,0.2,0.4,0.6,0.8,0.9]
     ax.xaxis.set_major_formatter(ScalarFormatter())
     ax.yaxis.set_major_formatter(ScalarFormatter())
-    ax.set_xticks(ticks_to_use)
-    ax.set_yticks(ticks_to_use)
+    ax.set_xticks(majorTicks)
+    ax.set_yticks(majorTicks)
     plt.axis([0.005,0.9,0.005,0.9])
-    #plt.axis('tight')
     plt.title(title)
     plt.xlabel(u"Väärät hyväksymiset (%)")
     plt.ylabel(u"Väärät hylkäykset (%)")
     plt.legend(loc = 0)
-    for l in ax.get_xticklabels()[::2]:
-        l.set_visible(False)
-    #plt.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc=3,ncol=2, borderaxespad=0.) # legend above the plot
+    plt.minorticks_off()
+    
+    def ToPercent(y, position):
+        return int(y * 100)
+        
+    formatter = FuncFormatter(ToPercent)
+    plt.gca().yaxis.set_major_formatter(formatter)
+    plt.gca().xaxis.set_major_formatter(formatter)
     ax.grid(True)
-    #plt.savefig("{}.png".format(title))
     plt.show()
     
 def GetResults(files):
@@ -91,7 +93,7 @@ def GetResults(files):
         
     return results
     
-def EERandDCF(results):
+def GetEERandDCF(results):
     eerDcf = []
     for entry in results:
         minDcf = 109.0
@@ -107,17 +109,3 @@ def EERandDCF(results):
         eerDcf.append([eer, minDcf, dcfPoint])
     
     return eerDcf
- 
-if __name__ == '__main__':
-    if len(sys.argv) > 1:
-        folder = sys.argv[1]            
-    else:
-        folder = "verificationresults"
-    files = []
-    for file in os.listdir(folder):
-        files.append("{}/{}".format(folder, file))
-    results = GetResults(files)
-    
-    eerDcf = EERandDCF(results)
-    print eerDcf
-    DETCurve(results, eerDcf)

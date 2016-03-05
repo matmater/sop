@@ -1,3 +1,9 @@
+/*!
+ *  This file is part of a speaker recognition group project.
+ *
+ *  \author Markus Nykänen <mnykne@gmail.com>
+ */
+
 #ifndef _RECOGNIZER_H_
 #define _RECOGNIZER_H_
 
@@ -7,7 +13,7 @@
 
 #include "SpeechData.h"
 
-/*! \brief The main structure of a speaker recognizer.
+/*! \brief Abstract speaker recognizer.
  */
 class Recognizer
 {
@@ -16,15 +22,25 @@ public:
      */
     virtual ~Recognizer() { }
 
-    /*! \brief Trains the recognizer with given speech data.
+    /*! \brief Train the recognizer.
      */
     virtual void Train() = 0;
-
-    /*! \brief Tests samples on the trained recognizer.
+    
+    /*! \brief Check if the speaker was recognized.
+     *
+     *  \param speaker The speaker to be recognized.
+     *  \param samples The samples of the speaker.
+     *
+     *  \return True if the speaker was recognized, false otherwise.
      */
-    virtual void Test(const std::shared_ptr<SpeechData>& data, std::map<SpeakerKey, RecognitionResult>& results) {}
-
-    /*! \brief Verifies samples on the trained recognizer.
+    virtual bool IsRecognized(const SpeakerKey& speaker, const std::vector< DynamicVector<Real> >& samples) = 0;
+    
+    /*! \brief Verify the claimed speaker.
+     *
+     *  \param speaker The speaker to be verified.
+     *  \param data Speech data set to derive verification scores.
+     *
+     *  \return A vector containing verification scores of the speaker.
      */
     virtual std::vector<Real> Verify(const SpeakerKey& speaker, const std::shared_ptr<SpeechData>& data) = 0;
 };

@@ -1,3 +1,9 @@
+/*!
+ *  This file is part of a speaker recognition group project.
+ *
+ *  \author Markus Nykänen <mnykne@gmail.com>
+ */
+
 #ifndef _RECOGNITIONRESULT_H_
 #define _RECOGNITIONRESULT_H_
 
@@ -5,6 +11,10 @@
 
 #include "SpeechData.h"
 
+/*! \class RecognitionResult
+ *
+ *  \todo Remove (?).
+ */
 class RecognitionResult
 {
 public:

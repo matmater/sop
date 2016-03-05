@@ -1,3 +1,9 @@
+/*!
+ *  This file is part of a speaker recognition group project.
+ *
+ *  \author Markus Nykänen <mnykne@gmail.com>
+ */
+
 #ifndef _GMMRECOGNIZER_H_
 #define _GMMRECOGNIZER_H_
 
@@ -5,18 +11,25 @@
 #include "RecognitionResult.h"
 #include "ModelRecognizer.h"
 
+/*! \class GMMRecognizer
+ *  \brief Gaussian Mixture Model speaker recognizer.
+ */
 class GMMRecognizer : public ModelRecognizer
 {
 public:
+    /*! \brief Default constructor.
+     */
     GMMRecognizer();
 
+    /*! \brief Virtual destructor.
+     */
     virtual ~GMMRecognizer();
 
-    virtual void Train();
-
-    virtual void Test(const std::shared_ptr<SpeechData>& data, std::map<SpeakerKey, RecognitionResult>& results) override;
-
 protected:
+    /*! \brief Create a new Gaussian Mixture Model.
+     *
+     *  \return A new GMModel instance.
+     */
     virtual std::shared_ptr<Model> CreateModel();
 };
 

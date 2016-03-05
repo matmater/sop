@@ -1,3 +1,9 @@
+/*!
+ *  This file is part of a speaker recognition group project.
+ *
+ *  \author Markus Nykänen <mnykne@gmail.com>
+ */
+
 #define _CRT_SECURE_NO_WARNINGS
 
 #include <cstdio>

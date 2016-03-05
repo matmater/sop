@@ -1,3 +1,9 @@
+/*!
+ *  This file is part of a speaker recognition group project.
+ *
+ *  \author Markus Nykänen <mnykne@gmail.com>
+ */
+
 template<typename T>
 DynamicVector<T>::DynamicVector(unsigned int size)
 {

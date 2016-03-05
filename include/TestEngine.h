@@ -1,3 +1,9 @@
+/*!
+ *  This file is part of a speaker recognition group project.
+ *
+ *  \author Markus Nykänen <mnykne@gmail.com>
+ */
+
 #ifndef _TESTENGINE_H_
 #define _TESTENGINE_H_
 
@@ -5,6 +11,9 @@
 
 #include "ModelRecognizer.h"
 
+/*! \class TestEngine
+ *  \brief An engine for VQ, GMM recognition & verification testing.
+ */
 class TestEngine
 {
 private:
@@ -25,7 +34,7 @@ private:
 
     struct TestHeader
     {
-        TestType type = TestType::UNKNOWN;;
+        TestType type = TestType::UNKNOWN;
         std::string label = "";
         std::string targetId = "";
     };
@@ -71,23 +80,48 @@ private:
     };
 
 public:
+    /*! \brief Default constructor.
+     */
     TestEngine();
 
+    /*! \brief Run all tests in a file.
+     */
     void Run(const std::string& file);
     
+private:
+    /*! \brief Varying population size recognition test.
+     *
+     *  \param test Test instructions.
+     *  \param recognizer The recognizer to test.
+     */
     void RecognizePop(
         const Test& test,
-        std::shared_ptr<ModelRecognizer> recogniner);
-
+        std::shared_ptr<ModelRecognizer> recognizer);
+    
+    /*! \brief Basic speaker recognition.
+     *
+     *  \param test Test instructions.
+     *  \param recognizer The recognizer to test.
+     */
     void Recognize(
         const Test& test,
         std::shared_ptr<ModelRecognizer> recognizer);
-
+    
+    /*! \brief Basic speaker verification.
+     *
+     *  \param test Test instructions.
+     *  \param recognizer The recognizer to test.
+     */
     void Verify(
         const Test& test,
         std::shared_ptr<ModelRecognizer> recognizer);
 
 private:
+    /*! \brief Labels a test instruction.
+     *
+     *  \return A user specified test label (if defined) or
+     *  an automatically generated label (otherwise).
+     */
     std::string GetLabel(const Test& test);
 };
 

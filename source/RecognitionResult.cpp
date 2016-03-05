@@ -1,3 +1,9 @@
+/*!
+ *  This file is part of a speaker recognition group project.
+ *
+ *  \author Markus Nykänen <mnykne@gmail.com>
+ */
+
 #include "RecognitionResult.h"
 
 RecognitionResult::RecognitionResult(const bool known, const SpeakerKey& speaker)

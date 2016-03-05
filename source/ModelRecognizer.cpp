@@ -1,3 +1,9 @@
+/*!
+ *  This file is part of a speaker recognition group project.
+ *
+ *  \author Markus Nykänen <mnykne@gmail.com>
+ */
+
 #include "ModelRecognizer.h"
 
 ModelRecognizer::ModelRecognizer()
@@ -434,123 +440,6 @@ void ModelRecognizer::SelectImpostorModels(const std::vector<SpeakerKey>& models
         }
 
         mImpostorModels[key] = it->second;
-    }
-}
-
-void ModelRecognizer::Test(const std::shared_ptr<SpeechData>& data, std::map<SpeakerKey, RecognitionResult>& results)
-{
-    Train();
-    Prepare();
-
-    if (!data->IsConsistent())
-    {
-        std::cout << "Inconsistent testing data." << std::endl;
-
-        return;
-    }
-
-    if (GetDimensionCount() != data->GetDimensionCount())
-    {
-        std::cout << "Incompatible testing data dimensions." << std::endl;
-
-        return;
-    }
-
-    if (IsBackgroundModelEnabled() && mBackgroundModel == nullptr)
-    {
-        std::cout << "Background model not created." << std::endl;
-
-        return;
-    }
-
-    // Clear old results (if any).
-    results.clear();
-
-    for (auto& entry : data->GetSamples())
-    {
-        SpeakerKey bestModelName;
-        std::shared_ptr<Model> bestModel = nullptr;
-
-        bool knownSpeaker = false;
-        Real bestModelScore = std::numeric_limits<Real>::min();
-
-        for (auto& model : mSpeakerModels)
-        {
-            if (entry.first.IsSameSpeaker(model.first))
-            {
-                knownSpeaker = true;
-            }
-
-            // Do not confuse these!
-            Real modelScore = model.second->GetScore(entry.second);
-            Real modelLogScore = model.second->GetLogScore(entry.second);
-
-            // Notice logarithmic domain.
-            Real ubmLogScore = std::numeric_limits<Real>::max();
-
-            if (mBackgroundModel != nullptr && mBackgroundModelEnabled)
-            {
-                ubmLogScore = mBackgroundModel->GetLogScore(entry.second);
-            }
-
-            std::cout << entry.first << "-" << model.first
-                << " m:" << modelScore
-                << ",l:" << modelLogScore
-                << ",u:" << ubmLogScore
-                << ",r:" << modelLogScore - ubmLogScore
-                << ",v:" << GetVerificationScore(model.first, entry.second) << std::endl;
-
-            if (modelScore > bestModelScore)
-            {
-                bestModelScore = modelScore;
-                bestModel = model.second;
-                bestModelName = model.first;
-            }
-        }
-
-        std::cout << "The most probable speaker is " << bestModelName << "." << std::endl;
-
-        if (bestModel != nullptr)
-        {
-            // Checking for nullptr ensures that UBM is enabled
-            // and the model actually exists.
-            if (mBackgroundModel != nullptr)
-            {
-                Real logRatio = bestModel->GetLogScore(entry.second) - mBackgroundModel->GetLogScore(entry.second);
-
-                // UBM is not too close to bestMatch.
-                if (logRatio > 0.3f && bestModelScore >= 0.08f) // UBM Threshold
-                {
-                    results[entry.first] = RecognitionResult(knownSpeaker, bestModelName);
-                }
-
-                // Too close to UBM.
-                else
-                {
-                    results[entry.first] = RecognitionResult(knownSpeaker);
-                }
-            }
-
-            // UBM is not enabled. Select using threshold.
-            else
-            {
-                if (bestModelScore >= 0.135f)
-                {
-                    results[entry.first] = RecognitionResult(knownSpeaker, bestModelName);
-                }
-
-                else
-                {
-                    results[entry.first] = RecognitionResult(knownSpeaker);
-                }
-            }
-        }
-
-        // Should happen only if there are no models trained. Still unrecognized?
-        else
-        {
-            results[entry.first] = RecognitionResult(knownSpeaker);
-        }
     }
 }
 

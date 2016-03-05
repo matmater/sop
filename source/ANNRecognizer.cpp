@@ -1,3 +1,9 @@
+/*!
+ *  This file is part of a speaker recognition group project.
+ *
+ *  \author Markus Nykänen <mnykne@gmail.com>
+ */
+
 #include "ANNRecognizer.h"
 
 ANNRecognizer::ANNRecognizer()
@@ -12,12 +18,29 @@ ANNRecognizer::~ANNRecognizer()
 
 void ANNRecognizer::Clear()
 {
-
+    mSpeakerData = nullptr;
 }
 
-void ANNRecognizer::Train(const SpeechData& data)
+void ANNRecognizer::SetSpeakerData(std::shared_ptr<SpeechData> data)
 {
-    if (!data.IsConsistent())
+    mSpeakerData = data;
+}
+
+std::shared_ptr<SpeechData> ANNRecognizer::GetSpeakerData()
+{
+    return mSpeakerData;
+}
+
+void ANNRecognizer::Train()
+{
+    if (mSpeakerData == nullptr)
+    {
+        std::cout << "Speaker data not found." << std::endl;
+
+        return;
+    }
+
+    if (!mSpeakerData->IsConsistent())
     {
         std::cout << "Inconsistent training data." << std::endl;
 
@@ -28,9 +51,9 @@ void ANNRecognizer::Train(const SpeechData& data)
 
     mNeuronMapping.clear();
 
-    unsigned int sampleCount = data.GetTotalSampleCount();
-    unsigned int inputCount = data.GetDimensionCount();
-    unsigned int outputCount = data.GetSpeakerCount();
+    unsigned int sampleCount = mSpeakerData->GetTotalSampleCount();
+    unsigned int inputCount = mSpeakerData->GetDimensionCount();
+    unsigned int outputCount = mSpeakerData->GetSpeakerCount();
 
     mTrainData.Init(sampleCount, inputCount, outputCount);
 
@@ -39,7 +62,7 @@ void ANNRecognizer::Train(const SpeechData& data)
     unsigned int speakerIndex = 0;
     unsigned int sampleIndex = 0;
 
-    for (const auto& entry : data.GetSamples())
+    for (const auto& entry : mSpeakerData->GetSamples())
     {
         std::cout << "Registering " << entry.first << ", Id: " << speakerIndex << std::endl;
 
@@ -99,108 +122,125 @@ void ANNRecognizer::Train(const SpeechData& data)
     mNetwork.Train(mTrainData);
 }
 
-void ANNRecognizer::SaveTrainedData(const std::string& path)
+bool ANNRecognizer::IsRecognized(const SpeakerKey& speaker, const std::vector< DynamicVector<Real> >& samples)
 {
+    //if (samples.size() == 0 || samples.front().GetSize() != mNetwork.GetInputCount())
+    //{
+    //    std::cout << "Incompatible testing data." << std::endl;
 
+    //    return;
+    //}
+
+    //bool found = false;
+
+    //for (auto& spk : mNeuronMapping)
+    //{
+    //    if (spk.second == speaker)
+    //    {
+    //        found = true;
+    //    }
+    //}
+
+    //if (!found)
+    //{
+    //    std::cout << "Unknown speaker." << std::endl;
+
+    //    return;
+    //}
+
+    //unsigned int outputCount = mNetwork.GetOutputCount();
+
+    //std::vector<Real> result(outputCount, 0.0f);
+
+    //for (const auto& entry : samples)
+    //{
+    //    for (unsigned int i = 0; i < entry.GetSize(); i++)
+    //    {
+    //        mNetwork.SetInput(i, entry[i]);
+    //    }
+
+    //    mNetwork.Run();
+
+    //    for (unsigned int o = 0; o < outputCount; o++)
+    //    {
+    //        result[o] += mNetwork.GetOutput(o) / static_cast<Real>(samples.size());
+    //    }
+    //}
+
+    //unsigned int bestIndex = -1;
+    //Real bestScore = std::numeric_limits<Real>::min();
+    //
+    //for (unsigned int o = 0; o < outputCount; o++)
+    //{
+    //    if (result[o] > bestScore)
+    //    {
+    //        bestScore = result[o];
+    //        bestIndex = o;
+    //    }
+    //}
+
+    //return speaker == mNeuronMapping[bestIndex];
+
+    return false;
 }
 
-void ANNRecognizer::LoadTrainedData(const std::string& path)
+std::vector<Real> ANNRecognizer::Verify(const SpeakerKey& speaker, const std::shared_ptr<SpeechData>& data)
 {
+    //if (data->GetDimensionCount() != mNetwork.GetInputCount())
+    //{
+    //    std::cout << "Incompatible testing data." << std::endl;
 
-}
+    //    return;
+    //}
+    //
+    //unsigned int outputCount = mNetwork.GetOutputCount();
 
-void ANNRecognizer::Test(const SpeechData& data, std::map<SpeakerKey, RecognitionResult>& results)
-{
-    if (!data.IsConsistent())
-    {
-        std::cout << "Inconsistent testing data." << std::endl;
+    //bool found = false;
 
-        return;
-    }
+    //unsigned int speakerIndex = 0;
 
-    if (data.GetDimensionCount() != mNetwork.GetInputCount())
-    {
-        std::cout << "Incompatible testing data." << std::endl;
+    //for (auto& spk : mNeuronMapping)
+    //{
+    //    if (spk.second == speaker)
+    //    {
+    //        found = true;
+    //        speakerIndex = spk.first;
+    //        break;
+    //    }
+    //}
 
-        return;
-    }
+    //if (!found)
+    //{
+    //    std::cout << "Unknown speaker." << std::endl;
 
-    unsigned int outputCount = mNetwork.GetOutputCount();
+    //    return;
+    //}
 
-    mResult.resize(outputCount);
+    //std::vector<Real> results;
+    //
+    //for (auto& entry : data->GetSamples())
+    //{
+    //    std::vector<Real> result(outputCount, 0.0f);
 
-    for (const auto& entry : data.GetSamples())
-    {
-        std::vector<std::vector<Real>> r;
-        bool knownSpeaker = false;
+    //    for (const auto& samples : entry.second)
+    //    {
+    //        for (unsigned int i = 0; i < samples.GetSize(); i++)
+    //        {
+    //            mNetwork.SetInput(i, samples[i]);
+    //        }
 
-        r.resize(outputCount);
+    //        mNetwork.Run();
 
-        for (const auto& sample : entry.second)
-        {
-            unsigned int totalVectors = 0;
+    //        for (unsigned int o = 0; o < outputCount; o++)
+    //        {
+    //            result[o] += mNetwork.GetOutput(o) / static_cast<Real>(entry.second.size());
+    //        }
+    //    }
 
-            for (unsigned int i = 0; i < sample.GetSize(); i++)
-            {
-                mNetwork.SetInput(i, sample[i]);
-            }
+    //    results.push_back(result[speakerIndex]);
+    //}
 
-            mNetwork.Run();
+    //return results;
 
-            for (unsigned int o = 0; o < outputCount; o++)
-            {
-                r[o].push_back(mNetwork.GetOutput(o));
-            }
-        }
-
-        for (unsigned int o = 0; o < outputCount; o++)
-        {
-            std::sort(r[o].begin(), r[o].end());
-
-            mResult[o] = r[o][r[o].size() / 2];
-        }
-
-        unsigned int id = 0;
-
-        unsigned int bestId = -1;
-        Real bestValue = std::numeric_limits<Real>::min();
-
-        for (Real res : mResult)
-        {
-            if (entry.first.IsSameSpeaker(mNeuronMapping[id]))
-            {
-                knownSpeaker = true;
-                std::cout << "THIS IS A KNOWN SPEAKER" << std::endl;				
-            }
-            std::cout << entry.first << "-" << mNeuronMapping[id] << ":" << res << std::endl;
-
-            if (res > bestValue)
-            {
-                bestValue = res;
-                bestId = id;
-            }
-
-            ++id;
-        }
-
-        if (bestId != -1)
-        {
-            if (bestValue >= 0.75f)
-            {
-                results[entry.first] = RecognitionResult(knownSpeaker,  mNeuronMapping[bestId]);
-            }
-
-            else
-            {
-                results[entry.first] = RecognitionResult(knownSpeaker);
-            }
-        }
-
-        else
-        {
-            results[entry.first] = RecognitionResult(knownSpeaker);
-        }
-    }
-
-    std::cout << "Testing DONE." << std::endl;
+    return std::vector<Real>();
 }

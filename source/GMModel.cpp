@@ -1,3 +1,9 @@
+/*!
+ *  This file is part of a speaker recognition group project.
+ *
+ *  \author Markus Nykänen <mnykne@gmail.com>
+ */
+
 #include "GMModel.h"
 #include "LBG.h"
 
@@ -35,6 +41,10 @@ void GMModel::Train(const std::vector< DynamicVector<Real> >& samples, unsigned 
 void GMModel::Adapt(const std::shared_ptr<Model>& other, const std::vector< DynamicVector<Real> >& samples,
                     unsigned int iterations, Real relevanceFactor)
 {
+    // Following:
+    // Reynolds DA, Quatieri TF & Dunn RB (2000) Speaker Verification Using Adapted Gaussian Mixture Models.
+    // Digital Signal Processing 10(1–3): 19-41.
+
     const GMModel* model = dynamic_cast<GMModel*>(other.get());
 
     if (model == nullptr)
@@ -271,6 +281,11 @@ Real GMModel::GetTrainingThreshold() const
 
 void GMModel::EM(const std::vector< DynamicVector<Real> >& samples)
 {
+    // Following:
+    // Reynolds DA & Rose RC (1995) Robust text-independent
+    // speaker identification using Gaussian mixture speaker models. Speech and Audio Processing, IEEE Transactions on 3(1):
+    // 72-83.
+
     for (auto& cluster : mClusters)
     {
         UpdatePDF(cluster);

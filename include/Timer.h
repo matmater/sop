@@ -1,17 +1,39 @@
+/*!
+ *  This file is part of a speaker recognition group project.
+ *
+ *  \author Markus Nykänen <mnykne@gmail.com>
+ */
+
 #ifndef _TIMER_H_
 #define _TIMER_H_
 
 #include "Common.h"
 
+/*! \class Timer
+ *  \brief Measures elapsed time in seconds.
+ */
 class Timer
 {
 public:
+    /*! \brief Default constructor. 
+     *
+     *  Starts the timer.
+     */
     Timer();
 
+    /*! \brief Virtual destructor.
+     */
     virtual ~Timer();
 
+    /*! \brief Restart the timer.
+     */
     void Restart();
 
+    /*! \brief Get time elapsed from the construction of
+     *  the timer or from restart in seconds.
+     *
+     *  \return Elapsed time in seconds.
+     */
     Real GetTimeElapsed();
 
 private:

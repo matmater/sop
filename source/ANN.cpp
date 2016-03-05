@@ -1,3 +1,9 @@
+/*!
+ *  This file is part of a speaker recognition group project.
+ *
+ *  \author Markus Nykänen <mnykne@gmail.com>
+ */
+
 #include "ANN.h"
 
 ANN::ANN()
@@ -489,7 +495,7 @@ void ANN::AccumulateGradients()
 
         Neuron* leftBeginNeuron = left->beginNeuron;
         Neuron* leftEndNeuron = left->endNeuron;
-            
+        
         Neuron* rightBeginNeuron = right->beginNeuron;
         Neuron* rightEndNeuron = right->endNeuron;
 
@@ -554,7 +560,7 @@ unsigned int ANN::GetOutputCount() const
 void ANN::Run()
 {
     // Set all neuron values to zero except input and bias neuron values.
-    // There is propably a bit better way to do this..
+    // There is definitely a bit more efficient way to do this..
     for (unsigned int l = 1; l < mLayers.size(); ++l)
     {
         Layer* layer = &mLayers[l];

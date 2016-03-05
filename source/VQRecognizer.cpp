@@ -1,3 +1,9 @@
+/*!
+ *  This file is part of a speaker recognition group project.
+ *
+ *  \author Markus Nykänen <mnykne@gmail.com>
+ */
+
 #include "VQRecognizer.h"
 #include "VQModel.h"
 
@@ -22,11 +28,6 @@ void VQRecognizer::SetWeightingEnabled(bool enabled)
 bool VQRecognizer::IsWeightingEnabled() const
 {
     return mWeightingEnabled;
-}
-
-void VQRecognizer::Train()
-{
-    ModelRecognizer::Train();
 }
 
 void VQRecognizer::PrepareModels()
@@ -77,11 +78,6 @@ void VQRecognizer::PrepareModels()
             m->ResetWeights();
         }
     }
-}
-
-void VQRecognizer::Test(const std::shared_ptr<SpeechData>& data, std::map<SpeakerKey, RecognitionResult>& results)
-{
-    ModelRecognizer::Test(data, results);
 }
 
 std::shared_ptr<Model> VQRecognizer::CreateModel()

@@ -1,9 +1,16 @@
+/*!
+ *  This file is part of a speaker recognition group project.
+ *
+ *  \author Markus Nykänen <mnykne@gmail.com>
+ */
+
 #ifndef _DYNAMICVECTOR_H_
 #define _DYNAMICVECTOR_H_
 
 #include "Common.h"
 
-/*! \brief A variable-size vector for aritmetic operations.
+/*! \brief Multi-dimensional vector.
+ *
  *  \tparam T Main data type of the values.
  */
 template<typename T>
@@ -11,6 +18,8 @@ class DynamicVector
 {
 public:
     /*! \brief Constructor.
+     *
+     *  Allocates a defined number of elements of type T.
      *
      *  \param size The size of the vector (dimensions).
      */
@@ -26,22 +35,22 @@ public:
      */
     DynamicVector& operator= (const DynamicVector& other);
 
-    /*! \brief Resizes the vector and initializes new values to
-     *         a default value.
+    /*! \brief Resize the vector and initialize new values to
+     *  a default value.
      *
      *  \param size The size of the vector (dimensions).
      *  \param value The default value.
      */
     void Resize(unsigned int size, T value = T());
 
-    /*! \brief Returns the size of the vector (dimension count).
+    /*! \brief Return the size of the vector (dimension count).
      *
      *  \return The size of the vector (dimension count).
      */
     unsigned int GetSize() const;
 
-    /*! \brief Adds a new value and increases the size of
-     *         the vector by one.
+    /*! \brief Add a new value and increases the size of
+     *  the vector by one.
      *
      *  \param value The value to be added.
      */
@@ -55,31 +64,31 @@ public:
      */
     const T& operator[] (unsigned int index) const;
 
-    /*! \brief Assigns a given value to each dimension.
+    /*! \brief Assign a given value to each dimension.
      *
      *  \param value The value to be assigned.
      */
     void Assign(T value);
     
-    /*! \brief Multiplies every dimension value by a given multiplier.
+    /*! \brief Multiply every dimension value by a given multiplier.
      *
      *  \param value The multiplier.
      */
     void Multiply(T value);
     
-    /*! \brief Multiplies by another vector dimension by dimension.
+    /*! \brief Multiply by another vector dimension by dimension.
      *
      *  \param other The other vector.
      */
     void Multiply(const DynamicVector& other);
 
-    /*! \brief Divides by another vector dimension by dimension.
+    /*! \brief Divide by another vector dimension by dimension.
      *
      *  \param other The other vector.
      */
     void Divide(const DynamicVector& other);
 
-    /*! \brief Adds a given value to each dimension.
+    /*! \brief Add a given value to each dimension.
      *
      *  \param value The summand.
      */
@@ -107,11 +116,12 @@ public:
      */
     void Subtract(const DynamicVector& other);
 
-    /*! \brief Calculates a squared euclidean distance to another vector.
+    /*! \brief Calculate a squared euclidean distance to another vector.
      *
      *  \todo Change function name.
      *
      *  \param other The other vector.
+     *
      *  \return The squared euclidean distance.
      */
     T Distance(const DynamicVector& other) const;

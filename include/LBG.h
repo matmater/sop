@@ -1,3 +1,9 @@
+/*!
+ *  This file is part of a speaker recognition group project.
+ *
+ *  \author Markus Nykänen <mnykne@gmail.com>
+ */
+
 #ifndef _LBG_H_
 #define _LBG_H_
 
@@ -21,8 +27,16 @@ public:
      */
     virtual ~LBG();
     
+    /*! \brief Set the number of clusters to find.
+     *
+     *  \param clusterCount The number of clusters to use.
+     */
     void SetClusterCount(unsigned int clusterCount);
     
+    /*! \brief Get the number of clusters to find.
+     *
+     *  \return The number of clusters to use.
+     */
     unsigned int GetClusterCount() const;
 
     /*! \brief Clusters given samples.

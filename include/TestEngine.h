@@ -1,7 +1,5 @@
 /*!
- *  This file is part of a speaker recognition group project.
- *
- *  \author Markus Nykänen <mnykne@gmail.com>
+ *  This file is part of a speaker recognition group project (SOP, 2015-2016)
  */
 
 #ifndef _TESTENGINE_H_
@@ -42,20 +40,20 @@ private:
     struct Test
     {
         unsigned int index = 0;
-        
+
         std::string id = "";
 
         std::string label = "";
 
         std::string features = "";
-        
+
         bool weighting = false;
         bool ubm = false;
         ScoreNormalizationType scoreNormalizationType = ScoreNormalizationType::NONE;
         unsigned int order = 1;
 
         TestType type = TestType::UNKNOWN;
-        
+
         unsigned int trainSf = 0;
         unsigned int trainGf = 0;
         unsigned int trainSl = 0;
@@ -73,7 +71,7 @@ private:
 
         unsigned int si = 0;
         unsigned int gi = 0;
-        
+
         unsigned int multiplier = 1;
 
         RecognizerType recognizerType = RecognizerType::UNKNOWN;
@@ -87,7 +85,7 @@ public:
     /*! \brief Run all tests in a file.
      */
     void Run(const std::string& file);
-    
+
 private:
     /*! \brief Varying population size recognition test.
      *
@@ -97,7 +95,7 @@ private:
     void RecognizePop(
         const Test& test,
         std::shared_ptr<ModelRecognizer> recognizer);
-    
+
     /*! \brief Basic speaker recognition.
      *
      *  \param test Test instructions.
@@ -106,7 +104,7 @@ private:
     void Recognize(
         const Test& test,
         std::shared_ptr<ModelRecognizer> recognizer);
-    
+
     /*! \brief Basic speaker verification.
      *
      *  \param test Test instructions.

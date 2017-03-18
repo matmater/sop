@@ -1,7 +1,5 @@
 /*!
- *  This file is part of a speaker recognition group project.
- *
- *  \author Markus Nykänen <mnykne@gmail.com>
+ *  This file is part of a speaker recognition group project (SOP, 2015-2016)
  */
 
 #include "GMModel.h"
@@ -43,7 +41,7 @@ void GMModel::Adapt(const std::shared_ptr<Model>& other, const std::vector< Dyna
 {
     // Following:
     // Reynolds DA, Quatieri TF & Dunn RB (2000) Speaker Verification Using Adapted Gaussian Mixture Models.
-    // Digital Signal Processing 10(1–3): 19-41.
+    // Digital Signal Processing 10(1-3): 19-41.
 
     const GMModel* model = dynamic_cast<GMModel*>(other.get());
 
@@ -122,11 +120,11 @@ void GMModel::Adapt(const std::shared_ptr<Model>& other, const std::vector< Dyna
 
             newLogLikelihood += probLogSumExp;
         }
-        
+
         for (auto& cluster : mClusters)
         {
             Real n = cluster.membershipProbabilitySum;
-            
+
             Real adaptionCoeff = n / (n + relevanceFactor);
 
             for (unsigned int d = 0; d < mClusters[0].means.GetSize(); ++d)
@@ -309,7 +307,7 @@ void GMModel::EM(const std::vector< DynamicVector<Real> >& samples)
         newLogLikelihood = E(samples);
 
         M(samples);
-        
+
         if (std::abs(logLikelihood - newLogLikelihood) < mEta)
         {
             break;

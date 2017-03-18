@@ -1,7 +1,5 @@
 /*!
- *  This file is part of a speaker recognition group project.
- *
- *  \author Markus Nykänen <mnykne@gmail.com>
+ *  This file is part of a speaker recognition group project (SOP, 2015-2016)
  */
 
 #ifndef _VQMODEL_H_
@@ -27,11 +25,11 @@ public:
     /*! \brief Virtual destructor.
      */
     virtual ~VQModel();
-    
+
     /*! \brief Reset all weights to 1.
      */
     void ResetWeights();
-    
+
     /*! \brief Initialize the internal structure of the model.
      */
     void Init();
@@ -48,7 +46,7 @@ public:
      *  \param itertions Maximum number of training iterations.
      */
     virtual void Train(const std::vector< DynamicVector<Real> >& samples, unsigned int iterations) override;
-    
+
     /*! \brief Train the model using MAP adaptation.
      *
      *  MAP algorithm for adapting a speaker model. Based on: ftp://ftp.cs.joensuu.fi/franti/papers/VQMAP-SPL2008.pdf
@@ -60,16 +58,16 @@ public:
      */
     virtual void Adapt(const std::shared_ptr<Model>& other, const std::vector< DynamicVector<Real> >& samples,
                        unsigned int iterations = 2, Real relevanceFactor = 12.0f) override;
-    
+
     /*! \brief Return squared-error distortion measure
      *  divided by the number of samples.
-     * 
+     *
      *  \param samples Samples of independent observations.
      *
      *  \return Squared-error distortion measure over the samples.
      */
     Real GetDistortion(const std::vector< DynamicVector<Real> >& samples) const;
-    
+
     /*! \brief Return similarity score using weighting feature.
      *
      * Following: Speaker Discriminative Weighting Method for VQ-based Speaker identification
@@ -96,7 +94,7 @@ public:
      *  \return Average score over samples.
      */
     virtual Real GetLogScore(const std::vector< DynamicVector<Real> >& samples) const override;
-    
+
     /*! \brief Get the number of feature dimensions used in the model.
      *
      *  \return The number of feature dimensions.
@@ -107,7 +105,7 @@ private:
     std::vector< DynamicVector<Real> > mClusterCentroids;
     std::vector<unsigned int> mClusterSizes;
     std::vector<Real> mClusterWeights;
-    
+
     mutable std::vector<unsigned int> mClusterSamples;
 };
 

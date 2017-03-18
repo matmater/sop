@@ -1,7 +1,5 @@
 /*!
- *  This file is part of a speaker recognition group project.
- *
- *  \author Markus Nykänen <mnykne@gmail.com>
+ *  This file is part of a speaker recognition group project (SOP, 2015-2016)
  */
 
 #include "SpeechData.h"
@@ -99,7 +97,7 @@ void SpeechData::Load(const std::string& path, unsigned int sl, unsigned int gl,
     std::string line;
 
     unsigned int lineCounter = 1;
-    
+
     if (train)
     {
         std::cout << "Loading train samples." << std::endl;
@@ -115,7 +113,7 @@ void SpeechData::Load(const std::string& path, unsigned int sl, unsigned int gl,
     {
         gl = multiplier * gl;
     }
-    
+
     unsigned int totalLines = sl+gl-1;
 
     unsigned int lc = 0;
@@ -161,7 +159,7 @@ void SpeechData::Load(const std::string& path, unsigned int sl, unsigned int gl,
                     std::cout << "Loading samples from '" << oldLabel << "' to '" << label << "'"
                         << " (" << 100 * (lineCounter - sl + 1) / (totalLines - sl + 1) << "%)" << std::endl;
                 }
-                
+
                 std::string features;
 
                 key = SpeakerKey(label);
@@ -169,7 +167,7 @@ void SpeechData::Load(const std::string& path, unsigned int sl, unsigned int gl,
                 auto& userSamples = mSamples[key];
 
                 unsigned int totalVectors = 0;
-                
+
                 // Feature vectors separated by commas.
                 while (std::getline(ssFeatures, features, ','))
                 {
@@ -337,7 +335,7 @@ void SpeechData::CMVN(
         means[d] = mean;
         deviations[d] = deviation;
     }
-    
+
     for (auto it = beginIt; it != endIt; it++)
     {
         it->Subtract(means);
@@ -395,7 +393,7 @@ void LoadTextSamples(const std::string& folder, const std::shared_ptr<SpeechData
         std::cout << "Could not load samples: Missing folder name." << std::endl;
         return;
     }
-    
+
     bool cmvn = false;
     unsigned int maxFeatures = 39;
 
@@ -460,7 +458,7 @@ std::string GetSpeakerString(unsigned int index, const std::string& folder)
         std::cout << "Could not load samples: Missing folder name." << std::endl;
         return "";
     }
-    
+
     std::stringstream ss(folder);
 
     std::string finalFolder;
@@ -479,9 +477,9 @@ std::string GetSpeakerString(unsigned int index, const std::string& folder)
         for (unsigned int i = 1; i <= 109; ++i)
         {
             std::string fname = finalFolder + "/samples_" + toString(i) + ".txt";
-                
+
             std::ifstream infile(fname);
-                
+
             if (infile.good())
             {
                 std::string line;

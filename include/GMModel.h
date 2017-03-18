@@ -1,7 +1,5 @@
 /*!
- *  This file is part of a speaker recognition group project.
- *
- *  \author Markus Nykänen <mnykne@gmail.com>
+ *  This file is part of a speaker recognition group project (SOP, 2015-2016)
  */
 
 #ifndef _GMMODEL_H_
@@ -46,25 +44,25 @@ public:
     /*! \brief Virtual destructor.
      */
     virtual ~GMModel();
-    
+
     /*! \brief Set the maximum number of training iterations.
      *
      *  \param iterations The new number of iterations.
      */
     void SetTrainingIterations(unsigned int iterations);
-    
+
     /*! \brief Get the maximum number of training iterations.
      *
      *  \return The number of iterations.
      */
     unsigned int GetTrainingIterations() const;
-    
+
     /*! \brief Set the training threshold used in model training.
      *
      *  \param threshold The new training threshold.
      */
     void SetTrainingThreshold(Real threshold);
-    
+
     /*! \brief Get the training threshold used in model training.
      *
      *  \return The training threshold.
@@ -80,14 +78,14 @@ public:
      *  \return A vector containing all mixture components.
      */
     const std::vector<Cluster>& GetClusters() const;
-    
+
     /*! \brief Train the model with speech data using EM algorithm.
      *
      *  \param samples Train sample data set.
      *  \param itertions Maximum number of training iterations.
      */
     virtual void Train(const std::vector< DynamicVector<Real> >& samples, unsigned int iterations) override;
-    
+
     /*! \brief Adapt the model from another model with speech data using MAP adaptation.
      *
      *  \param other The model to adapt from.
@@ -108,7 +106,7 @@ public:
      *  \return Normalized log-likelihood.
      */
     Real GetLogLikelihood(const std::vector< DynamicVector<Real> >& samples) const;
-    
+
     /*! \brief Score given samples.
      *
      *  \param samples Samples of independent observations.
@@ -124,7 +122,7 @@ public:
      *  \return Average log-score over samples.
      */
     virtual Real GetLogScore(const std::vector< DynamicVector<Real> >& samples) const override;
-    
+
     /*! \brief Get the number of feature dimensions used in the model.
      *
      *  \return The number of feature dimensions.
@@ -177,7 +175,7 @@ private:
 
 private:
     unsigned int mTrainingIterations;
-    
+
     Real mEta;
 
     bool mValid;

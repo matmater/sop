@@ -1,7 +1,5 @@
 /*!
- *  This file is part of a speaker recognition group project.
- *
- *  \author Markus Nykänen <mnykne@gmail.com>
+ *  This file is part of a speaker recognition group project (SOP, 2015-2016)
  */
 
 #include "TestEngine.h"
@@ -28,20 +26,20 @@ void TestEngine::Run(const std::string& file)
     std::string currentTestId;
 
     TestType testType = TestType::UNKNOWN;
-    
+
     unsigned int ubmSf = 0;
     unsigned int ubmGf = 0;
     unsigned int ubmSl = 0;
     unsigned int ubmGl = 0;
-    
+
     std::map<std::string, TestHeader> testIds;
-    
+
     unsigned int indexCounter = 0;
 
     while(std::getline(fs, line))
     {
         std::string item;
-        
+
         std::stringstream ssLine(line);
 
         if (!(ssLine >> item))
@@ -87,7 +85,7 @@ void TestEngine::Run(const std::string& file)
                 {
                     testType = TestType::RECOGNITION;
                 }
-                
+
                 else if (ttype == "recpop")
                 {
                     testType = TestType::RECOGNITION_POPULATION;
@@ -104,15 +102,15 @@ void TestEngine::Run(const std::string& file)
                     return;
                 }
             }
-            
+
             std::string testLabel;
 
             GetStringLiteral(ssLine, testLabel);
-            
+
             currentTestId = item.erase(0, 1);
 
             std::cout << "Current test id: '" << currentTestId << "', type: '" << ttype << "', label: '" << testLabel << "'." << std::endl;
-            
+
             if (testIds.find(currentTestId) != testIds.end())
             {
                 std::cout << "Duplicate test identifiers." << std::endl;
@@ -137,9 +135,9 @@ void TestEngine::Run(const std::string& file)
         if (testType != TestType::UNKNOWN)
         {
             std::string features = item;
-        
+
             std::string recognizerType;
-            
+
             if (!(ssLine >> recognizerType))
             {
                 std::cout << "Invalid test file: recognizer type not specified." << std::endl;
@@ -147,7 +145,7 @@ void TestEngine::Run(const std::string& file)
             }
 
             Test test;
-            
+
             // Training.
             if (!(ssLine >> test.trainSf)) {
                 std::cout << "Missing 'trainSf'." << std::endl;
@@ -160,15 +158,15 @@ void TestEngine::Run(const std::string& file)
             }
 
             if (!(ssLine >> test.trainSl)) {
-                std::cout << "Missing 'trainSl'." << std::endl; 
+                std::cout << "Missing 'trainSl'." << std::endl;
                 return;
             }
-        
+
             if (!(ssLine >> test.trainGl)) {
                 std::cout << "Missing 'trainGl'." << std::endl;
                 return;
             }
-            
+
             // Testing.
             if (!(ssLine >> test.testSf)) {
                 std::cout << "Missing 'testSf'." << std::endl;
@@ -184,7 +182,7 @@ void TestEngine::Run(const std::string& file)
                 std::cout << "Missing 'testSl'." << std::endl;
                 return;
             }
-        
+
             if (!(ssLine >> test.testGl)) {
                 std::cout << "Missing 'testGl'." << std::endl;
                 return;
@@ -207,7 +205,7 @@ void TestEngine::Run(const std::string& file)
                     std::cout << "Missing 'correctClaimed'." << std::endl;
                     return;
                 }
-        
+
                 if (!(ssLine >> test.si)) {
                     std::cout << "Missing 'si'." << std::endl;
                     return;
@@ -282,7 +280,7 @@ void TestEngine::Run(const std::string& file)
     std::sort(tests.begin(), tests.end(), [](const Test& a, const Test& b) {
         if (a.features < b.features) return true;
         if (a.features > b.features) return false;
-        
+
         // Train data
         if (a.trainSf < b.trainSf) return true;
         if (a.trainSf > b.trainSf) return false;
@@ -292,41 +290,41 @@ void TestEngine::Run(const std::string& file)
 
         if (a.trainSl < b.trainSl) return true;
         if (a.trainSl > b.trainSl) return false;
-        
+
         if (a.trainGl < b.trainGl) return true;
         if (a.trainGl > b.trainGl) return false;
 
         // Order
         if (a.order < b.order) return true;
         if (a.order > b.order) return false;
-        
+
         if (a.scoreNormalizationType < b.scoreNormalizationType) return true;
         if (a.scoreNormalizationType > b.scoreNormalizationType) return false;
-        
+
         if (a.weighting < b.weighting) return true;
         if (a.weighting > b.weighting) return false;
 
         if (a.ubm < b.ubm) return true;
         if (a.ubm > b.ubm) return false;
-        
+
         return (a.recognizerType < b.recognizerType);
     });
 
     std::string previousFeatures;
-    
+
     std::shared_ptr<SpeechData> ubmData;
     std::shared_ptr<SpeechData> trainData;
-    
+
     unsigned int previousUbmSf = 0;
     unsigned int previousUbmGf = 0;
     unsigned int previousUbmSl = 0;
     unsigned int previousUbmGl = 0;
 
     std::shared_ptr<ModelRecognizer> recognizer;
-    
+
     std::shared_ptr<VQRecognizer> vq = std::make_shared<VQRecognizer>();
     std::shared_ptr<GMMRecognizer> gmm = std::make_shared<GMMRecognizer>();
-    
+
     auto previousIt = tests.end();
 
     for (const auto& test : testIds)
@@ -385,7 +383,7 @@ void TestEngine::Run(const std::string& file)
             return;
         }
     }
-    
+
     for (const auto& test : testIds)
     {
         if (test.second.type == TestType::RECOGNITION || test.second.type == TestType::RECOGNITION_POPULATION)
@@ -397,7 +395,7 @@ void TestEngine::Run(const std::string& file)
             }
         }
     }
-    
+
     for (auto it = tests.begin(); it != tests.end(); it++)
     {
         if (previousIt   == tests.end()          ||
@@ -449,17 +447,17 @@ void TestEngine::Run(const std::string& file)
         recognizer->SetOrder(it->order);
         recognizer->SetBackgroundModelEnabled(it->ubm);
         recognizer->SetScoreNormalizationType(it->scoreNormalizationType);
-        
+
         recognizer->SetSpeakerData(trainData);
         recognizer->SetBackgroundModelData(ubmData);
-        
+
         if (it->type == TestType::RECOGNITION)
         {
             std::cout << "Recognition test: " << GetLabel(*it) << std::endl;
 
             recognizer->SetBackgroundModelEnabled(it->ubm);
             recognizer->SetAdaptationEnabled(it->ubm);
-            
+
             std::ofstream perfTrainFile(it->id + ".perftrain", std::ios_base::app);
 
             perfTrainFile << it->id + "_rec" + ".txt" << "|"
@@ -475,10 +473,10 @@ void TestEngine::Run(const std::string& file)
         else if (it->type == TestType::RECOGNITION_POPULATION)
         {
             std::cout << "Recognition (population) test: " << GetLabel(*it) << std::endl;
-            
+
             recognizer->SetBackgroundModelEnabled(it->ubm);
             recognizer->SetAdaptationEnabled(it->ubm);
-            
+
             std::ofstream perfTrainFile(it->id + ".perftrain", std::ios_base::app);
 
             perfTrainFile << it->id + "_rec" + ".txt" << "|"
@@ -497,7 +495,7 @@ void TestEngine::Run(const std::string& file)
 
             recognizer->SetBackgroundModelEnabled(it->ubm);
             recognizer->SetAdaptationEnabled(it->ubm);
-            
+
             std::ofstream perfTrainFile(it->id + ".perftrain", std::ios_base::app);
 
             perfTrainFile << it->id + "_" + toString(it->index) + "_ver.txt" << "|"
@@ -537,10 +535,10 @@ void TestEngine::RecognizePop(
         Real realTestTime = 0.0f;
 
         std::cout << i << "/" << test.cycles << std::endl;
-        
+
         unsigned int correct = 0;
         unsigned int incorrect = 0;
-        
+
         // Select trained speakers.
         std::vector<SpeakerKey> speakers;
         for (unsigned int k = 0; k < test.testGf; ++k)
@@ -559,7 +557,7 @@ void TestEngine::RecognizePop(
         }
 
         recognizer->SelectSpeakerModels(speakers);
-        
+
         Timer timer;
         for (const auto& samples : testData->GetSamples())
         {
@@ -609,10 +607,10 @@ void TestEngine::Recognize(
 
     // Test utterances
     LoadTextSamples(test.features, testData, test.testSf, test.testGf, test.testSl, test.testGl, test.multiplier, false);
-    
+
     unsigned int correct = 0;
     unsigned int incorrect = 0;
-    
+
     // Select trained speakers.
     std::vector<SpeakerKey> speakers;
 
@@ -632,7 +630,7 @@ void TestEngine::Recognize(
     }
 
     recognizer->SelectSpeakerModels(speakers);
-    
+
     unsigned int sf = test.testSf;
 
     Real realTestTime = 0.0f;
@@ -641,7 +639,7 @@ void TestEngine::Recognize(
     for (unsigned int i = 0; i < test.cycles ; i++)
     {
         std::cout << i + 1 << "/" << test.cycles << std::endl;
-        
+
         // Test utterances
         LoadTextSamples(test.features, testData, sf, test.testGf, test.testSl, test.testGl, test.multiplier, false);
 
@@ -670,7 +668,7 @@ void TestEngine::Recognize(
     }
 
     results << GetLabel(test) << " " << correct << " " << incorrect << std::endl;
-    
+
     std::ofstream perfTestFile(test.id + ".perftest", std::ios_base::app);
     perfTestFile << test.id + "_rec" + ".txt" << "|"
                  << GetLabel(test) << "|"
@@ -702,10 +700,10 @@ void TestEngine::Verify(
         impostors.push_back(key);
     }
     recognizer->SelectImpostorModels(impostors);
-    
+
     auto testData = std::make_shared<SpeechData>();
     auto testData2 = std::make_shared<SpeechData>();
-    
+
     unsigned int sf = test.testSf;
 
     unsigned int correctTrials = 0;
@@ -716,7 +714,7 @@ void TestEngine::Verify(
     for (unsigned int i = 0; i < test.cycles ; i++)
     {
         std::cout << i + 1 << "/" << test.cycles << std::endl;
-        
+
         // Select trained speakers.
         std::vector<SpeakerKey> speakers;
         for (unsigned int k = 0; k < test.testGf; ++k)
@@ -739,7 +737,7 @@ void TestEngine::Verify(
 
         std::vector<Real> correctScores;
         std::vector<Real> incorrectScores;
-        
+
         LoadTextSamples(test.features, testData, sf, test.testGf, test.testSl, test.testGl, test.multiplier, false);
 
         Timer timer;

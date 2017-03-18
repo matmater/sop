@@ -1,7 +1,5 @@
 /*!
- *  This file is part of a speaker recognition group project.
- *
- *  \author Markus Nykänen <mnykne@gmail.com>
+ *  This file is part of a speaker recognition group project (SOP, 2015-2016)
  */
 
 #ifndef _LBG_H_
@@ -26,13 +24,13 @@ public:
     /*! \brief Virtual destructor.
      */
     virtual ~LBG();
-    
+
     /*! \brief Set the number of clusters to find.
      *
      *  \param clusterCount The number of clusters to use.
      */
     void SetClusterCount(unsigned int clusterCount);
-    
+
     /*! \brief Get the number of clusters to find.
      *
      *  \return The number of clusters to use.

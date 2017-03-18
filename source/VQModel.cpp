@@ -1,7 +1,5 @@
 /*!
- *  This file is part of a speaker recognition group project.
- *
- *  \author Markus Nykänen <mnykne@gmail.com>
+ *  This file is part of a speaker recognition group project (SOP, 2015-2016)
  */
 
 #include "VQModel.h"
@@ -35,7 +33,7 @@ void VQModel::Init()
     {
         mClusterSizes.resize(GetOrder());
     }
-    
+
     if (mClusterWeights.size() != GetOrder())
     {
         mClusterWeights.resize(GetOrder());
@@ -47,7 +45,7 @@ void VQModel::Train(const std::vector< DynamicVector<Real> >& samples, unsigned 
     LBG lbg(GetOrder());
 
     mClusterWeights.resize(GetOrder());
-    
+
     ResetWeights();
 
     std::vector<unsigned int> indices;
@@ -228,7 +226,7 @@ Real VQModel::GetDistortion(const std::vector< DynamicVector<Real> >& samples) c
     {
         distortion += samples[s].Distance(centroids[mClusterSamples[s]]);
     }
-    
+
     return distortion;
 }
 

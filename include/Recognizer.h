@@ -1,7 +1,5 @@
 /*!
- *  This file is part of a speaker recognition group project.
- *
- *  \author Markus Nykänen <mnykne@gmail.com>
+ *  This file is part of a speaker recognition group project (SOP, 2015-2016)
  */
 
 #ifndef _RECOGNIZER_H_
@@ -25,7 +23,7 @@ public:
     /*! \brief Train the recognizer.
      */
     virtual void Train() = 0;
-    
+
     /*! \brief Check if the speaker was recognized.
      *
      *  \param speaker The speaker to be recognized.
@@ -34,7 +32,7 @@ public:
      *  \return True if the speaker was recognized, false otherwise.
      */
     virtual bool IsRecognized(const SpeakerKey& speaker, const std::vector< DynamicVector<Real> >& samples) = 0;
-    
+
     /*! \brief Verify the claimed speaker.
      *
      *  \param speaker The speaker to be verified.

@@ -1,7 +1,5 @@
 /*!
- *  This file is part of a speaker recognition group project.
- *
- *  \author Markus Nykänen <mnykne@gmail.com>
+ *  This file is part of a speaker recognition group project (SOP, 2015-2016)
  */
 
 #ifndef _COMMON_H_
@@ -173,7 +171,7 @@ inline Real RandomGaussian()
 }
 
 /*! \brief Calculates the mean of the values.
- *  
+ *
  *  Equation: Sum(values)/Size(values)
  */
 inline Real Mean(const std::vector<Real>& values)
@@ -197,7 +195,7 @@ inline Real Mean(const std::vector<Real>& values)
 }
 
 /*! \brief Returns the variance of the values with a given mean value.
- *  
+ *
  *  Equation: Sum(values)/(Size(values) - 1)
  */
 inline Real Variance(const std::vector<Real>& values, Real mean)
@@ -223,7 +221,7 @@ inline Real Variance(const std::vector<Real>& values, Real mean)
 
 /*! \brief Returns the standard deviation of the
  *  values with the given mean value.
- *  
+ *
  *  Equation: sqrt[sum(values)/(size(values) - 1)]
  */
 inline Real Deviation(const std::vector<Real>& values, Real mean)
@@ -238,7 +236,7 @@ inline bool FileExists(const std::string& path)
     return file.good();
 }
 
-template <typename T> 
+template <typename T>
 std::string toString(const T& n)
 {
     std::ostringstream s;
@@ -253,7 +251,7 @@ inline bool GetStringLiteral(std::istream& stream, std::string& str)
     std::streampos oldPos = stream.tellg();
 
     std::string result;
-    
+
     if (!((stream >> c) && c == '"'))
     {
         stream.clear();

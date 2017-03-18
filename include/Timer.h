@@ -1,7 +1,5 @@
 /*!
- *  This file is part of a speaker recognition group project.
- *
- *  \author Markus Nykänen <mnykne@gmail.com>
+ *  This file is part of a speaker recognition group project (SOP, 2015-2016)
  */
 
 #ifndef _TIMER_H_
@@ -15,7 +13,7 @@
 class Timer
 {
 public:
-    /*! \brief Default constructor. 
+    /*! \brief Default constructor.
      *
      *  Starts the timer.
      */

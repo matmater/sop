@@ -1,7 +1,5 @@
 /*!
- *  This file is part of a speaker recognition group project.
- *
- *  \author Markus Nykänen <mnykne@gmail.com>
+ *  This file is part of a speaker recognition group project (SOP, 2015-2016)
  */
 
 #ifndef _VQRECOGNIZER_H_
@@ -34,7 +32,7 @@ public:
      *  \param enabled True to enable weighting, false to disable.
      */
     void SetWeightingEnabled(bool enabled);
-    
+
     /*! \brief Check if codevector weighting is enabled.
      *
      *  \return True if weighting is enabled, false otherwise.

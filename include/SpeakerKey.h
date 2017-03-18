@@ -1,7 +1,5 @@
 /*!
- *  This file is part of a speaker recognition group project.
- *
- *  \author Markus Nykänen <mnykne@gmail.com>
+ *  This file is part of a speaker recognition group project (SOP, 2015-2016)
  */
 
 #ifndef _SPEAKERKEY_H_
@@ -44,7 +42,7 @@ public:
      *  \return True if lhs.id == rhs.id, false otherwise.
      */
     bool operator== (const SpeakerKey& rhs) const;
-    
+
     /*! \brief Default inequality operator.
      *
      *  \param rhs Right-hand-side operand.
@@ -52,7 +50,7 @@ public:
      *  \return True if lhs.id != rhs.id, false otherwise.
      */
     bool operator!= (const SpeakerKey& rhs) const;
-    
+
     /*! \brief Check if another speaker key match this
      *  speaker key, excluding sample id.
      *
@@ -63,12 +61,12 @@ public:
      *  \todo Fix.
      */
     bool IsSameSpeaker(const SpeakerKey& rhs) const;
-    
+
     /*! \brief Stream operator to stream raw speaker id string.
      *
      *  \param stream The output stream.
      *  \param key The speaker key to be printed.
-     * 
+     *
      *  \return The reference to the output stream.
      */
     friend std::ostream& operator<< (std::ostream& stream, const SpeakerKey& key);

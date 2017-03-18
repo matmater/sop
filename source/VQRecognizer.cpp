@@ -1,7 +1,5 @@
 /*!
- *  This file is part of a speaker recognition group project.
- *
- *  \author Markus Nykänen <mnykne@gmail.com>
+ *  This file is part of a speaker recognition group project (SOP, 2015-2016)
  */
 
 #include "VQRecognizer.h"
@@ -33,13 +31,13 @@ bool VQRecognizer::IsWeightingEnabled() const
 void VQRecognizer::PrepareModels()
 {
     ModelRecognizer::PrepareModels();
-    
+
     if (mWeightingEnabled)
     {
         std::map< SpeakerKey, std::shared_ptr<Model> > weightModels;
-        
+
         if (GetBackgroundModel() != nullptr)
-        {    
+        {
             weightModels.emplace(SpeakerKey(".ubm"), GetBackgroundModel());
         }
 

@@ -1,7 +1,5 @@
 /*!
- *  This file is part of a speaker recognition group project.
- *
- *  \author Markus Nykänen <mnykne@gmail.com>
+ *  This file is part of a speaker recognition group project (SOP, 2015-2016)
  */
 
 #ifndef _SPEECHDATA_H_
@@ -54,7 +52,7 @@ public:
      *  \param path Path to a file containing speaker-specific speech data.
      */
     void Load(const std::string& path);
-    
+
     /*! \brief Loads speech data from a text file(s)
      *
      *  \param sl Start line.
@@ -68,7 +66,7 @@ public:
      *  \note Line indexing starts at 1.
      */
     void Load(const std::string& path, unsigned int sl, unsigned int gl, unsigned multiplier, bool train, unsigned int maxFeatures, bool normalize = false, const std::string& alias = "");
-    
+
     /*! \brief Validates loaded data.
      *
      *  Checks that data dimensions match.
@@ -104,7 +102,7 @@ public:
      *  \note If data is inconsistent the returned value is undefined.
      */
     unsigned int GetDimensionCount() const;
-    
+
     /*! \brief Normalize selected samples using Ceptstral Mean Variance Normalization.
      *
      *  \param beginIt Begin iterator of the samples to be normalized.
@@ -113,7 +111,7 @@ public:
     void CMVN(
         std::vector < DynamicVector<Real> >::iterator beginIt,
         std::vector < DynamicVector<Real> >::iterator endIt);
-    
+
     /*! \brief Normalize selected samples using a predefined normalization type.
     *
      *  \param beginIt Begin iterator of the samples to be normalized.
@@ -122,17 +120,17 @@ public:
     void Normalize(
         std::vector < DynamicVector<Real> >::iterator beginIt,
         std::vector < DynamicVector<Real> >::iterator endIt);
-    
+
     /*! \brief Normalize all samples.
      */
     void Normalize();
-    
+
     /*! \brief Sets the feature normalization type.
      *
      *  \param normalizationType The feature normalization type.
      */
     void SetNormalizationType(FeatureNormalizationType normalizationType);
-    
+
     /*! \brief Gets the feature normalization type.
      *
      *  \return The feature normalization type.

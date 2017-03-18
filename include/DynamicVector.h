@@ -1,7 +1,5 @@
 /*!
- *  This file is part of a speaker recognition group project.
- *
- *  \author Markus Nykänen <mnykne@gmail.com>
+ *  This file is part of a speaker recognition group project (SOP, 2015-2016)
  */
 
 #ifndef _DYNAMICVECTOR_H_
@@ -28,7 +26,7 @@ public:
     /*! \brief Virtual destructor.
      */
     virtual ~DynamicVector();
-    
+
     /*! \brief Copy assignment operator.
      *
      *  Copies all elements.
@@ -69,13 +67,13 @@ public:
      *  \param value The value to be assigned.
      */
     void Assign(T value);
-    
+
     /*! \brief Multiply every dimension value by a given multiplier.
      *
      *  \param value The multiplier.
      */
     void Multiply(T value);
-    
+
     /*! \brief Multiply by another vector dimension by dimension.
      *
      *  \param other The other vector.
@@ -97,7 +95,7 @@ public:
     /*! \brief Vector copying.
      *
      *  Copies and assigns values from another vector.
-     *  
+     *
      *  \note Vector sizes must match.
      *
      *  \param other The other vector.

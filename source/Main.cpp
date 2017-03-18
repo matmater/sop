@@ -25,13 +25,9 @@ int main(int argc, char** argv)
 
     TestEngine engine;
 
-    if (argc >= 2)
-    {
+    if (argc >= 2) {
         engine.Run(argv[1]);
-    }
-
-    else
-    {
+    } else {
         engine.Run("tests.txt");
     }
 

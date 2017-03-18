@@ -24,7 +24,8 @@ public:
     };
 
 public:
-    RecognitionResult(const bool known = false, const SpeakerKey& speaker = SpeakerKey());
+    RecognitionResult(const bool known = false,
+        const SpeakerKey& speaker = SpeakerKey());
 
     ~RecognitionResult();
 

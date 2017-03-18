@@ -138,11 +138,10 @@ inline Real Sigmoid(Real v)
 inline Real SigmoidDelta(Real v)
 {
     // Avoid zero situation to prevent getting stuck.
-    // A Direct Adaptive Method for Faster Backpropagation Learning: The RPROP Algorithm
-    // http://deeplearning.cs.cmu.edu/pdfs/Rprop.pdf
+    // A Direct Adaptive Method for Faster Backpropagation Learning:
+    // The RPROP Algorithm http://deeplearning.cs.cmu.edu/pdfs/Rprop.pdf
 
-    if (v < -0.98f || v > 0.98f)
-    {
+    if (v < -0.98f || v > 0.98f) {
         // Just a precomputed value: 1 - 0.97^2.
         return 0.0591f;
     }
@@ -153,18 +152,17 @@ inline Real SigmoidDelta(Real v)
 
 /*! \brief Generates a gaussian random value in range [-1.0f, 1.0f].
  *
- *  \algorithm Box-Muller transform (polar form). http://en.wikipedia.org/wiki/Box%E2%80%93Muller_transform.
+ *  \algorithm Box-Muller transform (polar form).
+ *  http://en.wikipedia.org/wiki/Box%E2%80%93Muller_transform.
  */
 inline Real RandomGaussian()
 {
     Real u, v, s;
 
-    do
-    {
+    do {
         u = Random(-1.0f, 1.0f);
         v = Random(-1.0f, 1.0f);
         s = u * u + v * v;
-
     } while (s >= 1.0f || s == 0.0f);
 
     return (u * std::sqrt((-2.0f * std::log(s)) / s));
@@ -176,18 +174,15 @@ inline Real RandomGaussian()
  */
 inline Real Mean(const std::vector<Real>& values)
 {
-    if (values.size() == 0)
-    {
+    if (values.size() == 0) {
         std::cout << "Mean could not be calculated: no values." << std::endl;
-
         return 0.0f;
     }
 
     Real sum = 0.0f;
     Real invSize = 1.0f / static_cast<float>(values.size());
 
-    for (Real value : values)
-    {
+    for (Real value : values) {
         sum += value * invSize;
     }
 
@@ -200,9 +195,9 @@ inline Real Mean(const std::vector<Real>& values)
  */
 inline Real Variance(const std::vector<Real>& values, Real mean)
 {
-    if (values.size() < 2)
-    {
-        std::cout << "Variance could not be calculated: not enough values." << std::endl;
+    if (values.size() < 2) {
+        std::cout << "Variance could not be calculated: not enough values."
+                  << std::endl;
 
         return 0.0f;
     }
@@ -210,8 +205,7 @@ inline Real Variance(const std::vector<Real>& values, Real mean)
     Real sum = 0.0f;
     Real invSize = 1.0f / static_cast<float>(values.size() - 1);
 
-    for (Real value : values)
-    {
+    for (Real value : values) {
         Real tmp = value - mean;
         sum += tmp * tmp * invSize;
     }
@@ -252,15 +246,13 @@ inline bool GetStringLiteral(std::istream& stream, std::string& str)
 
     std::string result;
 
-    if (!((stream >> c) && c == '"'))
-    {
+    if (!((stream >> c) && c == '"')) {
         stream.clear();
         stream.seekg(oldPos);
         return false;
     }
 
-    if (!std::getline(stream, result, '"'))
-    {
+    if (!std::getline(stream, result, '"')) {
         stream.clear();
         stream.seekg(oldPos);
         return false;

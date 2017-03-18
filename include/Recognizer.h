@@ -31,7 +31,8 @@ public:
      *
      *  \return True if the speaker was recognized, false otherwise.
      */
-    virtual bool IsRecognized(const SpeakerKey& speaker, const std::vector< DynamicVector<Real> >& samples) = 0;
+    virtual bool IsRecognized(const SpeakerKey& speaker,
+        const std::vector< DynamicVector<Real> >& samples) = 0;
 
     /*! \brief Verify the claimed speaker.
      *
@@ -40,7 +41,8 @@ public:
      *
      *  \return A vector containing verification scores of the speaker.
      */
-    virtual std::vector<Real> Verify(const SpeakerKey& speaker, const std::shared_ptr<SpeechData>& data) = 0;
+    virtual std::vector<Real> Verify(const SpeakerKey& speaker,
+        const std::shared_ptr<SpeechData>& data) = 0;
 };
 
 #endif

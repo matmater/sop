@@ -19,34 +19,31 @@ GMModel::~GMModel()
 
 void GMModel::Init()
 {
-    if (mClusters.size() != GetOrder())
-    {
+    if (mClusters.size() != GetOrder()) {
         mClusters.resize(GetOrder());
     }
 }
 
-void GMModel::Train(const std::vector< DynamicVector<Real> >& samples, unsigned int iterations)
+void GMModel::Train(
+    const std::vector< DynamicVector<Real> >& samples, unsigned int iterations)
 {
     SetTrainingIterations(iterations);
-
     Init();
-
     InitClusters(samples);
-
     EM(samples);
 }
 
-void GMModel::Adapt(const std::shared_ptr<Model>& other, const std::vector< DynamicVector<Real> >& samples,
-                    unsigned int iterations, Real relevanceFactor)
+void GMModel::Adapt(const std::shared_ptr<Model>& other,
+    const std::vector< DynamicVector<Real> >& samples,
+    unsigned int iterations, Real relevanceFactor)
 {
     // Following:
-    // Reynolds DA, Quatieri TF & Dunn RB (2000) Speaker Verification Using Adapted Gaussian Mixture Models.
-    // Digital Signal Processing 10(1-3): 19-41.
+    // Reynolds DA, Quatieri TF & Dunn RB (2000) Speaker Verification Using
+    // Adapted Gaussian Mixture Models. Digital Signal Processing 10(1-3): 19-41.
 
     const GMModel* model = dynamic_cast<GMModel*>(other.get());
 
-    if (model == nullptr)
-    {
+    if (model == nullptr) {
         std::cout << "Not GMModel." << std::endl;
         return;
     }
@@ -54,8 +51,7 @@ void GMModel::Adapt(const std::shared_ptr<Model>& other, const std::vector< Dyna
     SetOrder(other->GetOrder());
     Init();
 
-    for (unsigned int c = 0; c < GetOrder(); c++)
-    {
+    for (unsigned int c = 0; c < GetOrder(); c++) {
         mClusters[c].means = model->mClusters[c].means;
         mClusters[c].variances = model->mClusters[c].variances;
         mClusters[c].mixingCoefficient = model->mClusters[c].mixingCoefficient;
@@ -66,34 +62,27 @@ void GMModel::Adapt(const std::shared_ptr<Model>& other, const std::vector< Dyna
     }
 
     for (auto& cluster : mClusters)
-    {
         UpdatePDF(cluster);
-    }
 
     Real logLikelihood = 0.0f;
     Real newLogLikelihood = 0.0f;
 
-    for (unsigned int e = 0; e < iterations; ++e)
-    {
-        for (auto& cluster : mClusters)
-        {
+    for (unsigned int e = 0; e < iterations; ++e) {
+        for (auto& cluster : mClusters) {
             cluster.membershipProbabilitySum = 0.0f;
             cluster.meansTmp.Assign(0.0f);
         }
 
         Real newLogLikelihood = 0.0f;
 
-        for (const auto& sample : samples)
-        {
+        for (const auto& sample : samples) {
             // Using LSE for numerical stability.
             Real probMax = std::numeric_limits<Real>::min();
             Real probSumExp = 0.0f;
             Real probLogSumExp = 0.0f;
 
-            for (auto& cluster : mClusters)
-            {
+            for (auto& cluster : mClusters) {
                 cluster.membershipProbability = GetLogLikelihood(sample, cluster);
-
                 if (cluster.membershipProbability > probMax)
                     probMax = cluster.membershipProbability;
             }
@@ -103,42 +92,36 @@ void GMModel::Adapt(const std::shared_ptr<Model>& other, const std::vector< Dyna
 
             probLogSumExp = probMax + std::log(probSumExp);
 
-            for (auto& cluster : mClusters)
-            {
+            for (auto& cluster : mClusters) {
                 // Calculate the final membership probability.
-                cluster.membershipProbability = std::exp(cluster.membershipProbability - probLogSumExp);
-
+                cluster.membershipProbability = std::exp(
+                    cluster.membershipProbability - probLogSumExp);
                 // Calculate the final sum of membership probabilities.
                 cluster.membershipProbabilitySum += cluster.membershipProbability;
-
-                for (unsigned int d = 0; d < cluster.means.GetSize(); ++d)
-                {
+                for (unsigned int d = 0; d < cluster.means.GetSize(); ++d) {
                     // Mean sum(p*x)
-                    cluster.meansTmp[d] += sample[d] * cluster.membershipProbability;
+                    cluster.meansTmp[d] +=
+                        sample[d] * cluster.membershipProbability;
                 }
             }
 
             newLogLikelihood += probLogSumExp;
         }
 
-        for (auto& cluster : mClusters)
-        {
+        for (auto& cluster : mClusters) {
             Real n = cluster.membershipProbabilitySum;
-
             Real adaptionCoeff = n / (n + relevanceFactor);
 
-            for (unsigned int d = 0; d < mClusters[0].means.GetSize(); ++d)
-            {
-                cluster.means[d] = adaptionCoeff * (cluster.meansTmp[d] / n) + (1.0f - adaptionCoeff) * cluster.means[d];
+            for (unsigned int d = 0; d < mClusters[0].means.GetSize(); ++d) {
+                cluster.means[d] = adaptionCoeff * (cluster.meansTmp[d] / n) +
+                    (1.0f - adaptionCoeff) * cluster.means[d];
             }
 
             UpdatePDF(cluster);
         }
 
         if (std::abs(logLikelihood - newLogLikelihood) / samples.size() < mEta)
-        {
             break;
-        }
 
         logLikelihood = newLogLikelihood;
 
@@ -151,22 +134,18 @@ void GMModel::Adapt(const std::shared_ptr<Model>& other, const std::vector< Dyna
 Real GMModel::GetLogLikelihood(const std::vector< DynamicVector<Real> >& samples) const
 {
     if (samples.size() == 0)
-    {
         return 0.0f;
-    }
 
     Real result = 0.0f;
     Real invN = 1.0f / static_cast<Real>(samples.size());
 
-    for (const auto& sample : samples)
-    {
+    for (const auto& sample : samples) {
         // Using LSE for numerical stability.
         Real probMax = std::numeric_limits<Real>::min();
         Real probSumExp = 0.0f;
         Real probLogSumExp = 0.0f;
 
-        for (auto& cluster : mClusters)
-        {
+        for (auto& cluster : mClusters) {
             // TODO get rid of this assignment. For now this is "ok" though as long
             // as this function is called outside.
             cluster.membershipProbability = GetLogLikelihood(sample, cluster);
@@ -199,9 +178,7 @@ Real GMModel::GetLogScore(const std::vector< DynamicVector<Real> >& samples) con
 unsigned int GMModel::GetDimensionCount() const
 {
     if (mClusters.size() == 0)
-    {
         return 0;
-    }
 
     return mClusters.begin()->means.GetSize();
 }
@@ -210,8 +187,7 @@ void GMModel::InitClusters(const std::vector< DynamicVector<Real> >& samples)
 {
     // Create the initial centroid by averaging sample data.
 
-    for (auto& cluster : mClusters)
-    {
+    for (auto& cluster : mClusters) {
         cluster.means.Resize(samples[0].GetSize());
         cluster.variances.Resize(samples[0].GetSize());
         cluster.meansTmp.Resize(samples[0].GetSize());
@@ -227,31 +203,23 @@ void GMModel::InitClusters(const std::vector< DynamicVector<Real> >& samples)
     lbg.Cluster(samples, indices, centroids, sizes);
 
     for (unsigned int c = 0; c < centroids.size(); c++)
-    {
         mClusters[c].means.Assign(centroids[c]);
-    }
 
     Real tot = 0.0f;
 
-    for (auto it = mClusters.begin(); it != mClusters.end(); it++)
-    {
+    for (auto it = mClusters.begin(); it != mClusters.end(); it++) {
         //std::cout << "Cluster :" << sizes[it - mClusters.begin()] << std::endl;
-
         tot += sizes[it - mClusters.begin()];
     }
 
     for (unsigned int c = 0; c < mClusters.size(); ++c)
-    {
         mClusters[c].mixingCoefficient = sizes[c] / tot;
-    }
 
-    for (auto& cluster : mClusters)
-    {
-        for (unsigned int d = 0; d < mClusters[0].means.GetSize(); ++d)
-        {
-            for (const auto& sample : samples)
-            {
-                cluster.variances[d] += (cluster.means[d] - sample[d]) * (cluster.means[d] - sample[d]) / samples.size();
+    for (auto& cluster : mClusters) {
+        for (unsigned int d = 0; d < mClusters[0].means.GetSize(); ++d) {
+            for (const auto& sample : samples) {
+                cluster.variances[d] += (cluster.means[d] - sample[d])
+                    * (cluster.means[d] - sample[d]) / samples.size();
             }
         }
     }
@@ -281,7 +249,8 @@ void GMModel::EM(const std::vector< DynamicVector<Real> >& samples)
 {
     // Following:
     // Reynolds DA & Rose RC (1995) Robust text-independent
-    // speaker identification using Gaussian mixture speaker models. Speech and Audio Processing, IEEE Transactions on 3(1):
+    // speaker identification using Gaussian mixture speaker models.
+    // Speech and Audio Processing, IEEE Transactions on 3(1):
     // 72-83.
 
     for (auto& cluster : mClusters)
@@ -292,29 +261,21 @@ void GMModel::EM(const std::vector< DynamicVector<Real> >& samples)
     Real logLikelihood = 0.0f;
     Real newLogLikelihood = 0.0f;
 
-    for (unsigned int e = 0; e < mTrainingIterations; ++e)
-    {
+    for (unsigned int e = 0; e < mTrainingIterations; ++e) {
         //std::cout << "Iteration:" << e << std::endl;
-
-        for (auto& cluster : mClusters)
-        {
+        for (auto& cluster : mClusters) {
             cluster.membershipProbabilitySum = 0.0f;
-
             cluster.meansTmp.Assign(0.0f);
             cluster.variancesTmp.Assign(0.0f);
         }
 
         newLogLikelihood = E(samples);
-
         M(samples);
 
         if (std::abs(logLikelihood - newLogLikelihood) < mEta)
-        {
             break;
-        }
 
         logLikelihood = newLogLikelihood;
-
         std::cout << ".";
     }
 
@@ -325,17 +286,14 @@ Real GMModel::E(const std::vector< DynamicVector<Real> >& samples)
 {
     Real newLogLikelihood = 0.0f;
 
-    for (const auto& sample : samples)
-    {
+    for (const auto& sample : samples) {
         // Using LSE for numerical stability.
         Real probMax = std::numeric_limits<Real>::min();
         Real probSumExp = 0.0f;
         Real probLogSumExp = 0.0f;
 
-        for (auto& cluster : mClusters)
-        {
+        for (auto& cluster : mClusters) {
             cluster.membershipProbability = GetLogLikelihood(sample, cluster);
-
             if (cluster.membershipProbability > probMax)
                 probMax = cluster.membershipProbability;
         }
@@ -345,21 +303,18 @@ Real GMModel::E(const std::vector< DynamicVector<Real> >& samples)
 
         probLogSumExp = probMax + std::log(probSumExp);
 
-        for (auto& cluster : mClusters)
-        {
+        for (auto& cluster : mClusters) {
             // Calculate the final membership probability.
-            cluster.membershipProbability = std::exp(cluster.membershipProbability - probLogSumExp);
-
+            cluster.membershipProbability = std::exp(
+                cluster.membershipProbability - probLogSumExp);
             // Calculate the final sum of membership probabilities.
             cluster.membershipProbabilitySum += cluster.membershipProbability;
-
-            for (unsigned int d = 0; d < cluster.means.GetSize(); ++d)
-            {
+            for (unsigned int d = 0; d < cluster.means.GetSize(); ++d) {
                 // Mean sum(p*x)
                  cluster.meansTmp[d] += sample[d] * cluster.membershipProbability;
-
                 // Variance sum(p*x^2) (- mu^2)
-                cluster.variancesTmp[d] += sample[d] * sample[d] * cluster.membershipProbability;
+                cluster.variancesTmp[d] += sample[d] * sample[d]
+                    * cluster.membershipProbability;
             }
         }
 
@@ -371,38 +326,35 @@ Real GMModel::E(const std::vector< DynamicVector<Real> >& samples)
 
 void GMModel::M(const std::vector< DynamicVector<Real> >& samples)
 {
-    for (auto& cluster : mClusters)
-    {
+    for (auto& cluster : mClusters) {
         Real invMembershipProbabilitySum = 1.0f / cluster.membershipProbabilitySum;
 
-        for (unsigned int d = 0; d < mClusters[0].means.GetSize(); ++d)
-        {
+        for (unsigned int d = 0; d < mClusters[0].means.GetSize(); ++d) {
             cluster.means[d] = cluster.meansTmp[d] * invMembershipProbabilitySum;
-            cluster.variances[d] = cluster.variancesTmp[d] * invMembershipProbabilitySum - cluster.means[d] * cluster.means[d];
+            cluster.variances[d] = cluster.variancesTmp[d]
+                * invMembershipProbabilitySum - cluster.means[d] * cluster.means[d];
 
             // Limit variance value.
             // When multiplying many numbers with values < 1.0 it is likely that
             // the value goes near zero and it causes instability in the implementation especially
             // when using a diagonal covariance matrix.
-
             if (cluster.variances[d] < 1.0e-5f)
-            {
                 cluster.variances[d] = 1.0e-5f;
-            }
         }
 
-        cluster.mixingCoefficient = cluster.membershipProbabilitySum / static_cast<Real>(samples.size());
+        cluster.mixingCoefficient = cluster.membershipProbabilitySum
+            / static_cast<Real>(samples.size());
 
         UpdatePDF(cluster);
     }
 }
 
-Real GMModel::GetLogLikelihood(const DynamicVector<Real>& values, const Cluster& cluster) const
+Real GMModel::GetLogLikelihood(const DynamicVector<Real>& values,
+    const Cluster& cluster) const
 {
     Real v = 0.0f;
 
-    for (unsigned int d = 0; d < mClusters[0].means.GetSize(); ++d)
-    {
+    for (unsigned int d = 0; d < mClusters[0].means.GetSize(); ++d) {
         Real tmp = values[d] - cluster.means[d];
         v += tmp * tmp * cluster.variancesInv[d];
     }
@@ -413,20 +365,16 @@ Real GMModel::GetLogLikelihood(const DynamicVector<Real>& values, const Cluster&
 void GMModel::UpdatePDF(Cluster& cluster)
 {
     for (unsigned int d = 0; d < mClusters[0].means.GetSize(); ++d)
-    {
         cluster.variancesInv[d] = 1.0f / cluster.variances[d];
-    }
-
-    Real constant = 1.0;
 
     // Determinant
+    Real constant = 1.0;
     for (unsigned int d = 0; d < mClusters[0].means.GetSize(); ++d)
-    {
         constant *= cluster.variances[d];
-    }
 
     constant = std::log(constant);
-    constant += static_cast<Real>(mClusters[0].means.GetSize())* std::log(2.0f * PI_F);
+    constant += static_cast<Real>(mClusters[0].means.GetSize())
+        * std::log(2.0f * PI_F);
 
     cluster.pdfConstant = -0.5f * constant;
 }

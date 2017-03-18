@@ -84,7 +84,8 @@ public:
      *  \param samples Train sample data set.
      *  \param itertions Maximum number of training iterations.
      */
-    virtual void Train(const std::vector< DynamicVector<Real> >& samples, unsigned int iterations) override;
+    virtual void Train(const std::vector< DynamicVector<Real> >& samples,
+        unsigned int iterations) override;
 
     /*! \brief Adapt the model from another model with speech data using MAP adaptation.
      *
@@ -93,8 +94,9 @@ public:
      *  \param iterations The number of MAP iterations.
      *  \param relevanceFactor The MAP relevance factor.
      */
-    virtual void Adapt(const std::shared_ptr<Model>& other, const std::vector< DynamicVector<Real> >& samples,
-               unsigned int iterations = 2, Real relevanceFactor = 16.0f) override;
+    virtual void Adapt(const std::shared_ptr<Model>& other,
+        const std::vector< DynamicVector<Real> >& samples,
+        unsigned int iterations = 2, Real relevanceFactor = 16.0f) override;
 
     /*! \brief Calculate the normalized log-likelihood value over given samples.
      *
@@ -105,7 +107,8 @@ public:
      *
      *  \return Normalized log-likelihood.
      */
-    Real GetLogLikelihood(const std::vector< DynamicVector<Real> >& samples) const;
+    Real GetLogLikelihood(
+        const std::vector< DynamicVector<Real> >& samples) const;
 
     /*! \brief Score given samples.
      *
@@ -113,7 +116,8 @@ public:
      *
      *  \return Average score over samples.
      */
-    virtual Real GetScore(const std::vector< DynamicVector<Real> >& samples) const override;
+    virtual Real GetScore(
+        const std::vector< DynamicVector<Real> >& samples) const override;
 
     /*! \brief Log-score given samples.
      *
@@ -121,7 +125,8 @@ public:
      *
      *  \return Average log-score over samples.
      */
-    virtual Real GetLogScore(const std::vector< DynamicVector<Real> >& samples) const override;
+    virtual Real GetLogScore(
+        const std::vector< DynamicVector<Real> >& samples) const override;
 
     /*! \brief Get the number of feature dimensions used in the model.
      *
@@ -165,7 +170,8 @@ private:
      *
      *  \return Log-likelihood
      */
-    Real GetLogLikelihood(const DynamicVector<Real>& values, const Cluster& cluster) const;
+    Real GetLogLikelihood(
+        const DynamicVector<Real>& values, const Cluster& cluster) const;
 
     /*! \brief Precalculates constant pdf values for efficiency.
      *

@@ -18,13 +18,9 @@ TestEngine::TestEngine()
 void TestEngine::Run(const std::string& file)
 {
     std::vector<Test> tests;
-
     std::ifstream fs(file);
-
     std::string line;
-
     std::string currentTestId;
-
     TestType testType = TestType::UNKNOWN;
 
     unsigned int ubmSf = 0;
@@ -36,37 +32,34 @@ void TestEngine::Run(const std::string& file)
 
     unsigned int indexCounter = 0;
 
-    while(std::getline(fs, line))
-    {
+    while(std::getline(fs, line)) {
         std::string item;
 
         std::stringstream ssLine(line);
 
         if (!(ssLine >> item))
-        {
             continue;
-        }
 
         // Skip comments.
         if (item.size() >= 2 && item[0] == '/' && item[1] == '/')
-        {
             continue;
-        }
 
-        if (item == "%ubm")
-        {
+        if (item == "%ubm") {
             if (!(ssLine >> ubmSf)) {
                 std::cerr << "Missing UBM sf." << std::endl;
                 return;
             }
+
             if (!(ssLine >> ubmGf)) {
                 std::cout << "Missing UBM gf." << std::endl;
                 return;
             }
+
             if (!(ssLine >> ubmSl)) {
                 std::cout << "Missing UBM sl." << std::endl;
                 return;
             }
+
             if (!(ssLine >> ubmGl)) {
                 std::cout << "Missing UBM gl." << std::endl;
                 return;
@@ -75,44 +68,30 @@ void TestEngine::Run(const std::string& file)
             continue;
         }
 
-        if (item.size() > 1 && item[0] == '%')
-        {
+        if (item.size() > 1 && item[0] == '%') {
             std::string ttype;
 
-            if (ssLine >> ttype)
-            {
-                if (ttype == "rec")
-                {
+            if (ssLine >> ttype) {
+                if (ttype == "rec") {
                     testType = TestType::RECOGNITION;
-                }
-
-                else if (ttype == "recpop")
-                {
+                } else if (ttype == "recpop") {
                     testType = TestType::RECOGNITION_POPULATION;
-                }
-
-                else if (ttype == "ver")
-                {
+                } else if (ttype == "ver") {
                     testType = TestType::VERIFICATION;
-                }
-
-                else
-                {
+                } else {
                     std::cout << "Missing test type." << std::endl;
                     return;
                 }
             }
 
             std::string testLabel;
-
             GetStringLiteral(ssLine, testLabel);
-
             currentTestId = item.erase(0, 1);
 
-            std::cout << "Current test id: '" << currentTestId << "', type: '" << ttype << "', label: '" << testLabel << "'." << std::endl;
+            std::cout << "Current test id: '" << currentTestId << "', type: '"
+            << ttype << "', label: '" << testLabel << "'." << std::endl;
 
-            if (testIds.find(currentTestId) != testIds.end())
-            {
+            if (testIds.find(currentTestId) != testIds.end()) {
                 std::cout << "Duplicate test identifiers." << std::endl;
                 return;
             }
@@ -132,14 +111,12 @@ void TestEngine::Run(const std::string& file)
             continue;
         }
 
-        if (testType != TestType::UNKNOWN)
-        {
+        if (testType != TestType::UNKNOWN) {
             std::string features = item;
 
             std::string recognizerType;
 
-            if (!(ssLine >> recognizerType))
-            {
+            if (!(ssLine >> recognizerType)) {
                 std::cout << "Invalid test file: recognizer type not specified." << std::endl;
                 return;
             }
@@ -194,8 +171,7 @@ void TestEngine::Run(const std::string& file)
                 return;
             }
 
-            if (testType == TestType::VERIFICATION)
-            {
+            if (testType == TestType::VERIFICATION) {
                 if (!(ssLine >> test.incorrectClaimed)) {
                     std::cout << "Missing 'incorrectClaimed'." << std::endl;
                     return;
@@ -219,11 +195,9 @@ void TestEngine::Run(const std::string& file)
 
             std::string feature;
 
-            while (ssLine >> feature)
-            {
+            while (ssLine >> feature) {
                 // Stop at comment.
-                if (item.size() >= 2 && item[0] == '/' && item[1] == '/')
-                {
+                if (item.size() >= 2 && item[0] == '/' && item[1] == '/') {
                     break;
                 }
 
@@ -327,22 +301,17 @@ void TestEngine::Run(const std::string& file)
 
     auto previousIt = tests.end();
 
-    for (const auto& test : testIds)
-    {
+    for (const auto& test : testIds) {
         std::string label;
 
-        if (!test.second.label.empty())
-        {
+        if (!test.second.label.empty()) {
             label = test.second.label;
-        }
-
-        else
-        {
+        } else {
             label = test.first;
         }
 
-        if (test.second.type == TestType::RECOGNITION || test.second.type == TestType::RECOGNITION_POPULATION)
-        {
+        if (test.second.type == TestType::RECOGNITION
+            || test.second.type == TestType::RECOGNITION_POPULATION) {
             // Initialize recognition results file.
             std::ofstream resultsFile(test.first + "_rec.txt");
 
@@ -358,15 +327,12 @@ void TestEngine::Run(const std::string& file)
 
             std::ofstream perfTestFile(test.first + ".perftest");
             perfTestFile << label << "|" << "rec" << std::endl;
-
         } else if (test.second.type == TestType::VERIFICATION) {
-            if (!test.second.targetId.empty())
-            {
+            if (!test.second.targetId.empty()) {
                 std::cout << "Targets are only supported in recognition." << std::endl;
                 return;
             }
-            else
-            {
+            else {
                 // Just init (and clear) the test file.
                 std::ofstream testFile(test.first + ".test");
                 testFile << label << "|" << "ver" << std::endl;
@@ -377,19 +343,16 @@ void TestEngine::Run(const std::string& file)
                 std::ofstream perfTestFile(test.first + ".perftest");
                 perfTestFile << label << "|" << "ver" << std::endl;
             }
-        }
-        else {
+        } else {
             std::cout << "Invalid test id." << std::endl;
             return;
         }
     }
 
-    for (const auto& test : testIds)
-    {
-        if (test.second.type == TestType::RECOGNITION || test.second.type == TestType::RECOGNITION_POPULATION)
-        {
-            if (!test.second.targetId.empty())
-            {
+    for (const auto& test : testIds) {
+        if (test.second.type == TestType::RECOGNITION
+            || test.second.type == TestType::RECOGNITION_POPULATION) {
+            if (!test.second.targetId.empty()) {
                 std::ofstream testFile(test.second.targetId + ".test", std::ios_base::app);
                 testFile << test.first + "_rec.txt" << "|" << test.second.label << std::endl;
             }
@@ -403,8 +366,7 @@ void TestEngine::Run(const std::string& file)
             it->trainSf  != previousIt->trainSf  ||
             it->trainGf  != previousIt->trainGf  ||
             it->trainSl  != previousIt->trainSl  ||
-            it->trainGl  != previousIt->trainGl)
-        {
+            it->trainGl  != previousIt->trainGl) {
             // Load speaker data.
             trainData = std::make_shared<SpeechData>();
             LoadTextSamples(
@@ -420,26 +382,18 @@ void TestEngine::Run(const std::string& file)
         }
 
         if (previousIt   == tests.end() ||
-            it->features != previousIt->features)
-        {
+            it->features != previousIt->features) {
             // Load ubm data from a different set of speakers.
             ubmData = std::make_shared<SpeechData>();
             LoadTextSamples(it->features, ubmData, ubmSf, ubmGf, ubmSl, ubmGl, 1, true);
         }
 
-        if (it->recognizerType == RecognizerType::VQ)
-        {
+        if (it->recognizerType == RecognizerType::VQ) {
             vq->SetWeightingEnabled(it->weighting);
             recognizer = vq;
-        }
-
-        else if (it->recognizerType == RecognizerType::GMM)
-        {
+        } else if (it->recognizerType == RecognizerType::GMM) {
             recognizer = gmm;
-        }
-
-        else
-        {
+        } else {
             std::cout << "Unknown recognizer type." << std::endl;
             return;
         }
@@ -451,8 +405,7 @@ void TestEngine::Run(const std::string& file)
         recognizer->SetSpeakerData(trainData);
         recognizer->SetBackgroundModelData(ubmData);
 
-        if (it->type == TestType::RECOGNITION)
-        {
+        if (it->type == TestType::RECOGNITION) {
             std::cout << "Recognition test: " << GetLabel(*it) << std::endl;
 
             recognizer->SetBackgroundModelEnabled(it->ubm);
@@ -468,10 +421,7 @@ void TestEngine::Run(const std::string& file)
                 << recognizer->GetBackgroundModelData()->GetSamples().size() << std::endl;
 
             Recognize(*it, recognizer);
-        }
-
-        else if (it->type == TestType::RECOGNITION_POPULATION)
-        {
+        } else if (it->type == TestType::RECOGNITION_POPULATION) {
             std::cout << "Recognition (population) test: " << GetLabel(*it) << std::endl;
 
             recognizer->SetBackgroundModelEnabled(it->ubm);
@@ -487,10 +437,7 @@ void TestEngine::Run(const std::string& file)
                 << recognizer->GetBackgroundModelData()->GetSamples().size() << std::endl;
 
             RecognizePop(*it, recognizer);
-        }
-
-        else if (it->type == TestType::VERIFICATION)
-        {
+        } else if (it->type == TestType::VERIFICATION) {
             std::cout << "Verification test: " << GetLabel(*it) << std::endl;
 
             recognizer->SetBackgroundModelEnabled(it->ubm);
@@ -506,10 +453,7 @@ void TestEngine::Run(const std::string& file)
                 << recognizer->GetBackgroundModelData()->GetSamples().size() << std::endl;
 
             Verify(*it, recognizer);
-        }
-
-        else
-        {
+        } else {
             std::cout << "Unknown test type." << std::endl;
         }
 
@@ -522,16 +466,14 @@ void TestEngine::RecognizePop(
     std::shared_ptr<ModelRecognizer> recognizer)
 {
     std::string resultsFileName = test.id + "_rec" + ".txt";
-
     std::ofstream results(resultsFileName, std::ios_base::app);
-
     auto testData = std::make_shared<SpeechData>();
 
     // Test utterances
-    LoadTextSamples(test.features, testData, test.testSf, test.cycles * test.testGf, test.testSl, test.testGl, test.multiplier, false);
+    LoadTextSamples(test.features, testData, test.testSf,
+        test.cycles * test.testGf, test.testSl, test.testGl, test.multiplier, false);
 
-    for (unsigned int i = 1; i <= test.cycles ; i++)
-    {
+    for (unsigned int i = 1; i <= test.cycles ; i++) {
         Real realTestTime = 0.0f;
 
         std::cout << i << "/" << test.cycles << std::endl;
@@ -541,14 +483,12 @@ void TestEngine::RecognizePop(
 
         // Select trained speakers.
         std::vector<SpeakerKey> speakers;
-        for (unsigned int k = 0; k < test.testGf; ++k)
-        {
+        for (unsigned int k = 0; k < test.testGf; ++k) {
             SpeakerKey key(GetSpeakerString(test.testSf + k, test.features));
 
             // Debug check.
             if (recognizer->GetSpeakerData()->GetSamples().find(key)
-                == recognizer->GetSpeakerData()->GetSamples().end())
-            {
+                == recognizer->GetSpeakerData()->GetSamples().end()) {
                 std::cout << "Speaker '" << key << "' not loaded." << std::endl;
                 continue;
             }
@@ -559,30 +499,25 @@ void TestEngine::RecognizePop(
         recognizer->SelectSpeakerModels(speakers);
 
         Timer timer;
-        for (const auto& samples : testData->GetSamples())
-        {
+        for (const auto& samples : testData->GetSamples()) {
             std::string speakerString;
             speakerString += samples.first.GetId()[0];
             speakerString += samples.first.GetId()[1];
             speakerString += samples.first.GetId()[2];
 
-            if (recognizer->IsRecognized(SpeakerKey(speakerString), samples.second))
-            {
+            if (recognizer->IsRecognized(SpeakerKey(speakerString), samples.second)) {
                 ++correct;
-            }
-
-            else
-            {
+            } else {
                 ++incorrect;
             }
         }
         realTestTime += timer.GetTimeElapsed();
 
-        if (correct > 0 || incorrect > 0)
-        {
+        if (correct > 0 || incorrect > 0) {
             std::cout << "Speakers " << test.testGf
                       << ", accuracy "
-                      << 100.0f * static_cast<float>(correct) / static_cast<float>(correct + incorrect) << "%" << std::endl;
+                      << 100.0f * static_cast<float>(correct)
+                      / static_cast<float>(correct + incorrect) << "%" << std::endl;
         }
 
         results << GetLabel(test) << " " << correct << " " << incorrect << std::endl;
@@ -606,7 +541,8 @@ void TestEngine::Recognize(
     auto testData = std::make_shared<SpeechData>();
 
     // Test utterances
-    LoadTextSamples(test.features, testData, test.testSf, test.testGf, test.testSl, test.testGl, test.multiplier, false);
+    LoadTextSamples(test.features, testData, test.testSf, test.testGf,
+        test.testSl, test.testGl, test.multiplier, false);
 
     unsigned int correct = 0;
     unsigned int incorrect = 0;
@@ -614,14 +550,12 @@ void TestEngine::Recognize(
     // Select trained speakers.
     std::vector<SpeakerKey> speakers;
 
-    for (unsigned int k = 0; k < test.testGf; ++k)
-    {
+    for (unsigned int k = 0; k < test.testGf; ++k) {
         SpeakerKey key(GetSpeakerString(test.testSf + k, test.features));
 
         // Debug check.
         if (recognizer->GetSpeakerData()->GetSamples().find(key)
-            == recognizer->GetSpeakerData()->GetSamples().end())
-        {
+            == recognizer->GetSpeakerData()->GetSamples().end()) {
             std::cout << "Speaker '" << key << "' not loaded." << std::endl;
             continue;
         }
@@ -636,28 +570,23 @@ void TestEngine::Recognize(
     Real realTestTime = 0.0f;
     unsigned int realTestsTotal = 0;
 
-    for (unsigned int i = 0; i < test.cycles ; i++)
-    {
+    for (unsigned int i = 0; i < test.cycles ; i++) {
         std::cout << i + 1 << "/" << test.cycles << std::endl;
 
         // Test utterances
-        LoadTextSamples(test.features, testData, sf, test.testGf, test.testSl, test.testGl, test.multiplier, false);
+        LoadTextSamples(test.features, testData, sf, test.testGf, test.testSl,
+            test.testGl, test.multiplier, false);
 
         Timer timer;
-        for (const auto& samples : testData->GetSamples())
-        {
+        for (const auto& samples : testData->GetSamples()) {
             std::string speakerString;
             speakerString += samples.first.GetId()[0];
             speakerString += samples.first.GetId()[1];
             speakerString += samples.first.GetId()[2];
 
-            if (recognizer->IsRecognized(SpeakerKey(speakerString), samples.second))
-            {
+            if (recognizer->IsRecognized(SpeakerKey(speakerString), samples.second)) {
                 ++correct;
-            }
-
-            else
-            {
+            } else {
                 ++incorrect;
             }
         }
@@ -685,14 +614,12 @@ void TestEngine::Verify(
 
     // Select trained impostors.
     std::vector<SpeakerKey> impostors;
-    for (unsigned int i = 0; i < test.gi; ++i)
-    {
+    for (unsigned int i = 0; i < test.gi; ++i) {
         SpeakerKey key(GetSpeakerString(test.si + i, test.features));
 
         // Debug check.
         if (recognizer->GetSpeakerData()->GetSamples().find(key)
-            == recognizer->GetSpeakerData()->GetSamples().end())
-        {
+            == recognizer->GetSpeakerData()->GetSamples().end()) {
             std::cout << "Impostor '" << key << "' not loaded." << std::endl;
             continue;
         }
@@ -711,20 +638,17 @@ void TestEngine::Verify(
 
     Real realTestTime = 0.0f;
 
-    for (unsigned int i = 0; i < test.cycles ; i++)
-    {
+    for (unsigned int i = 0; i < test.cycles ; i++) {
         std::cout << i + 1 << "/" << test.cycles << std::endl;
 
         // Select trained speakers.
         std::vector<SpeakerKey> speakers;
-        for (unsigned int k = 0; k < test.testGf; ++k)
-        {
+        for (unsigned int k = 0; k < test.testGf; ++k) {
             SpeakerKey key(GetSpeakerString(sf + k, test.features));
 
             // Debug check.
             if (recognizer->GetSpeakerData()->GetSamples().find(key)
-               == recognizer->GetSpeakerData()->GetSamples().end())
-            {
+               == recognizer->GetSpeakerData()->GetSamples().end()) {
                 std::cout << "Speaker '" << sf + k << "' not loaded." << std::endl;
                 continue;
             }
@@ -738,25 +662,25 @@ void TestEngine::Verify(
         std::vector<Real> correctScores;
         std::vector<Real> incorrectScores;
 
-        LoadTextSamples(test.features, testData, sf, test.testGf, test.testSl, test.testGl, test.multiplier, false);
+        LoadTextSamples(test.features, testData, sf, test.testGf, test.testSl,
+            test.testGl, test.multiplier, false);
 
         Timer timer;
-        for (const auto& samples : testData->GetSamples())
-        {
+        for (const auto& samples : testData->GetSamples()) {
             std::string speakerString;
             speakerString += samples.first.GetId()[0];
             speakerString += samples.first.GetId()[1];
             speakerString += samples.first.GetId()[2];
 
-            Real verificationResults = recognizer->GetVerificationScore(SpeakerKey(speakerString), samples.second);
+            Real verificationResults = recognizer->GetVerificationScore(
+                SpeakerKey(speakerString), samples.second);
             correctScores.push_back(verificationResults);
             ++correctTrials;
 
-            for (const auto& imp : speakers)
-            {
-                if (imp != SpeakerKey(speakerString))
-                {
-                    Real verificationResults = recognizer->GetVerificationScore(SpeakerKey(imp), samples.second);
+            for (const auto& imp : speakers) {
+                if (imp != SpeakerKey(speakerString)) {
+                    Real verificationResults = recognizer->GetVerificationScore(
+                        SpeakerKey(imp), samples.second);
                     incorrectScores.push_back(verificationResults);
                     ++incorrectTrials;
                 }
@@ -765,16 +689,12 @@ void TestEngine::Verify(
         realTestTime += timer.GetTimeElapsed();
 
         for (auto& entry : correctScores)
-        {
             results << entry << " ";
-        }
 
         results << std::endl;
 
         for (auto& entry : incorrectScores)
-        {
             results << entry << " ";
-        }
 
         results << std::endl;
 
@@ -795,13 +715,9 @@ void TestEngine::Verify(
 
 std::string TestEngine::GetLabel(const Test& test)
 {
-    if (test.label.empty())
-    {
+    if (test.label.empty()) {
         return test.id + "_" + toString(test.index);
-    }
-
-    else
-    {
+    } else {
         return test.label;
     }
 }

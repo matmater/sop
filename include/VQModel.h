@@ -13,7 +13,8 @@
 #include "LBG.h"
 #include "Model.h"
 
-/*! \brief Speaker recognizer based on Vector Quantization using LBG and MAP algorithms.
+/*! \brief Speaker recognizer based on Vector Quantization using LBG
+ *  and MAP algorithms.
  */
 class VQModel : public Model
 {
@@ -45,19 +46,22 @@ public:
      *  \param samples Train sample data set.
      *  \param itertions Maximum number of training iterations.
      */
-    virtual void Train(const std::vector< DynamicVector<Real> >& samples, unsigned int iterations) override;
+    virtual void Train(const std::vector< DynamicVector<Real> >& samples,
+        unsigned int iterations) override;
 
     /*! \brief Train the model using MAP adaptation.
      *
-     *  MAP algorithm for adapting a speaker model. Based on: ftp://ftp.cs.joensuu.fi/franti/papers/VQMAP-SPL2008.pdf
+     *  MAP algorithm for adapting a speaker model. Based on:
+     *  ftp://ftp.cs.joensuu.fi/franti/papers/VQMAP-SPL2008.pdf
      *
      *  \param other The model to adapt from.
      *  \param sample The training samples.
      *  \param iterations The number of MAP iterations.
      *  \param relevanceFactor The MAP relevance factor.
      */
-    virtual void Adapt(const std::shared_ptr<Model>& other, const std::vector< DynamicVector<Real> >& samples,
-                       unsigned int iterations = 2, Real relevanceFactor = 12.0f) override;
+    virtual void Adapt(const std::shared_ptr<Model>& other,
+        const std::vector< DynamicVector<Real> >& samples,
+        unsigned int iterations = 2, Real relevanceFactor = 12.0f) override;
 
     /*! \brief Return squared-error distortion measure
      *  divided by the number of samples.
@@ -77,7 +81,8 @@ public:
      *
      *  \return Weighted similarity measure over the samples.
      */
-    Real GetWeightedSimilarity(const std::vector< DynamicVector<Real> >& samples) const;
+    Real GetWeightedSimilarity(
+        const std::vector< DynamicVector<Real> >& samples) const;
 
     /*! \brief Score given samples.
      *
@@ -85,7 +90,8 @@ public:
      *
      *  \return Average score over samples.
      */
-    virtual Real GetScore(const std::vector< DynamicVector<Real> >& samples) const override;
+    virtual Real GetScore(
+        const std::vector< DynamicVector<Real> >& samples) const override;
 
     /*! \brief Log-score given samples.
      *
@@ -93,7 +99,8 @@ public:
      *
      *  \return Average score over samples.
      */
-    virtual Real GetLogScore(const std::vector< DynamicVector<Real> >& samples) const override;
+    virtual Real GetLogScore(
+        const std::vector< DynamicVector<Real> >& samples) const override;
 
     /*! \brief Get the number of feature dimensions used in the model.
      *

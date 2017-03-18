@@ -57,15 +57,19 @@ public:
      *
      *  \param sl Start line.
      *  \param gl Number of lines to fetch.
-     *  \param multiplier Tells how many lines are considered as a single line (combine multiple utterances).
+     *  \param multiplier Tells how many lines are considered as a single line
+     *  (combine multiple utterances).
      *  \param train If this flag is true, test specific labels will be removed.
-     *  \param maxFeatures Maxmimum number of features to load (from the beginning of the feature vector).
+     *  \param maxFeatures Maxmimum number of features to load (from the
+     *  beginning of the feature vector).
      *  \param normalize Enable utterance-based normalization.
      *  \param alias Alter the speaker id.
      *
      *  \note Line indexing starts at 1.
      */
-    void Load(const std::string& path, unsigned int sl, unsigned int gl, unsigned multiplier, bool train, unsigned int maxFeatures, bool normalize = false, const std::string& alias = "");
+    void Load(const std::string& path, unsigned int sl, unsigned int gl,
+        unsigned multiplier, bool train, unsigned int maxFeatures,
+        bool normalize = false, const std::string& alias = "");
 
     /*! \brief Validates loaded data.
      *
@@ -103,7 +107,8 @@ public:
      */
     unsigned int GetDimensionCount() const;
 
-    /*! \brief Normalize selected samples using Ceptstral Mean Variance Normalization.
+    /*! \brief Normalize selected samples using Ceptstral Mean Variance
+     *  Normalization.
      *
      *  \param beginIt Begin iterator of the samples to be normalized.
      *  \param endIt End iterator of the samples to be normalized.
@@ -153,7 +158,8 @@ public:
      *
      *  \return A map containing all loaded speaker keys and respective samples.
      */
-    const std::map<SpeakerKey, std::vector<DynamicVector<Real> > >& GetSamples() const;
+    const std::map<SpeakerKey, std::vector<DynamicVector<Real> > >&
+    GetSamples() const;
 
 private:
     FeatureNormalizationType mNormalizationType;

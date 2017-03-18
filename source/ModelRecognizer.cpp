@@ -43,9 +43,7 @@ void ModelRecognizer::ClearTrainedData()
 void ModelRecognizer::SetOrder(unsigned int order)
 {
     if (order != mOrder)
-    {
         mDirty = true;
-    }
 
     mOrder = order;
 }
@@ -58,9 +56,7 @@ unsigned int ModelRecognizer::GetOrder() const
 void ModelRecognizer::SetAdaptationEnabled(bool enabled)
 {
     if (enabled != mAdaptationEnabled)
-    {
         mSpeakerModelsDirty = true;
-    }
 
     mAdaptationEnabled = enabled;
 }
@@ -73,9 +69,7 @@ bool ModelRecognizer::IsAdaptationEnabled() const
 void ModelRecognizer::SetAdaptationIterations(unsigned int iterations)
 {
     if (iterations != mAdaptationIterations)
-    {
         mSpeakerModelsDirty = true;
-    }
 
     mAdaptationIterations = iterations;
 }
@@ -88,9 +82,7 @@ unsigned int ModelRecognizer::GetAdaptationIterations() const
 void ModelRecognizer::SetRelevanceFactor(Real factor)
 {
     if (std::abs(factor - mRelevanceFactor) > 0.0005f)
-    {
         mSpeakerModelsDirty = true;
-    }
 
     mRelevanceFactor = factor;
 }
@@ -103,9 +95,7 @@ Real ModelRecognizer::GetRelevanceFactor() const
 void ModelRecognizer::SetScoreNormalizationType(ScoreNormalizationType type)
 {
     if (type != mScoreNormalizationType)
-    {
         mPrepared = false;
-    }
 
     mScoreNormalizationType = type;
 }
@@ -118,9 +108,7 @@ ScoreNormalizationType ModelRecognizer::GetScoreNormalizationType() const
 void ModelRecognizer::SetBackgroundModelEnabled(bool enabled)
 {
     if (enabled != mBackgroundModelEnabled)
-    {
         mPrepared = false;
-    }
 
     mBackgroundModelEnabled = enabled;
 }
@@ -133,9 +121,7 @@ bool ModelRecognizer::IsBackgroundModelEnabled() const
 void ModelRecognizer::SetSpeakerData(std::shared_ptr<SpeechData> data)
 {
     if (data != mSpeakerData)
-    {
         mDirty = true;
-    }
 
     mSpeakerData = data;
 }
@@ -158,9 +144,7 @@ void ModelRecognizer::PrepareModels()
 void ModelRecognizer::SetBackgroundModelData(std::shared_ptr<SpeechData> data)
 {
     if (data != mBackgroundModelData)
-    {
         mBackgroundModelDirty = true;
-    }
 
     mBackgroundModelData = data;
 }
@@ -176,10 +160,8 @@ void ModelRecognizer::TrainBackgroundModel()
 
     std::vector< DynamicVector<Real> > samples;
 
-    for (const auto& speaker : mBackgroundModelData->GetSamples())
-    {
-        for (const auto& sample : speaker.second)
-        {
+    for (const auto& speaker : mBackgroundModelData->GetSamples()) {
+        for (const auto& sample : speaker.second) {
             samples.push_back(sample);
         }
     }
@@ -197,77 +179,63 @@ void ModelRecognizer::TrainSpeakerModels()
 
     bool adapt = false;
 
-    if (IsBackgroundModelEnabled() && mBackgroundModel != nullptr && mAdaptationEnabled)
-    {
+    if (IsBackgroundModelEnabled() && mBackgroundModel != nullptr
+        && mAdaptationEnabled) {
         adapt = true;
-    }
-
-    else if (IsBackgroundModelEnabled() && mBackgroundModel == nullptr)
-    {
+    } else if (IsBackgroundModelEnabled() && mBackgroundModel == nullptr) {
         std::cout << "Warning: enabled background model not found." << std::endl;
     }
 
     Timer timer;
-    for (const auto& sequence : mSpeakerData->GetSamples())
-    {
+    for (const auto& sequence : mSpeakerData->GetSamples()) {
         ++progress;
 
         auto model = CreateModel();
         mModelCache[sequence.first] = model;
 
-        if (adapt)
-        {
+        if (adapt) {
             std::cout << "Training model (MAP): " << sequence.first
-                << " (" << 100 * progress / mSpeakerData->GetSamples().size() << "%)" << std::endl;
-        }
-
-        else
-        {
+                << " (" << 100 * progress / mSpeakerData->GetSamples().size()
+                << "%)" << std::endl;
+        } else {
             std::cout << "Training model: " << sequence.first
-                << " (" << 100 * progress / mSpeakerData->GetSamples().size() << "%)" << std::endl;
+                << " (" << 100 * progress / mSpeakerData->GetSamples().size()
+                << "%)" << std::endl;
         }
 
-        // UBM exists, train everything else with adaptation.
-        if (adapt)
-        {
-            model->Adapt(mBackgroundModel, sequence.second, mAdaptationIterations, mRelevanceFactor);
-        }
-
-        // No UBM, train normally.
-        else
-        {
+        if (adapt) {
+            // UBM exists, train everything else with adaptation.
+            model->Adapt(mBackgroundModel, sequence.second,
+                mAdaptationIterations, mRelevanceFactor);
+        } else {
+            // No UBM, train normally.
             model->SetOrder(GetOrder());
-
             model->Train(sequence.second, GetTrainingIterations());
         }
     }
+
     mTrainTimeSpeakerModels = timer.GetTimeElapsed();
 }
 
 void ModelRecognizer::Train()
 {
-    if (mSpeakerData == nullptr || !mSpeakerData->IsConsistent())
-    {
+    if (mSpeakerData == nullptr || !mSpeakerData->IsConsistent()) {
         std::cout << "Missing or inconsistent speaker model training data." << std::endl;
         return;
     }
 
-    if (mBackgroundModelData != nullptr && !mSpeakerData->IsConsistent())
-    {
+    if (mBackgroundModelData != nullptr && !mSpeakerData->IsConsistent()) {
         std::cout << "Inconsistent background model training data." << std::endl;
         return;
     }
 
     // Dirty means that something fundamental changes were made so that all models
     // need to be re-trained (i.e. the order).
-    if (mDirty)
-    {
+    if (mDirty) {
         ClearTrainedData();
 
-        if (mAdaptationEnabled)
-        {
+        if (mAdaptationEnabled) {
             std::cout << "Training background model." << std::endl;
-
             TrainBackgroundModel();
             mBackgroundModelDirty = false;
         }
@@ -279,16 +247,11 @@ void ModelRecognizer::Train()
         mDirty = false;
         mSpeakerModelsDirty = false;
         mPrepared = false;
-    }
-
-    // Otherwise,
-    else
-    {
+    } else {
         bool backgroundTrained = false;
 
         // i.e., background model data changed.
-        if (mBackgroundModelDirty && mAdaptationEnabled)
-        {
+        if (mBackgroundModelDirty && mAdaptationEnabled) {
             std::cout << "Training background model." << std::endl;
 
             TrainBackgroundModel();
@@ -299,8 +262,7 @@ void ModelRecognizer::Train()
         }
 
         // i.e., if adaptation parameters changed.
-        if (mSpeakerModelsDirty || backgroundTrained && mAdaptationEnabled)
-        {
+        if (mSpeakerModelsDirty || backgroundTrained && mAdaptationEnabled) {
             std::cout << "Training speaker models." << std::endl;
 
             TrainSpeakerModels();
@@ -315,9 +277,7 @@ void ModelRecognizer::Prepare()
 {
     // Is everything already OK?
     if (mPrepared)
-    {
         return;
-    }
 
     PrepareModels();
 
@@ -326,14 +286,12 @@ void ModelRecognizer::Prepare()
     // Z norm
     if (   mScoreNormalizationType == ScoreNormalizationType::ZERO
         || mScoreNormalizationType == ScoreNormalizationType::ZERO_TEST
-        || mScoreNormalizationType == ScoreNormalizationType::TEST_ZERO)
-    {
+        || mScoreNormalizationType == ScoreNormalizationType::TEST_ZERO) {
         progress = 0;
 
         std::cout << "Calculating Z-norm scores." << std::endl;
 
-        for (auto& model : mSpeakerModels)
-        {
+        for (auto& model : mSpeakerModels) {
             ++progress;
 
             std::cout << "Calculating Z-norm scores: " << model.first
@@ -344,36 +302,24 @@ void ModelRecognizer::Prepare()
             unsigned int impostors = 0;
 
             // Z-norm scores.
-            for (auto& impostor : mImpostorModels)
-            {
+            for (auto& impostor : mImpostorModels) {
                 auto it = mSpeakerData->GetSamples().find(impostor.first);
-
-                if (it == mSpeakerData->GetSamples().end())
-                {
+                if (it == mSpeakerData->GetSamples().end()) {
                     std::cout << "Impostor speaker data not found." << std::endl;
-
                     continue;
                 }
-
-                if (impostor.first != model.first)
-                {
+                if (impostor.first != model.first) {
                     scores.push_back(GetRatio(model.second, it->second));
-
                     ++impostors;
                 }
             }
 
-            if (impostors > 1)
-            {
+            if (impostors > 1) {
                 // Initialize speaker-specific Z-normalization parameters.
                 auto& zd = mImpostorDistributions[model.first];
-
                 zd.mean = Mean(scores);
                 zd.deviation = Deviation(scores, zd.mean);
-            }
-
-            else
-            {
+            } else {
                 std::cout << "Not enough impostors for Z-normalization was found." << std::endl;
             }
         }
@@ -385,14 +331,12 @@ void ModelRecognizer::Prepare()
 Real ModelRecognizer::GetTrainTimeBackgroundModel()
 {
     Train();
-
     return mTrainTimeBackgroundModel;
 }
 
 Real ModelRecognizer::GetTrainTimeSpeakerModels()
 {
     Train();
-
     return mTrainTimeSpeakerModels;
 }
 
@@ -401,19 +345,14 @@ void ModelRecognizer::SelectSpeakerModels(const std::vector<SpeakerKey>& models)
     Train();
 
     mPrepared = false;
-
     mSpeakerModels.clear();
 
-    for (const auto& key : models)
-    {
+    for (const auto& key : models) {
         auto it = mModelCache.find(key);
-
-        if (it == mModelCache.end())
-        {
+        if (it == mModelCache.end()) {
             std::cout << "Speaker model '" << key << "' could not be selected." << std::endl;
             continue;
         }
-
         mSpeakerModels[key] = it->second;
     }
 }
@@ -427,16 +366,12 @@ void ModelRecognizer::SelectImpostorModels(const std::vector<SpeakerKey>& models
     mImpostorModels.clear();
     mImpostorDistributions.clear();
 
-    for (const auto& key : models)
-    {
+    for (const auto& key : models) {
         auto it = mModelCache.find(key);
-
-        if (it == mModelCache.end())
-        {
+        if (it == mModelCache.end()) {
             std::cout << "Impostor model '" << key << "' could not be selected." << std::endl;
             continue;
         }
-
         mImpostorModels[key] = it->second;
     }
 }
@@ -445,8 +380,7 @@ Real ModelRecognizer::GetRatio(const std::shared_ptr<Model>& model, const std::v
 {
     Train();
 
-    if (IsBackgroundModelEnabled() && (mBackgroundModel != nullptr))
-    {
+    if (IsBackgroundModelEnabled() && (mBackgroundModel != nullptr)) {
         return model->GetLogScore(samples) - mBackgroundModel->GetLogScore(samples);
     }
 
@@ -459,29 +393,22 @@ bool ModelRecognizer::IsRecognized(const SpeakerKey& speaker, const std::vector<
 
     Prepare();
 
-    if (mSpeakerModels.empty())
-    {
+    if (mSpeakerModels.empty()) {
         std::cout << "WARNING: Speaker not recognized, no speaker models found." << std::endl;
-
         return false;
     }
 
-    if (mSpeakerModels.find(speaker) == mSpeakerModels.end())
-    {
+    if (mSpeakerModels.find(speaker) == mSpeakerModels.end()) {
         std::cout << "WARNING: Speaker not recognized, no speaker model found." << std::endl;
-
         return false;
     }
 
     Real bestScore = std::numeric_limits<Real>::min();
     SpeakerKey bestSpeaker;
 
-    for (auto& model : mSpeakerModels)
-    {
+    for (auto& model : mSpeakerModels) {
         Real score = model.second->GetScore(samples);
-
-        if (score > bestScore)
-        {
+        if (score > bestScore) {
             bestScore = score;
             bestSpeaker = model.first;
         }
@@ -493,23 +420,18 @@ bool ModelRecognizer::IsRecognized(const SpeakerKey& speaker, const std::vector<
 Real ModelRecognizer::GetVerificationScore(const SpeakerKey& speaker, const std::vector< DynamicVector<Real> >& samples)
 {
     Train();
-
     Prepare();
 
     auto it = mSpeakerModels.find(speaker);
-
-    if (it == mSpeakerModels.end())
-    {
+    if (it == mSpeakerModels.end()) {
         std::cout << "Speaker model '" << speaker << "' not found." << std::endl;
-
         return 0.0f;
     }
 
     Real score = GetRatio(it->second, samples);
 
     // Return score immediately if normalization is not enabled.
-    if (mScoreNormalizationType == ScoreNormalizationType::NONE)
-    {
+    if (mScoreNormalizationType == ScoreNormalizationType::NONE) {
         return score;
     }
 
@@ -519,117 +441,91 @@ Real ModelRecognizer::GetVerificationScore(const SpeakerKey& speaker, const std:
     // Get Z-norm parameters.
     if (   mScoreNormalizationType == ScoreNormalizationType::ZERO
         || mScoreNormalizationType == ScoreNormalizationType::ZERO_TEST
-        || mScoreNormalizationType == ScoreNormalizationType::TEST_ZERO)
-    {
+        || mScoreNormalizationType == ScoreNormalizationType::TEST_ZERO) {
         zd = mImpostorDistributions[it->first];
     }
 
     // Calculate T-norm parameters.
     if (   mScoreNormalizationType == ScoreNormalizationType::TEST
         || mScoreNormalizationType == ScoreNormalizationType::ZERO_TEST
-        || mScoreNormalizationType == ScoreNormalizationType::TEST_ZERO)
-    {
+        || mScoreNormalizationType == ScoreNormalizationType::TEST_ZERO) {
         std::vector<Real> scores;
 
         unsigned int impostors = 0;
-
-        for (auto& impostor : mImpostorModels)
-        {
+        for (auto& impostor : mImpostorModels) {
             if (impostor.first == speaker)
-            {
                 continue;
-            }
 
             ++impostors;
-
             scores.push_back(GetRatio(impostor.second, samples));
         }
 
-        if (impostors > 1)
-        {
+        if (impostors > 1) {
             td.mean = Mean(scores);
             td.deviation = Deviation(scores, td.mean);
-        }
-
-        else
-        {
+        } else {
             std::cout << "Not enough impostors for T-normalization was found." << std::endl;
         }
     }
 
     // Apply normalization.
-    switch (mScoreNormalizationType)
-    {
+    switch (mScoreNormalizationType) {
     case ScoreNormalizationType::ZERO:
         return (score - zd.mean) / zd.deviation;
-
     case ScoreNormalizationType::TEST:
         return (score - td.mean) / td.deviation;
-
     case ScoreNormalizationType::ZERO_TEST:
         return (((score - zd.mean) / zd.deviation) - td.mean) / td.deviation;
-
     case ScoreNormalizationType::TEST_ZERO:
         return (((score - td.mean) / td.deviation) - zd.mean) / zd.deviation;
-
     default:
         std::cout << "Unknown score normalization type." << std::endl;
         return 0.0f;
     }
 }
 
-std::vector<Real> ModelRecognizer::GetMultipleVerificationScore(const SpeakerKey& speaker, const std::shared_ptr<SpeechData>& data)
+std::vector<Real> ModelRecognizer::GetMultipleVerificationScore(
+    const SpeakerKey& speaker, const std::shared_ptr<SpeechData>& data)
 {
     Train();
-
     Prepare();
 
     std::vector<Real> results;
 
-    if (!data->IsConsistent())
-    {
+    if (!data->IsConsistent()) {
         std::cout << "Inconsistent testing data." << std::endl;
-
         return results;
     }
 
-    if (GetDimensionCount() != data->GetDimensionCount())
-    {
+    if (GetDimensionCount() != data->GetDimensionCount()) {
         std::cout << "Incompatible testing data dimensions: " << GetDimensionCount() << " " << data->GetDimensionCount() << std::endl;
-
         return results;
     }
 
-    if (IsBackgroundModelEnabled() && mBackgroundModel == nullptr)
-    {
+    if (IsBackgroundModelEnabled() && mBackgroundModel == nullptr) {
         std::cout << "Background model not created." << std::endl;
-
         return results;
     }
 
     auto it = mSpeakerModels.find(speaker);
 
-    if (it == mSpeakerModels.end())
-    {
+    if (it == mSpeakerModels.end()) {
         std::cout << "Speaker model '" << speaker << "' not found." << std::endl;
-
         return results;
     }
 
-    for (auto& entry : data->GetSamples())
-    {
+    for (auto& entry : data->GetSamples()) {
         results.push_back(GetVerificationScore(speaker, entry.second));
     }
 
     return results;
 }
 
-std::vector<Real> ModelRecognizer::Verify(const SpeakerKey& speaker, const std::shared_ptr<SpeechData>& data)
+std::vector<Real> ModelRecognizer::Verify(const SpeakerKey& speaker,
+    const std::shared_ptr<SpeechData>& data)
 {
     Train();
-
     Prepare();
-
     return GetMultipleVerificationScore(speaker, data);
 }
 
@@ -637,14 +533,15 @@ unsigned int ModelRecognizer::GetDimensionCount()
 {
     Prepare();
 
-    if (mSpeakerModels.size() == 0)
-    {
+    if (mSpeakerModels.size() == 0) {
         return 0;
     }
 
-    unsigned int speakerModelDimensions = mSpeakerModels.begin()->second->GetDimensionCount();
+    unsigned int speakerModelDimensions = mSpeakerModels
+        .begin()->second->GetDimensionCount();
 
-    if (IsBackgroundModelEnabled() && (mBackgroundModel == nullptr || speakerModelDimensions != mBackgroundModel->GetDimensionCount()))
+    if (IsBackgroundModelEnabled() && (mBackgroundModel == nullptr
+        || speakerModelDimensions != mBackgroundModel->GetDimensionCount()))
     {
         std::cout << "Mismatching speaker model and background model dimensions." << std::endl;
         return -1;
@@ -663,22 +560,26 @@ std::shared_ptr<Model> ModelRecognizer::GetBackgroundModel()
     return mBackgroundModel;
 }
 
-std::map<SpeakerKey, std::shared_ptr<Model> >& ModelRecognizer::GetImpostorModels()
+std::map<SpeakerKey, std::shared_ptr<Model> >&
+ModelRecognizer::GetImpostorModels()
 {
     return mImpostorModels;
 }
 
-const std::map<SpeakerKey, std::shared_ptr<Model> >& ModelRecognizer::GetImpostorModels() const
+const std::map<SpeakerKey, std::shared_ptr<Model> >&
+ModelRecognizer::GetImpostorModels() const
 {
     return mImpostorModels;
 }
 
-const std::map<SpeakerKey, std::shared_ptr<Model> >& ModelRecognizer::GetSpeakerModels() const
+const std::map<SpeakerKey, std::shared_ptr<Model> >&
+ModelRecognizer::GetSpeakerModels() const
 {
     return mSpeakerModels;
 }
 
-std::map<SpeakerKey, std::shared_ptr<Model> >& ModelRecognizer::GetSpeakerModels()
+std::map<SpeakerKey, std::shared_ptr<Model> >&
+ModelRecognizer::GetSpeakerModels()
 {
     return mSpeakerModels;
 }

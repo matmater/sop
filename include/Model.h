@@ -48,7 +48,8 @@ public:
      *  \param samples Train sample data set.
      *  \param iterations Maximum number of training iterations.
      */
-    virtual void Train(const std::vector< DynamicVector<Real> >& samples, unsigned int iterations) = 0;
+    virtual void Train(const std::vector< DynamicVector<Real> >& samples,
+        unsigned int iterations) = 0;
 
     /*! \brief Adapt the model from another model with speech data.
      *
@@ -57,22 +58,25 @@ public:
      *  \param iterations The number of adaptation iterations.
      *  \param relevanceFactor The adaptation relevance factor.
      */
-    virtual void Adapt(const std::shared_ptr<Model>& other, const std::vector< DynamicVector<Real> >& samples,
-                       unsigned int iterations = 2, Real relevanceFactor = 16.0f) = 0;
+    virtual void Adapt(const std::shared_ptr<Model>& other,
+        const std::vector< DynamicVector<Real> >& samples,
+        unsigned int iterations = 2, Real relevanceFactor = 16.0f) = 0;
 
     /*! \brief Score given samples.
      *
      *  \param samples Samples of independent observations.
      *  \return Score over samples.
      */
-    virtual Real GetScore(const std::vector< DynamicVector<Real> >& samples) const = 0;
+    virtual Real GetScore(
+        const std::vector< DynamicVector<Real> >& samples) const = 0;
 
     /*! \brief Log-score given samples.
      *
      *  \param samples Samples of independent observations.
      *  \return Log-Score over samples.
      */
-    virtual Real GetLogScore(const std::vector< DynamicVector<Real> >& samples) const = 0;
+    virtual Real GetLogScore(
+        const std::vector< DynamicVector<Real> >& samples) const = 0;
 
 private:
     unsigned int mOrder;

@@ -17,8 +17,7 @@ DynamicVector<T>::~DynamicVector()
 template<typename T>
 DynamicVector<T>& DynamicVector<T>::operator= (const DynamicVector& other)
 {
-    if (&other != this)
-    {
+    if (&other != this) {
         mValues.resize(other.mValues.size());
         Assign(other);
     }
@@ -59,8 +58,7 @@ const T& DynamicVector<T>::operator[] (unsigned int index) const
 template<typename T>
 void DynamicVector<T>::Assign(T value)
 {
-    for (unsigned int i = 0; i < mValues.size(); i++)
-    {
+    for (unsigned int i = 0; i < mValues.size(); i++) {
         mValues[i] = value;
     }
 }
@@ -68,8 +66,7 @@ void DynamicVector<T>::Assign(T value)
 template<typename T>
 void DynamicVector<T>::Assign(const DynamicVector& other)
 {
-    for (unsigned int i = 0; i < mValues.size(); i++)
-    {
+    for (unsigned int i = 0; i < mValues.size(); i++) {
         mValues[i] = other[i];
     }
 }
@@ -77,8 +74,7 @@ void DynamicVector<T>::Assign(const DynamicVector& other)
 template<typename T>
 void DynamicVector<T>::Multiply(T value)
 {
-    for (unsigned int i = 0; i < mValues.size(); i++)
-    {
+    for (unsigned int i = 0; i < mValues.size(); i++) {
         mValues[i] *= value;
     }
 }
@@ -86,8 +82,7 @@ void DynamicVector<T>::Multiply(T value)
 template<typename T>
 void DynamicVector<T>::Multiply(const DynamicVector& other)
 {
-    for (unsigned int i = 0; i < mValues.size(); i++)
-    {
+    for (unsigned int i = 0; i < mValues.size(); i++) {
         mValues[i] *= other.mValues[i];
     }
 }
@@ -95,8 +90,7 @@ void DynamicVector<T>::Multiply(const DynamicVector& other)
 template<typename T>
 void DynamicVector<T>::Divide(const DynamicVector& other)
 {
-    for (unsigned int i = 0; i < mValues.size(); i++)
-    {
+    for (unsigned int i = 0; i < mValues.size(); i++) {
         mValues[i] /= other.mValues[i];
     }
 }
@@ -104,8 +98,7 @@ void DynamicVector<T>::Divide(const DynamicVector& other)
 template<typename T>
 void DynamicVector<T>::Add(T value)
 {
-    for (unsigned int i = 0; i < mValues.size(); i++)
-    {
+    for (unsigned int i = 0; i < mValues.size(); i++) {
         mValues[i] += value;
     }
 }
@@ -113,8 +106,7 @@ void DynamicVector<T>::Add(T value)
 template<typename T>
 void DynamicVector<T>::Add(const DynamicVector& other)
 {
-    for (unsigned int i = 0; i < mValues.size(); i++)
-    {
+    for (unsigned int i = 0; i < mValues.size(); i++) {
         mValues[i] += other.mValues[i];
     }
 }
@@ -122,8 +114,7 @@ void DynamicVector<T>::Add(const DynamicVector& other)
 template<typename T>
 void DynamicVector<T>::Subtract(const DynamicVector& other)
 {
-    for (unsigned int i = 0; i < mValues.size(); i++)
-    {
+    for (unsigned int i = 0; i < mValues.size(); i++) {
         mValues[i] -= other.mValues[i];
     }
 }
@@ -133,10 +124,8 @@ T DynamicVector<T>::Distance(const DynamicVector& other) const
 {
     T distance = T();
 
-    for (unsigned int i = 0; i < mValues.size(); i++)
-    {
+    for (unsigned int i = 0; i < mValues.size(); i++) {
         T diff = mValues[i] - other.mValues[i];
-
         distance += diff * diff;
     }
 

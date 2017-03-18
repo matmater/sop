@@ -65,7 +65,8 @@ public:
     /*! \brief Set background model enabled or disabled.
      *
      *  This takes effect whenever the model is trained. If the background model
-     *  is enabled background model data must be provided by calling SetBackgroundModelData().
+     *  is enabled background model data must be provided by calling
+     *  SetBackgroundModelData().
      *
      *  \param enabled True to enable, false to disable.
      */
@@ -95,8 +96,8 @@ public:
 
     /*! \brief Set background model data.
      *
-     *  This takes effect when the model is trained and the background model is enabled.
-     *  See SetBackgroundModelEnabled().
+     *  This takes effect when the model is trained and the background model
+     *  is enabled. See SetBackgroundModelEnabled().
      *
      *  \param data The speech data set for training containing
      *  background model speakers and their samples.
@@ -233,26 +234,32 @@ public:
 
     /*! \brief Check if a given speaker is recognized.
      *
-     *  All speaker models are checked against given samples. The model that gives the highest
-     *  score will be chosen as the recognized speaker.
+     *  All speaker models are checked against given samples. The model that
+     *  gives the highest score will be chosen as the recognized speaker.
      *
      *  \param speaker Correct speaker.
      *  \param samples Correct speaker samples to be tested.
      *
-     *  \return True if the recognized speaker and the given speaker match. False, otherwise.
+     *  \return True if the recognized speaker and the given speaker match.
+     *  False, otherwise.
      */
-    virtual bool IsRecognized(const SpeakerKey& speaker, const std::vector< DynamicVector<Real> >& samples);
+    virtual bool IsRecognized(const SpeakerKey& speaker,
+        const std::vector< DynamicVector<Real> >& samples);
 
-    /*! \brief Calculate a verification score for a claimed speaker based on given samples.
+    /*! \brief Calculate a verification score for a claimed speaker based on
+     *  given samples.
      *
      *  This calculates the final verification score:
-     *  If the background model is enabled and available the calculated speaker/ubm ratio will be returned.
-     *  Additionally, if normalization is enabled the ratio will be normalized.
+     *  If the background model is enabled and available the calculated
+     *  speaker/ubm ratio will be returned. Additionally, if normalization is
+     *  enabled the ratio will be normalized.
      *
-     *  If the background model is not available the raw score of the speaker will be returned and normalized
+     *  If the background model is not available the raw score of the speaker
+     *  will be returned and normalized
      *  if required.
      */
-    virtual Real GetVerificationScore(const SpeakerKey& speaker, const std::vector< DynamicVector<Real> >& samples);
+    virtual Real GetVerificationScore(const SpeakerKey& speaker,
+        const std::vector< DynamicVector<Real> >& samples);
 
     /*! \brief Return verification scores of multiple samples.
      *
@@ -263,7 +270,8 @@ public:
      *
      *  \sa GetVerificationScore()
      */
-    virtual std::vector<Real> GetMultipleVerificationScore(const SpeakerKey& speaker, const std::shared_ptr<SpeechData>& data);
+    virtual std::vector<Real> GetMultipleVerificationScore(
+        const SpeakerKey& speaker, const std::shared_ptr<SpeechData>& data);
 
     /*! \brief Verify the claimed speaker.
      *
@@ -272,7 +280,8 @@ public:
      *
      *  \return A vector containing verification scores of the speaker.
      */
-    virtual std::vector<Real> Verify(const SpeakerKey& speaker, const std::shared_ptr<SpeechData>& data) override;
+    virtual std::vector<Real> Verify(const SpeakerKey& speaker,
+        const std::shared_ptr<SpeechData>& data) override;
 
 protected:
     /*! \brief Prepare calculations after training.
@@ -309,7 +318,8 @@ protected:
      *
      *  \return Unnormalized verification score.
      */
-    virtual Real GetRatio(const std::shared_ptr<Model>& model, const std::vector< DynamicVector<Real> >& samples);
+    virtual Real GetRatio(const std::shared_ptr<Model>& model,
+        const std::vector< DynamicVector<Real> >& samples);
 
     /* \brief Get the trained background model.
      *
@@ -333,7 +343,8 @@ protected:
      *
      *  \return A map containing impostor speaker keys and respective models.
      */
-    const std::map<SpeakerKey, std::shared_ptr<Model> >& GetImpostorModels() const;
+    const std::map<SpeakerKey, std::shared_ptr<Model> >&
+    GetImpostorModels() const;
 
     /*! \brief Non-const version to get all active speaker models.
      *
@@ -345,7 +356,8 @@ protected:
      *
      *  \return A map containing speaker keys and respective models.
      */
-    const std::map<SpeakerKey, std::shared_ptr<Model> >& GetSpeakerModels() const;
+    const std::map<SpeakerKey, std::shared_ptr<Model> >&
+    GetSpeakerModels() const;
 
     /*! \brief Get the number of feature dimensions.
      *
